@@ -326,22 +326,24 @@ static void __try_release_vlan_defs(void)
 	yavlan_list_len = 0;
 }
 
-static int generate_vlan_defs_by_param(const char *param_vlans)
+static int generate_vlan_defs_by_param(const char *vlan_defs)
 {
 	int err = -EINVAL;
 	char *cp, *__vlans = NULL;
+	size_t vlans_len;
 
-	if (strlen(param_vlans) == 0) {
+	vlans_len = strlen(vlan_defs);
+	if (vlans_len == 0) {
 		printk(KERN_WARNING "YaVLAN: No VLAN definition specified\n");
 		goto out;
 	}
 
 	/* Parse parameter 'vlans': 10@eth1@eth1-10,11@eth1,12@eth0,... */
-	if (!(__vlans = kmalloc(sizeof(param_vlans), GFP_KERNEL))) {
+	if (!(__vlans = kmalloc(vlans_len + 1, GFP_KERNEL))) {
 		err = -ENOMEM;
 		goto out;
 	}
-	strncpy(__vlans, param_vlans, sizeof(param_vlans));
+	memcpy(__vlans, vlan_defs, vlans_len + 1);
 
 	cp = __vlans;
 	do {
@@ -426,8 +428,10 @@ int __init yavlan_init(void)
 		}
 	}
 
-	if ((rc = generate_vlan_defs_by_param(param_vlans)) < 0)
+	if ((rc = generate_vlan_defs_by_param(param_vlans)) < 0) {
+		err = rc;
 		goto out;
+	}
 
 	/* This calls the notifier callback in which the hook is added. */
 	register_netdevice_notifier(&hooked_dev_notifier);
