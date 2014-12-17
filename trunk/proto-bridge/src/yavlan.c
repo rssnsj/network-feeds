@@ -22,6 +22,10 @@ static int param_mtu = 0;
 module_param_named(mtu, param_mtu, int, 0644);
 MODULE_PARM_DESC(mtu, "Override VLAN interface MTU size");
 
+static int param_packip = 0;
+module_param_named(packip, param_packip, int, 0644);
+MODULE_PARM_DESC(packip, "Encapsulate VID in Ethernet header for IPv4 to keep MTU <= 1500");
+
 struct yavlan_info {
 	unsigned short vid;
 	char phy_ifname[IFNAMSIZ];
@@ -309,29 +313,27 @@ static struct notifier_block hooked_dev_notifier = {
 	.notifier_call = hooked_dev_event,
 };
 
-int __init yavlan_init(void)
+static void __try_release_vlan_defs(void)
+{
+	int i;
+
+	for (i = 0; i < yavlan_list_len; i++) {
+		if (yavlan_list[i]->phy_dev)
+			netdev_detach_yavlan(yavlan_list[i]->phy_dev, yavlan_list[i]);
+		kfree(yavlan_list[i]);
+		yavlan_list[i] = NULL;
+	}
+	yavlan_list_len = 0;
+}
+
+static int generate_vlan_defs_by_param(const char *param_vlans)
 {
 	int err = -EINVAL;
 	char *cp, *__vlans = NULL;
-	int i;
 
 	if (strlen(param_vlans) == 0) {
 		printk(KERN_WARNING "YaVLAN: No VLAN definition specified\n");
 		goto out;
-	}
-
-	/* Check parameter 'proto', expecting a valid Ethernet protocol. */
-	if (param_proto < 0x100) {
-		printk(KERN_WARNING "YaVLAN: Invalid Ethernet protocol '0x%04x'\n", param_proto);
-		goto out;
-	}
-	yavlan_ptype.type = htons(param_proto);
-	/* Check parameter 'mtu'. */
-	if (param_mtu) {
-		if (param_mtu < 1000 || param_mtu > 8192) {
-			printk(KERN_WARNING "YaVLAN: Illegal MTU size: %d\n", param_mtu);
-			goto out;
-		}
 	}
 
 	/* Parse parameter 'vlans': 10@eth1@eth1-10,11@eth1,12@eth0,... */
@@ -395,7 +397,37 @@ int __init yavlan_init(void)
 		}
 		yavlan_list[yavlan_list_len++] = vi;
 	} while (cp);
+
 	kfree(__vlans);
+	return 0;
+
+out:
+	if (__vlans)
+		kfree(__vlans);
+	__try_release_vlan_defs();
+	return err;
+}
+
+int __init yavlan_init(void)
+{
+	int err = -EINVAL, rc;
+
+	/* Check parameter 'proto', expecting a valid Ethernet protocol. */
+	if (param_proto < 0x100) {
+		printk(KERN_WARNING "YaVLAN: Invalid Ethernet protocol '0x%04x'\n", param_proto);
+		goto out;
+	}
+	yavlan_ptype.type = htons(param_proto);
+	/* Check parameter 'mtu'. */
+	if (param_mtu) {
+		if (param_mtu < 1000 || param_mtu > 8192) {
+			printk(KERN_WARNING "YaVLAN: Illegal MTU size: %d\n", param_mtu);
+			goto out;
+		}
+	}
+
+	if ((rc = generate_vlan_defs_by_param(param_vlans)) < 0)
+		goto out;
 
 	/* This calls the notifier callback in which the hook is added. */
 	register_netdevice_notifier(&hooked_dev_notifier);
@@ -406,31 +438,16 @@ int __init yavlan_init(void)
 	return 0;
 
 out:
-	if (__vlans)
-		kfree(__vlans);
-	for (i = 0; i < yavlan_list_len; i++) {
-		if (yavlan_list[i]->phy_dev)
-			netdev_detach_yavlan(yavlan_list[i]->phy_dev, yavlan_list[i]);
-		kfree(yavlan_list[i]);
-		yavlan_list[i] = NULL;
-	}
-	yavlan_list_len = 0;
-
+	__try_release_vlan_defs();
 	return err;
 }
 
 void __exit yavlan_exit(void)
 {
-	int i;
-
 	dev_remove_pack(&yavlan_ptype);
 	unregister_netdevice_notifier(&hooked_dev_notifier);
 
-	for (i = 0; i < yavlan_list_len; i++) {
-		kfree(yavlan_list[i]);
-		yavlan_list[i] = NULL;
-	}
-	yavlan_list_len = 0;
+	__try_release_vlan_defs();
 }
 
 module_init(yavlan_init);
