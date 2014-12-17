@@ -52,6 +52,21 @@ static inline struct yavlan_info *yavlan_get_by_phydev_vid(
 	return NULL;
 }
 
+static inline struct yavlan_info *yavlan_get_by_phyname_vid(
+		const char *phy_ifname, unsigned short vid)
+{
+	int i;
+	for (i = 0; i < yavlan_list_count; i++) {
+		struct yavlan_info *vi = yavlan_list[i];
+		if (!vi)
+			continue;
+		if (vi->vid == vid && strcmp(vi->phy_ifname, phy_ifname) == 0)
+			return vi;
+	}
+	return NULL;
+}
+
+
 static int yavlan_base_rcv(struct sk_buff *skb, struct net_device *dev,
 		struct packet_type *pt, struct net_device *orig_dev)
 {
@@ -404,6 +419,13 @@ static int generate_vlan_defs_by_param(const char *vlan_defs)
 		}
 		if (vid == 0 || vid >= VLAN_N_VID) {
 			printk(KERN_WARNING "YaVLAN: Invalid VLAN ID: '%u'\n", vid);
+			goto out;
+		}
+
+		/* Duplication check. */
+		if (yavlan_get_by_phyname_vid(cp_pname, (unsigned short)vid)) {
+			printk(KERN_WARNING "YaVLAN: Duplicate VLAN definition: %u@%s\n",
+					vid, cp_pname);
 			goto out;
 		}
 
