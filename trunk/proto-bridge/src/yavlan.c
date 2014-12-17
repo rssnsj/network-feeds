@@ -441,11 +441,12 @@ out:
 }
 
 static struct packet_type yavlan_base_ptype;
-static struct packet_type *yavlan_ext_ptype = NULL;
+static struct packet_type yavlan_ext_ptype[YAVLAN_LIST_SIZE];
+static size_t yavlan_ext_ptype_count = 0;
 
 int __init yavlan_init(void)
 {
-	int err = -EINVAL, rc, i;
+	int err = -EINVAL, rc, i, j;
 
 	/* Check parameter 'proto', expecting a valid Ethernet protocol. */
 	if (base_proto_id < 0x100) {
@@ -474,14 +475,26 @@ int __init yavlan_init(void)
 	yavlan_base_ptype.dev = NULL;
 	dev_add_pack(&yavlan_base_ptype);
 	if (enable_packip) {
-		yavlan_ext_ptype = kmalloc(sizeof(struct packet_type) * yavlan_list_count, GFP_KERNEL);
 		for (i = 0; i < yavlan_list_count; i++) {
-			struct packet_type *__pt = &yavlan_ext_ptype[i];
-			memset(__pt, 0x0, sizeof(struct packet_type));
+			unsigned short proto_id = base_proto_id + yavlan_list[i]->vid;
+			struct packet_type *__pt = &yavlan_ext_ptype[yavlan_ext_ptype_count];
+
+			/* To avoid duplicate hooking for a single protocol type. */
+			for (j = 0; j < yavlan_ext_ptype_count; j++) {
+				if (proto_id == ntohs(yavlan_ext_ptype[j].type)) {
+					__pt = NULL;
+					break;
+				}
+			}
+			if (__pt == NULL)
+				continue;
+
 			__pt->type = htons(base_proto_id + yavlan_list[i]->vid);
 			__pt->func = yavlan_ext_rcv;
 			__pt->dev = NULL;
 			dev_add_pack(__pt);
+
+			yavlan_ext_ptype_count++;
 		}
 	}
 
@@ -503,7 +516,7 @@ void __exit yavlan_exit(void)
 				continue;
 			dev_remove_pack(__pt);
 		}
-		kfree(yavlan_ext_ptype);
+		yavlan_ext_ptype_count = 0;
 	}
 	dev_remove_pack(&yavlan_base_ptype);
 	unregister_netdevice_notifier(&hooked_dev_notifier);
