@@ -16,7 +16,7 @@ MODULE_PARM_DESC(vlans, "Definition of all VLANs");
 
 static int base_proto_id = 0x7077;
 module_param_named(proto, base_proto_id, int, 0644);
-MODULE_PARM_DESC(proto, "Customized Ethernet type");
+MODULE_PARM_DESC(proto, "Ethernet protocol number (not recommended to change)");
 
 static int vlan_dev_mtu = 0;
 module_param_named(mtu, vlan_dev_mtu, int, 0644);
@@ -26,6 +26,10 @@ static int enable_packip = 0;
 module_param_named(packip, enable_packip, int, 0644);
 MODULE_PARM_DESC(packip, "Encapsulate VID in Ethernet header for IPv4 to keep MTU <= 1500");
 
+static int enable_packip6 = 0;
+module_param_named(packip6, enable_packip6, int, 0644);
+MODULE_PARM_DESC(packip6, "Encapsulate VID in Ethernet header for IPv6 to keep MTU <= 1500");
+
 struct yavlan_info {
 	unsigned short vid;
 	char phy_ifname[IFNAMSIZ];
@@ -34,7 +38,8 @@ struct yavlan_info {
 	struct net_device *vlan_dev;
 };
 
-#define YAVLAN_LIST_SIZE  16
+#define PACKIP_V4V6_PROTO_DIFF  0x1000
+#define YAVLAN_LIST_SIZE  24
 static struct yavlan_info *yavlan_list[YAVLAN_LIST_SIZE];
 static int yavlan_list_count = 0;
 
@@ -125,21 +130,30 @@ out:
 static int yavlan_ext_rcv(struct sk_buff *skb, struct net_device *dev,
 		struct packet_type *pt, struct net_device *orig_dev)
 {
-	unsigned short vid;
+	unsigned short fake_proto, vid = 0;
 	struct yavlan_info *vi;
+	__be16 real_proto = 0;
 
 	/* Ignore non-Ethernet packets */
 	if (!vlan_eth_hdr(skb))
 		goto out;
 
-	vid = ntohs(eth_hdr(skb)->h_proto) - base_proto_id;
+	fake_proto = ntohs(eth_hdr(skb)->h_proto);
+
+	if (fake_proto >= base_proto_id) {
+		vid = fake_proto - base_proto_id;
+		real_proto = htons(ETH_P_IP);
+	} else {
+		vid = fake_proto - (base_proto_id - PACKIP_V4V6_PROTO_DIFF);
+		real_proto = htons(ETH_P_IPV6);
+	}
+
 	if (!(vi = yavlan_get_by_phydev_vid(dev, vid)))
 		goto out;
 
-	eth_hdr(skb)->h_proto = htons(ETH_P_IP);
-
+	eth_hdr(skb)->h_proto = real_proto;
 	skb->dev = vi->vlan_dev;
-	skb->protocol = htons(ETH_P_IP);
+	skb->protocol = real_proto;
 	skb->ip_summed = CHECKSUM_NONE;
 	vi->vlan_dev->stats.rx_bytes += skb->len;
 	vi->vlan_dev->stats.rx_packets++;
@@ -187,6 +201,8 @@ static int yavlan_start_xmit(struct sk_buff *skb, struct net_device *dev)
 
 	if (enable_packip && eth_hdr(skb)->h_proto == __constant_htons(ETH_P_IP)) {
 		eth_hdr(skb)->h_proto = htons(base_proto_id + vi->vid);
+	} else if (enable_packip6 && eth_hdr(skb)->h_proto == __constant_htons(ETH_P_IPV6)) {
+		eth_hdr(skb)->h_proto = htons(base_proto_id - PACKIP_V4V6_PROTO_DIFF + vi->vid);
 	} else {
 		struct ethhdr eh;
 
@@ -466,9 +482,19 @@ static struct packet_type yavlan_base_ptype;
 static struct packet_type yavlan_ext_ptype[YAVLAN_LIST_SIZE];
 static size_t yavlan_ext_ptype_count = 0;
 
+static inline bool __yavlan_ext_ptype_exists(unsigned short proto_id)
+{
+	int j;
+	for (j = 0; j < yavlan_ext_ptype_count; j++) {
+		if (proto_id == ntohs(yavlan_ext_ptype[j].type))
+			return true;
+	}
+	return false;
+}
+
 int __init yavlan_init(void)
 {
-	int err = -EINVAL, rc, i, j;
+	int err = -EINVAL, rc, i;
 
 	/* Check parameter 'proto', expecting a valid Ethernet protocol. */
 	if (base_proto_id < 0x100) {
@@ -496,29 +522,47 @@ int __init yavlan_init(void)
 	yavlan_base_ptype.func = yavlan_base_rcv;
 	yavlan_base_ptype.dev = NULL;
 	dev_add_pack(&yavlan_base_ptype);
+
 	if (enable_packip) {
 		for (i = 0; i < yavlan_list_count; i++) {
 			unsigned short proto_id = base_proto_id + yavlan_list[i]->vid;
-			struct packet_type *__pt = &yavlan_ext_ptype[yavlan_ext_ptype_count];
+			struct packet_type *__pt = NULL;
 
 			/* To avoid duplicate hooking for a single protocol type. */
-			for (j = 0; j < yavlan_ext_ptype_count; j++) {
-				if (proto_id == ntohs(yavlan_ext_ptype[j].type)) {
-					__pt = NULL;
-					break;
-				}
-			}
-			if (__pt == NULL)
+			if (__yavlan_ext_ptype_exists(proto_id))
 				continue;
-
-			__pt->type = htons(base_proto_id + yavlan_list[i]->vid);
+			if (yavlan_ext_ptype_count >= YAVLAN_LIST_SIZE) {
+				printk(KERN_WARNING "YaVLAN: Too many VLAN definitions, ignored more.\n");
+				break;
+			}
+			__pt = &yavlan_ext_ptype[yavlan_ext_ptype_count++];
+			__pt->type = htons(proto_id);
 			__pt->func = yavlan_ext_rcv;
 			__pt->dev = NULL;
 			dev_add_pack(__pt);
-
-			yavlan_ext_ptype_count++;
 		}
 	}
+
+	if (enable_packip6) {
+		for (i = 0; i < yavlan_list_count; i++) {
+			unsigned short proto_id = base_proto_id - PACKIP_V4V6_PROTO_DIFF +
+					yavlan_list[i]->vid;
+			struct packet_type *__pt = NULL;
+
+			if (__yavlan_ext_ptype_exists(proto_id))
+				continue;
+			if (yavlan_ext_ptype_count >= YAVLAN_LIST_SIZE) {
+				printk(KERN_WARNING "YaVLAN: Too many VLAN definitions, ignored more.\n");
+				break;
+			}
+			__pt = &yavlan_ext_ptype[yavlan_ext_ptype_count++];
+			__pt->type = htons(proto_id);
+			__pt->func = yavlan_ext_rcv;
+			__pt->dev = NULL;
+			dev_add_pack(__pt);
+		}
+	}
+
 
 	printk(KERN_INFO "YaVLAN - Yet another VLAN implementation\n");
 	return 0;
@@ -530,9 +574,9 @@ out:
 
 void __exit yavlan_exit(void)
 {
-	if (enable_packip) {
+	if (enable_packip || enable_packip6) {
 		int i;
-		for (i = 0; i < yavlan_list_count; i++) {
+		for (i = 0; i < yavlan_ext_ptype_count; i++) {
 			struct packet_type *__pt = &yavlan_ext_ptype[i];
 			if (__pt->func == NULL)
 				continue;
