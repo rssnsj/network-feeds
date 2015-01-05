@@ -356,14 +356,6 @@ static int hooked_dev_event(struct notifier_block *unused,
 			if (vi->vlan_dev->mtu > dev->mtu)
 				dev_set_mtu(vi->vlan_dev, dev->mtu);
 			break;
-		case NETDEV_UP:
-			if (!(vi->vlan_dev->flags & IFF_UP))
-				dev_change_flags(vi->vlan_dev, vi->vlan_dev->flags | IFF_UP);
-			break;
-		case NETDEV_DOWN:
-			if ((vi->vlan_dev->flags & IFF_UP))
-				dev_change_flags(vi->vlan_dev, vi->vlan_dev->flags & ~IFF_UP);
-			break;
 		}
 	}
 
