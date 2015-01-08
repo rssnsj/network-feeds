@@ -47,10 +47,10 @@ cipher:value("seed-cfb")
 -- timeout = s:option(Value, "timeout", translate("Timeout"))
 -- timeout.optional = false
 
-proxy_mode = s:option(ListValue, "proxy_mode", translate("Proxy Mode"))
-proxy_mode:value("G")
-proxy_mode:value("S")
-proxy_mode:value("M")
+proxy_mode = s:option(ListValue, "proxy_mode", translate("Proxy Range"))
+proxy_mode:value("G", translate("To All Public IPs"))
+proxy_mode:value("S", translate("To All Overseas IPs"))
+proxy_mode:value("M", translate("Smart Mode w/ GFW-list"))
 
 safe_dns = s:option(Value, "safe_dns", translate("Safe DNS"))
 safe_dns.optional = false

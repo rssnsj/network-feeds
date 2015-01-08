@@ -1,6 +1,6 @@
 
 config shadowsocks
-	option enabled '1'
+	option enabled '0'
 	option server '17.25.25.25'
 	option server_port '7412'
 	option password 'UxtILsG8'

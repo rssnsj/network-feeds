@@ -26,7 +26,10 @@ start()
 	local ss_proxy_mode=`uci get shadowsocks.@shadowsocks[0].proxy_mode`
 
 	# -----------------------------------------------------------------
-	[ "$ss_enabled" = 0 ] && return 1
+	if [ "$ss_enabled" = 0 ]; then
+		echo "WARNING: Shadowsocks is disabled."
+		return 1
+	fi
 
 	if [ -z "$ss_server_addr" -o -z "$ss_server_port" ]; then
 		echo "WARNING: Shadowsocks not fully configured, not starting."

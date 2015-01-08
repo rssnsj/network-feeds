@@ -20,6 +20,10 @@ define Package/shadowsocks-tools
   DEPENDS:=+ipset-lists +shadowsocks-libev
 endef
 
+define Package/shadowsocks-tools/conffiles
+/etc/config/shadowsocks
+endef
+
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
 endef
