@@ -1,12 +1,13 @@
 #!/bin/sh /etc/rc.common
+# Copyright (C) 2014 Justin Liu <rssnsj@gmail.com>
+
+START=96
 
 #
 # Data source of /etc/gfwlist.list:
 #  https://github.com/zhiyi7/ddwrt/blob/master/jffs/vpn/dnsmasq-gfw.txt
 #  http://code.google.com/p/autoproxy-gfwlist/
 #
-
-START=96
 
 if [ -f /etc/default/ss-redir.defs.sh ]; then
 	. /etc/default/ss-redir.defs.sh
