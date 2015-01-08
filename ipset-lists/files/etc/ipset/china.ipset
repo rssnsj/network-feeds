@@ -394,6 +394,8 @@ add china 43.228.132.0/22
 add china 43.228.136.0/22
 add china 43.228.148.0/22
 add china 43.228.152.0/22
+add china 43.228.180.0/22
+add china 43.228.188.0/22
 add china 43.236.0.0/22
 add china 43.236.4.0/22
 add china 43.236.8.0/22
@@ -1954,6 +1956,8 @@ add china 103.47.116.0/22
 add china 103.47.120.0/22
 add china 103.47.136.0/22
 add china 103.47.140.0/22
+add china 103.47.200.0/22
+add china 103.47.212.0/22
 add china 103.224.40.0/22
 add china 103.224.44.0/22
 add china 103.224.60.0/22
