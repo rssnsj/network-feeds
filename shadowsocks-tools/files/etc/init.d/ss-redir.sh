@@ -24,7 +24,7 @@ start()
 {
 	[ "$SS_DISABLED" = Y ] && return 1
 	if [ -z "$SS_SERVER_ADDR" -o -z "$SS_SERVER_PORT" ]; then
-		echo "*** Server address or port are not defined, aborted."
+		echo "WARNING: Shadowsocks server address is not defined, not starting it."
 		return 1
 	fi
 
