@@ -9,13 +9,6 @@ START=96
 #  http://code.google.com/p/autoproxy-gfwlist/
 #
 
-if [ -f /etc/default/ss-redir.defs.sh ]; then
-	. /etc/default/ss-redir.defs.sh
-else
-	echo "*** Parameter definition file '/etc/default/ss-redir.defs.sh' does not exist."
-	exit 1
-fi
-
 SS_REDIR_PORT=7070
 SS_REDIR_PIDFILE=/var/run/ss-redir-go.pid 
 DNSMASQ_PORT=7053
@@ -23,6 +16,13 @@ DNSMASQ_PIDFILE=/var/run/dnsmasq-go.pid
 
 start()
 {
+	if [ -f /etc/default/ss-redir.defs.sh ]; then
+		. /etc/default/ss-redir.defs.sh
+	else
+		echo "*** Parameter definition file '/etc/default/ss-redir.defs.sh' does not exist."
+		return 1
+	fi
+
 	[ "$SS_DISABLED" = Y ] && return 1
 	if [ -z "$SS_SERVER_ADDR" -o -z "$SS_SERVER_PORT" ]; then
 		echo "WARNING: Shadowsocks not fully configured. Please edit /etc/default/ss-redir.defs.sh."
