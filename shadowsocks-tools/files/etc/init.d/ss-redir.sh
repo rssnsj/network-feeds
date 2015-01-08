@@ -59,8 +59,9 @@ start()
 			iptables -t nat -A shadowsocks_pre -m set --match-set china dst -j RETURN
 			;;
 		M)
-			ipset create gfwlist hash:net maxelem 65536
+			ipset create gfwlist hash:ip maxelem 65536
 			iptables -t nat -A shadowsocks_pre -m set ! --match-set gfwlist dst -j RETURN
+			iptables -t nat -A shadowsocks_pre -m set --match-set china dst -j RETURN
 			;;
 	esac
 	local subnet
