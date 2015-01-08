@@ -1,0 +1,12 @@
+
+config shadowsocks
+	option enabled '1'
+	option server '17.25.25.25'
+	option server_port '7412'
+	option password 'UxtILsG8'
+	option method 'table'
+	option timeout '60'
+	option proxy_mode 'M'
+	option safe_dns '223.5.5.5'
+	option safe_dns_port '53'
+

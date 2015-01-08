@@ -1,6 +1,9 @@
 --[[
---Shadowsocks Client configuration page. Made by 981213
---
+Shadowsocks LuCI Configuration Page.
+References:
+ https://github.com/ravageralpha/my_openwrt_mod  - by RA-MOD
+ http://www.v2ex.com/t/139438  - by imcczy
+ https://github.com/rssnsj/openwrt-feeds  - by Justin Liu
 ]]--
 
 local fs = require "nixio.fs"
@@ -18,15 +21,8 @@ server = s:option(Value, "server", translate("Server Address"))
 server.optional = false
 
 server_port = s:option(Value, "server_port", translate("Server Port"))
-server_port.datatype = "range(0,65535)"
+server_port.datatype = "range(1,65535)"
 server_port.optional = false
-
-local_port = s:option(Value, "local_port", translate("Local Port"))
-local_port.datatype = "range(0,65535)"
-local_port.optional = false
-
-timeout = s:option(Value, "timeout", translate("Timeout"))
-timeout.optional = false
 
 password = s:option(Value, "password", translate("Password"))
 password.password = true
@@ -48,14 +44,24 @@ cipher:value("idea-cfb")
 cipher:value("rc2-cfb")
 cipher:value("seed-cfb")
 
-cipher = s:option(ListValue, "fast_open", translate("fast_open"))
-cipher:value("false")
-cipher:value("true")
+-- timeout = s:option(Value, "timeout", translate("Timeout"))
+-- timeout.optional = false
 
---[[
+proxy_mode = s:option(ListValue, "proxy_mode", translate("Proxy Mode"))
+proxy_mode:value("G")
+proxy_mode:value("S")
+proxy_mode:value("M")
+
+safe_dns = s:option(Value, "safe_dns", translate("Safe DNS"))
+safe_dns.optional = false
+
+safe_dns_port = s:option(Value, "safe_dns_port", translate("Safe DNS Port"))
+safe_dns_port.datatype = "range(1,65535)"
+safe_dns_port.optional = false
+
 local apply = luci.http.formvalue("cbi.apply")
 if apply then
-	os.execute("/etc/init.d/shadowsocks restart &")
+	os.execute("/etc/init.d/ss-redir.sh restart &")
 end
-]]--
+
 return m

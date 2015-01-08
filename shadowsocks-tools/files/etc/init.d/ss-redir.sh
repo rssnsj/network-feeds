@@ -16,21 +16,25 @@ DNSMASQ_PIDFILE=/var/run/dnsmasq-go.pid
 
 start()
 {
-	if [ -f /etc/default/ss-redir.defs.sh ]; then
-		. /etc/default/ss-redir.defs.sh
-	else
-		echo "*** Parameter definition file '/etc/default/ss-redir.defs.sh' does not exist."
+	local ss_enabled=`uci get shadowsocks.@shadowsocks[0].enabled 2>/dev/null`
+	local ss_server_addr=`uci get shadowsocks.@shadowsocks[0].server`
+	local ss_server_port=`uci get shadowsocks.@shadowsocks[0].server_port`
+	local ss_password=`uci get shadowsocks.@shadowsocks[0].password`
+	local ss_method=`uci get shadowsocks.@shadowsocks[0].method`
+	local ss_safe_dns=`uci get shadowsocks.@shadowsocks[0].safe_dns`
+	local ss_safe_dns_port=`uci get shadowsocks.@shadowsocks[0].safe_dns_port`
+	local ss_proxy_mode=`uci get shadowsocks.@shadowsocks[0].proxy_mode`
+
+	# -----------------------------------------------------------------
+	[ "$ss_enabled" = 0 ] && return 1
+
+	if [ -z "$ss_server_addr" -o -z "$ss_server_port" ]; then
+		echo "WARNING: Shadowsocks not fully configured, not starting."
 		return 1
 	fi
 
-	[ "$SS_DISABLED" = Y ] && return 1
-	if [ -z "$SS_SERVER_ADDR" -o -z "$SS_SERVER_PORT" ]; then
-		echo "WARNING: Shadowsocks not fully configured. Please edit /etc/default/ss-redir.defs.sh."
-		return 1
-	fi
-
-	[ -z "$SS_PROXY_MODE" ] && SS_PROXY_MODE=S
-	[ -z "$SS_SERVER_METHOD" ] && SS_SERVER_METHOD=table
+	[ -z "$ss_proxy_mode" ] && ss_proxy_mode=S
+	[ -z "$ss_method" ] && ss_method=table
 	# Get LAN settings as default parameters
 	[ -f /lib/functions/network.sh ] && . /lib/functions/network.sh
 	[ -z "$COVERED_SUBNETS" ] && network_get_subnet COVERED_SUBNETS lan
@@ -38,8 +42,8 @@ start()
 
 	# -----------------------------------------------------------------
 	###### shadowsocks ######
-	ss-redir -b:: -l$SS_REDIR_PORT -s$SS_SERVER_ADDR -p$SS_SERVER_PORT \
-		-k"$SS_SERVER_PASSWORD" -m$SS_SERVER_METHOD -f $SS_REDIR_PIDFILE || return 1
+	ss-redir -b:: -l$SS_REDIR_PORT -s$ss_server_addr -p$ss_server_port \
+		-k"$ss_password" -m$ss_method -f $SS_REDIR_PIDFILE || return 1
 
 	# IPv4 firewall rules
 	iptables -t nat -N shadowsocks_pre
@@ -52,8 +56,8 @@ start()
 		iptables -t nat -A shadowsocks_pre -d 127.0.0.0/8 -j RETURN
 		iptables -t nat -A shadowsocks_pre -d 224.0.0.0/3 -j RETURN
 	}
-	iptables -t nat -A shadowsocks_pre -d $SS_SERVER_ADDR -j RETURN
-	case "$SS_PROXY_MODE" in
+	iptables -t nat -A shadowsocks_pre -d $ss_server_addr -j RETURN
+	case "$ss_proxy_mode" in
 		G) : ;;
 		S)
 			iptables -t nat -A shadowsocks_pre -m set --match-set china dst -j RETURN
@@ -80,13 +84,14 @@ EOF
 
 	# -----------------------------------------------------------------
 	###### Anti-pollution configuration ######
-	if [ -n "$SAFE_DNS_SERVER" ]; then
+	if [ -n "$ss_safe_dns" ]; then
+		[ -n "$ss_safe_dns_port" ] && ss_safe_dns="$ss_safe_dns#$ss_safe_dns_port"
 		(
 			local gfw_host
 			cat /etc/gfwlist.list |
 			while read gfw_host; do
 				[ -z "$gfw_host" ] && continue
-				echo "server=/$gfw_host/$SAFE_DNS_SERVER"
+				echo "server=/$gfw_host/$ss_safe_dns"
 			done
 		) > /var/etc/dnsmasq-go.d/01-pollution.conf
 	else
@@ -95,7 +100,7 @@ EOF
 
 	# -----------------------------------------------------------------
 	###### dnsmasq-to-ipset configuration ######
-	if [ "$SS_PROXY_MODE" = M ]; then
+	if [ "$ss_proxy_mode" = M ]; then
 		(
 			local gfw_host
 			cat /etc/gfwlist.list |
