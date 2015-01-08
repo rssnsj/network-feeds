@@ -55,8 +55,13 @@ start()
 	iptables -t nat -A shadowsocks_pre -d $SS_SERVER_ADDR -j RETURN
 	case "$SS_PROXY_MODE" in
 		G) : ;;
-		S) iptables -t nat -A shadowsocks_pre -m set --match-set china dst -j RETURN;;
-		M) iptables -t nat -A shadowsocks_pre ! -m set --match-set gfwlist dst -j RETURN;;
+		S)
+			iptables -t nat -A shadowsocks_pre -m set --match-set china dst -j RETURN
+			;;
+		M)
+			ipset create gfwlist hash:net maxelem 65536
+			iptables -t nat -A shadowsocks_pre -m set ! --match-set gfwlist dst -j RETURN
+			;;
 	esac
 	local subnet
 	for subnet in $COVERED_SUBNETS; do
@@ -95,7 +100,7 @@ EOF
 			cat /etc/gfwlist.list |
 			while read gfw_host; do
 				[ -z "$gfw_host" ] && continue
-				echo "server=/$gfw_host/$SAFE_DNS_SERVER"
+				echo "ipset=/$gfw_host/gfwlist"
 			done
 		) > /var/etc/dnsmasq-go.d/02-ipset.conf
 
@@ -121,8 +126,6 @@ EOF
 
 stop()
 {
-	[ "$SS_DISABLED" = Y ] && return 1
-
 	if iptables -t nat -F dnsmasq_go_pre 2>/dev/null; then
 		iptables -t nat -D PREROUTING -p udp -j dnsmasq_go_pre
 		iptables -t nat -X dnsmasq_go_pre
@@ -139,6 +142,8 @@ stop()
 		iptables -t nat -D PREROUTING -p tcp -j shadowsocks_pre 2>/dev/null
 		iptables -t nat -X shadowsocks_pre 2>/dev/null
 	fi
+
+	ipset destroy gfwlist 2>/dev/null
 
 	if [ -f $SS_REDIR_PIDFILE ]; then
 		kill -9 `cat $SS_REDIR_PIDFILE`
