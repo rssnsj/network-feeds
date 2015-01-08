@@ -24,7 +24,7 @@ start()
 {
 	[ "$SS_DISABLED" = Y ] && return 1
 	if [ -z "$SS_SERVER_ADDR" -o -z "$SS_SERVER_PORT" ]; then
-		echo "WARNING: Shadowsocks server address is not defined, not starting it."
+		echo "WARNING: Shadowsocks not fully configured. Please edit /etc/default/ss-redir.defs.sh."
 		return 1
 	fi
 
