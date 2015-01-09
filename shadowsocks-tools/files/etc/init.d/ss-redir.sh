@@ -13,18 +13,22 @@ SS_REDIR_PORT=7070
 SS_REDIR_PIDFILE=/var/run/ss-redir-go.pid 
 DNSMASQ_PORT=7053
 DNSMASQ_PIDFILE=/var/run/dnsmasq-go.pid
+PDNSD_LOCAL_PORT=7453
 
 start()
 {
 	local ss_enabled=`uci get shadowsocks.@shadowsocks[0].enabled 2>/dev/null`
 	local ss_server_addr=`uci get shadowsocks.@shadowsocks[0].server`
 	local ss_server_port=`uci get shadowsocks.@shadowsocks[0].server_port`
-	local ss_password=`uci get shadowsocks.@shadowsocks[0].password`
+	local ss_password=`uci get shadowsocks.@shadowsocks[0].password 2>/dev/null`
 	local ss_method=`uci get shadowsocks.@shadowsocks[0].method`
-	local ss_timeout=`uci get shadowsocks.@shadowsocks[0].timeout`
-	local ss_safe_dns=`uci get shadowsocks.@shadowsocks[0].safe_dns`
-	local ss_safe_dns_port=`uci get shadowsocks.@shadowsocks[0].safe_dns_port`
+	local ss_timeout=`uci get shadowsocks.@shadowsocks[0].timeout 2>/dev/null`
+	local ss_safe_dns=`uci get shadowsocks.@shadowsocks[0].safe_dns 2>/dev/null`
+	local ss_safe_dns_port=`uci get shadowsocks.@shadowsocks[0].safe_dns_port 2>/dev/null`
+	local ss_safe_dns_tcp=`uci get shadowsocks.@shadowsocks[0].safe_dns_tcp 2>/dev/null`
 	local ss_proxy_mode=`uci get shadowsocks.@shadowsocks[0].proxy_mode`
+
+	/etc/init.d/pdnsd disable 2>/dev/null
 
 	# -----------------------------------------------------------------
 	if [ "$ss_enabled" = 0 ]; then
@@ -40,6 +44,7 @@ start()
 	[ -z "$ss_proxy_mode" ] && ss_proxy_mode=S
 	[ -z "$ss_method" ] && ss_method=table
 	[ -z "$ss_timeout" ] && ss_timeout=60
+	[ -z "$ss_safe_dns_port" ] && ss_safe_dns_port=53
 	# Get LAN settings as default parameters
 	[ -f /lib/functions/network.sh ] && . /lib/functions/network.sh
 	[ -z "$COVERED_SUBNETS" ] && network_get_subnet COVERED_SUBNETS lan
@@ -81,22 +86,32 @@ start()
 
 	# -----------------------------------------------------------------
 	###### dnsmasq main configuration ######
+	mkdir -p /var/etc/dnsmasq-go.d
 	cat > /var/etc/dnsmasq-go.conf <<EOF
 conf-dir=/var/etc/dnsmasq-go.d
 EOF
 	[ -f /tmp/resolv.conf.auto ] && echo "resolv-file=/tmp/resolv.conf.auto" >> /var/etc/dnsmasq-go.conf
-	mkdir -p /var/etc/dnsmasq-go.d
 
 	# -----------------------------------------------------------------
 	###### Anti-pollution configuration ######
-	if [ -n "$ss_safe_dns" ]; then
-		[ -n "$ss_safe_dns_port" ] && ss_safe_dns="$ss_safe_dns#$ss_safe_dns_port"
+	if [ "$ss_safe_dns_tcp" = 1 ]; then
+		# Just use 8.8.x.x when $ss_safe_dns left empty
+		start_pdnsd "$ss_safe_dns"
 		(
 			local gfw_host
 			cat /etc/gfwlist.list |
 			while read gfw_host; do
 				[ -z "$gfw_host" ] && continue
-				echo "server=/$gfw_host/$ss_safe_dns"
+				echo "server=/$gfw_host/127.0.0.1#$PDNSD_LOCAL_PORT"
+			done
+		) > /var/etc/dnsmasq-go.d/01-pollution.conf
+	elif [ -n "$ss_safe_dns" ]; then
+		(
+			local gfw_host
+			cat /etc/gfwlist.list |
+			while read gfw_host; do
+				[ -z "$gfw_host" ] && continue
+				echo "server=/$gfw_host/$ss_safe_dns#$ss_safe_dns_port"
 			done
 		) > /var/etc/dnsmasq-go.d/01-pollution.conf
 	else
@@ -138,7 +153,7 @@ EOF
 stop()
 {
 	if iptables -t nat -F dnsmasq_go_pre 2>/dev/null; then
-		iptables -t nat -D PREROUTING -p udp -j dnsmasq_go_pre
+		while iptables -t nat -D PREROUTING -p udp -j dnsmasq_go_pre 2>/dev/null; do :; done
 		iptables -t nat -X dnsmasq_go_pre
 	fi
 
@@ -149,8 +164,10 @@ stop()
 	rm -f /var/etc/dnsmasq-go.conf
 	rm -rf /var/etc/dnsmasq-go.d
 
+	stop_pdnsd
+
 	if iptables -t nat -F shadowsocks_pre 2>/dev/null; then
-		iptables -t nat -D PREROUTING -p tcp -j shadowsocks_pre 2>/dev/null
+		while iptables -t nat -D PREROUTING -p tcp -j shadowsocks_pre 2>/dev/null; do :; done
 		iptables -t nat -X shadowsocks_pre 2>/dev/null
 	fi
 
@@ -160,5 +177,63 @@ stop()
 		kill -9 `cat $SS_REDIR_PIDFILE`
 		rm -f $SS_REDIR_PIDFILE
 	fi
+}
+
+# $1: upstream DNS server
+start_pdnsd()
+{
+	local safe_dns="$1"
+
+	local tcp_dns_list="8.8.8.8,8.8.4.4"
+	[ -n "$safe_dns" ] && tcp_dns_list="$safe_dns,$tcp_dns_list"
+
+	killall -9 pdnsd 2>/dev/null && sleep 1
+	mkdir -p /var/etc /var/pdnsd
+	cat > /var/etc/pdnsd.conf <<EOF
+global {
+	perm_cache=256;
+	cache_dir="/var/pdnsd";
+	pid_file = /var/run/pdnsd.pid;
+	run_as="nobody";
+	server_ip = 127.0.0.1;
+	server_port = $PDNSD_LOCAL_PORT;
+	status_ctl = on;
+	query_method = tcp_only;
+	min_ttl=15m;
+	max_ttl=1w;
+	timeout=10;
+	neg_domain_pol=on;
+	proc_limit=2;
+	procq_limit=8;
+}
+server {
+	label= "fwxxx";
+	ip = $tcp_dns_list;
+	timeout=6;
+	uptest=none;
+	interval=10m;
+	purge_cache=off;
+}
+EOF
+
+	/usr/sbin/pdnsd -c /var/etc/pdnsd.conf -d
+
+	# Access TCP DNS server through Shadowsocks tunnel
+	if iptables -t nat -N pdnsd_output; then
+		iptables -t nat -I pdnsd_output -m set --match-set china dst -j RETURN
+		iptables -t nat -I pdnsd_output -p tcp -j REDIRECT --to $SS_REDIR_PORT
+	fi
+	iptables -t nat -I OUTPUT -p tcp --dport 53 -j pdnsd_output
+}
+
+stop_pdnsd()
+{
+	if iptables -t nat -F pdnsd_output 2>/dev/null; then
+		while iptables -t nat -D OUTPUT -p tcp --dport 53 -j pdnsd_output 2>/dev/null; do :; done
+		iptables -t nat -X pdnsd_output
+	fi
+	killall -9 pdnsd 2>/dev/null
+	rm -rf /var/pdnsd
+	rm -f /var/etc/pdnsd.conf
 }
 

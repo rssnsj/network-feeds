@@ -19,13 +19,14 @@ switch.rmempty = false
 
 server = s:option(Value, "server", translate("Server Address"))
 server.optional = false
+server.rmempty = false
 
 server_port = s:option(Value, "server_port", translate("Server Port"))
 server_port.datatype = "range(1,65535)"
 server_port.optional = false
+server_port.rmempty = false
 
 password = s:option(Value, "password", translate("Password"))
-password.rmempty = false
 password.password = true
 
 method = s:option(ListValue, "method", translate("Encryption Method"))
@@ -55,15 +56,18 @@ proxy_mode:value("G", translate("All Public IPs"))
 proxy_mode:value("S", translate("All non-China IPs"))
 proxy_mode:value("M", translate("GFW-list based Smart Proxy"))
 
-safe_dns = s:option(Value, "safe_dns", translate("Safe DNS"))
+safe_dns = s:option(Value, "safe_dns", translate("Safe DNS IP"))
 safe_dns.datatype = "ip4addr"
 safe_dns.optional = false
 
 safe_dns_port = s:option(Value, "safe_dns_port", translate("Safe DNS Port"),
-	translate("Available DNS with port other than 53 would avoid GFW pollution."))
+	translate("Foreign DNS IP with port 53 in UDP might be polluted."))
 safe_dns_port.datatype = "range(1,65535)"
 safe_dns_port.placeholder = "53"
 safe_dns_port.optional = false
+
+safe_dns_tcp = s:option(Flag, "safe_dns_tcp", translate("Safe DNS uses TCP"))
+safe_dns_tcp.rmempty = false
 
 local apply = luci.http.formvalue("cbi.apply")
 if apply then

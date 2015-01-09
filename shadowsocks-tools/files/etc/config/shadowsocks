@@ -7,6 +7,7 @@ config shadowsocks
 	option method 'table'
 	option timeout '60'
 	option proxy_mode 'M'
-	option safe_dns '223.5.5.5'
+	option safe_dns '8.8.8.8'
 	option safe_dns_port '53'
+	option safe_dns_tcp '0'
 
