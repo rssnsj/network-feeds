@@ -1,9 +1,9 @@
 
 config shadowsocks
 	option enabled '0'
-	option server '17.25.25.25'
-	option server_port '7412'
-	option password 'UxtILsG8'
+	option server '17.17.17.17'
+	option server_port '1717'
+	option password 'WaWaWaWa'
 	option method 'table'
 	option proxy_mode 'M'
 	option safe_dns_tcp '1'

@@ -19,6 +19,7 @@ switch.rmempty = false
 
 server = s:option(Value, "server", translate("Server Address"))
 server.optional = false
+server.datatype = "host"
 server.rmempty = false
 
 server_port = s:option(Value, "server_port", translate("Server Port"))
@@ -56,17 +57,19 @@ proxy_mode:value("G", translate("All Public IPs"))
 proxy_mode:value("S", translate("All non-China IPs"))
 proxy_mode:value("M", translate("GFW-list based Smart Proxy"))
 
-safe_dns = s:option(Value, "safe_dns", translate("Safe DNS IP"))
+safe_dns = s:option(Value, "safe_dns", translate("Safe DNS"),
+	translate("8.8.8.8, 8.8.4.4 will be used by default."))
 safe_dns.datatype = "ip4addr"
 safe_dns.optional = false
 
 safe_dns_port = s:option(Value, "safe_dns_port", translate("Safe DNS Port"),
-	translate("Foreign DNS IP with port 53 in UDP might be polluted."))
+	translate("Foreign DNS on UDP port 53 might be polluted."))
 safe_dns_port.datatype = "range(1,65535)"
 safe_dns_port.placeholder = "53"
 safe_dns_port.optional = false
 
-safe_dns_tcp = s:option(Flag, "safe_dns_tcp", translate("Safe DNS uses TCP"))
+safe_dns_tcp = s:option(Flag, "safe_dns_tcp", translate("DNS uses TCP"),
+	translate("TCP DNS queries will be done over Shadowsocks tunnel."))
 safe_dns_tcp.rmempty = false
 
 local apply = luci.http.formvalue("cbi.apply")
