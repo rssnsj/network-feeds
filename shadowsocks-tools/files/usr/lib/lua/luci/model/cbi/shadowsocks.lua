@@ -8,8 +8,8 @@ References:
 
 local fs = require "nixio.fs"
 
-m = Map("shadowsocks", translate("Shadowsocks Client"),
-        translatef("A fast tunnel proxy that help you get through firewalls.<br />Here you can setup a Shadowsocks Client on your router, and you should have a remote server."))
+m = Map("shadowsocks", translate("Shadowsocks Transparent Proxy"),
+	translatef("A fast tunnel proxy that help you get through firewalls.<br />Here you can setup a Shadowsocks Proxy on your router, and you should have a remote server."))
 
 s = m:section(TypedSection, "shadowsocks", translate("Settings"))
 s.anonymous = true
@@ -25,38 +25,44 @@ server_port.datatype = "range(1,65535)"
 server_port.optional = false
 
 password = s:option(Value, "password", translate("Password"))
+password.rmempty = false
 password.password = true
 
-cipher = s:option(ListValue, "method", translate("Cipher Method"))
-cipher:value("table")
-cipher:value("rc4")
-cipher:value("rc4-md5")
-cipher:value("aes-128-cfb")
-cipher:value("aes-192-cfb")
-cipher:value("aes-256-cfb")
-cipher:value("bf-cfb")
-cipher:value("cast5-cfb")
-cipher:value("des-cfb")
-cipher:value("camellia-128-cfb")
-cipher:value("camellia-192-cfb")
-cipher:value("camellia-256-cfb")
-cipher:value("idea-cfb")
-cipher:value("rc2-cfb")
-cipher:value("seed-cfb")
+method = s:option(ListValue, "method", translate("Encryption Method"))
+method:value("table")
+method:value("rc4")
+method:value("rc4-md5")
+method:value("aes-128-cfb")
+method:value("aes-192-cfb")
+method:value("aes-256-cfb")
+method:value("bf-cfb")
+method:value("cast5-cfb")
+method:value("des-cfb")
+method:value("camellia-128-cfb")
+method:value("camellia-192-cfb")
+method:value("camellia-256-cfb")
+method:value("idea-cfb")
+method:value("rc2-cfb")
+method:value("seed-cfb")
 
--- timeout = s:option(Value, "timeout", translate("Timeout"))
--- timeout.optional = false
+timeout = s:option(Value, "timeout", translate("Timeout"))
+timeout.datatype = "range(0,10000)"
+timeout.placeholder = "60"
+timeout.optional = false
 
-proxy_mode = s:option(ListValue, "proxy_mode", translate("Proxy Range"))
-proxy_mode:value("G", translate("To All Public IPs"))
-proxy_mode:value("S", translate("To All Overseas IPs"))
-proxy_mode:value("M", translate("Smart Mode w/ GFW-list"))
+proxy_mode = s:option(ListValue, "proxy_mode", translate("Proxy Scope"))
+proxy_mode:value("G", translate("All Public IPs"))
+proxy_mode:value("S", translate("All non-China IPs"))
+proxy_mode:value("M", translate("GFW-list based Smart Proxy"))
 
 safe_dns = s:option(Value, "safe_dns", translate("Safe DNS"))
+safe_dns.datatype = "ip4addr"
 safe_dns.optional = false
 
-safe_dns_port = s:option(Value, "safe_dns_port", translate("Safe DNS Port"))
+safe_dns_port = s:option(Value, "safe_dns_port", translate("Safe DNS Port"),
+	translate("Available DNS with port other than 53 would avoid GFW pollution."))
 safe_dns_port.datatype = "range(1,65535)"
+safe_dns_port.placeholder = "53"
 safe_dns_port.optional = false
 
 local apply = luci.http.formvalue("cbi.apply")

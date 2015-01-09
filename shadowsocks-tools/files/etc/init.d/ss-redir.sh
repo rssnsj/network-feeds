@@ -21,6 +21,7 @@ start()
 	local ss_server_port=`uci get shadowsocks.@shadowsocks[0].server_port`
 	local ss_password=`uci get shadowsocks.@shadowsocks[0].password`
 	local ss_method=`uci get shadowsocks.@shadowsocks[0].method`
+	local ss_timeout=`uci get shadowsocks.@shadowsocks[0].timeout`
 	local ss_safe_dns=`uci get shadowsocks.@shadowsocks[0].safe_dns`
 	local ss_safe_dns_port=`uci get shadowsocks.@shadowsocks[0].safe_dns_port`
 	local ss_proxy_mode=`uci get shadowsocks.@shadowsocks[0].proxy_mode`
@@ -38,6 +39,7 @@ start()
 
 	[ -z "$ss_proxy_mode" ] && ss_proxy_mode=S
 	[ -z "$ss_method" ] && ss_method=table
+	[ -z "$ss_timeout" ] && ss_timeout=60
 	# Get LAN settings as default parameters
 	[ -f /lib/functions/network.sh ] && . /lib/functions/network.sh
 	[ -z "$COVERED_SUBNETS" ] && network_get_subnet COVERED_SUBNETS lan
@@ -46,7 +48,7 @@ start()
 	# -----------------------------------------------------------------
 	###### shadowsocks ######
 	ss-redir -b:: -l$SS_REDIR_PORT -s$ss_server_addr -p$ss_server_port \
-		-k"$ss_password" -m$ss_method -f $SS_REDIR_PIDFILE || return 1
+		-k"$ss_password" -m$ss_method -t$ss_timeout -f $SS_REDIR_PIDFILE || return 1
 
 	# IPv4 firewall rules
 	iptables -t nat -N shadowsocks_pre
