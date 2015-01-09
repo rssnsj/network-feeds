@@ -27,6 +27,9 @@ start()
 	local ss_safe_dns_port=`uci get shadowsocks.@shadowsocks[0].safe_dns_port 2>/dev/null`
 	local ss_safe_dns_tcp=`uci get shadowsocks.@shadowsocks[0].safe_dns_tcp 2>/dev/null`
 	local ss_proxy_mode=`uci get shadowsocks.@shadowsocks[0].proxy_mode`
+	# $covered_subnets, $local_addresses are not required
+	local covered_subnets=`uci get shadowsocks.@shadowsocks[0].covered_subnets 2>/dev/null`
+	local local_addresses=`uci get shadowsocks.@shadowsocks[0].local_addresses 2>/dev/null`
 
 	/etc/init.d/pdnsd disable 2>/dev/null
 
@@ -47,8 +50,8 @@ start()
 	[ -z "$ss_safe_dns_port" ] && ss_safe_dns_port=53
 	# Get LAN settings as default parameters
 	[ -f /lib/functions/network.sh ] && . /lib/functions/network.sh
-	[ -z "$COVERED_SUBNETS" ] && network_get_subnet COVERED_SUBNETS lan
-	[ -z "$LOCAL_ADDRESSES" ] && network_get_ipaddr LOCAL_ADDRESSES lan
+	[ -z "$covered_subnets" ] && network_get_subnet covered_subnets lan
+	[ -z "$local_addresses" ] && network_get_ipaddr local_addresses lan
 
 	# -----------------------------------------------------------------
 	###### shadowsocks ######
@@ -79,7 +82,7 @@ start()
 			;;
 	esac
 	local subnet
-	for subnet in $COVERED_SUBNETS; do
+	for subnet in $covered_subnets; do
 		iptables -t nat -A shadowsocks_pre -s $subnet -p tcp -j REDIRECT --to $SS_REDIR_PORT
 	done
 	iptables -t nat -I PREROUTING -p tcp -j shadowsocks_pre
@@ -142,7 +145,7 @@ EOF
 		iptables -t nat -F dnsmasq_go_pre
 		iptables -t nat -A dnsmasq_go_pre -p udp ! --dport 53 -j RETURN
 		local loc_addr
-		for loc_addr in $LOCAL_ADDRESSES; do
+		for loc_addr in $local_addresses; do
 			iptables -t nat -A dnsmasq_go_pre -d $loc_addr -p udp -j REDIRECT --to $DNSMASQ_PORT
 		done
 		iptables -t nat -I PREROUTING -p udp -j dnsmasq_go_pre
