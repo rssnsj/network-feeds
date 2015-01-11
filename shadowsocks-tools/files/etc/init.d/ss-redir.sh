@@ -1,5 +1,6 @@
 #!/bin/sh /etc/rc.common
 # Copyright (C) 2014 Justin Liu <rssnsj@gmail.com>
+# https://github.com/rssnsj/openwrt-feeds
 
 START=96
 
@@ -223,8 +224,8 @@ EOF
 
 	# Access TCP DNS server through Shadowsocks tunnel
 	if iptables -t nat -N pdnsd_output; then
-		iptables -t nat -I pdnsd_output -m set --match-set china dst -j RETURN
-		iptables -t nat -I pdnsd_output -p tcp -j REDIRECT --to $SS_REDIR_PORT
+		iptables -t nat -A pdnsd_output -m set --match-set china dst -j RETURN
+		iptables -t nat -A pdnsd_output -p tcp -j REDIRECT --to $SS_REDIR_PORT
 	fi
 	iptables -t nat -I OUTPUT -p tcp --dport 53 -j pdnsd_output
 }
