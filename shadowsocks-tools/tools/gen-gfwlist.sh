@@ -2,7 +2,9 @@
 
 GFWLIST_URL="http://autoproxy-gfwlist.googlecode.com/svn/trunk/gfwlist.txt"
 
-wget "$GFWLIST_URL" -O- | base64 -d > gfwlist.1
+[ -f gfwlist.txt ] || wget "$GFWLIST_URL"
+
+cat gfwlist.txt | base64 -d > gfwlist.1
 
 cat gfwlist.1 | 
 	sed 's#!.\+##; s#|##g; s#@##g; s#http:\/\/##; s#https:\/\/##;' |
