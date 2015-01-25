@@ -32,10 +32,11 @@ MODULE_PARM_DESC(packip6, "Encapsulate VID in Ethernet header for IPv6 to keep M
 
 struct yavlan_info {
 	unsigned short vid;
-	char phy_ifname[IFNAMSIZ];
-	char vlan_ifname[IFNAMSIZ];
 	struct net_device *phy_dev;
 	struct net_device *vlan_dev;
+	unsigned char peer_hwaddr[ETH_ALEN];
+	char phy_ifname[IFNAMSIZ];
+	char vlan_ifname[IFNAMSIZ];
 };
 
 #define PACKIP_V4V6_PROTO_DIFF  0x1000
@@ -98,23 +99,36 @@ static int yavlan_base_rcv(struct sk_buff *skb, struct net_device *dev,
 	if (!(vi = yavlan_get_by_phydev_vid(dev, vid)))
 		goto out;
 
-	/* Adjust MAC header pointer and overwrite VLAN tag. */
-	skb_push(skb, ETH_HLEN - VLAN_HLEN);
-	skb_reset_mac_header(skb);
+	if (proto != 0) {
+		/* Adjust MAC header pointer and overwrite VLAN tag. */
+		skb_push(skb, ETH_HLEN - VLAN_HLEN);
+		skb_reset_mac_header(skb);
 
-	if (unlikely(!pskb_may_pull(skb, ETH_HLEN)))
-		goto out;
-	memcpy(eth_hdr(skb)->h_dest, veh.h_dest, ETH_ALEN);
-	memcpy(eth_hdr(skb)->h_source, veh.h_source, ETH_ALEN);
-	eth_hdr(skb)->h_proto = proto;
+		if (unlikely(!pskb_may_pull(skb, ETH_HLEN)))
+			goto out;
+		memcpy(eth_hdr(skb)->h_dest, veh.h_dest, ETH_ALEN);
+		memcpy(eth_hdr(skb)->h_source, veh.h_source, ETH_ALEN);
+		eth_hdr(skb)->h_proto = proto;
 
-	/* Move back to real network header after stripping VLAN tag. */
-	skb_pull_rcsum(skb, ETH_HLEN);
-	skb_reset_network_header(skb);
-	skb_reset_transport_header(skb);
+		/* Move back to real network header after stripping VLAN tag. */
+		skb_pull_rcsum(skb, ETH_HLEN);
+		skb_reset_network_header(skb);
+		skb_reset_transport_header(skb);
+	} else {
+		if (unlikely(!pskb_may_pull(skb, VLAN_HLEN + ETH_HLEN)))
+			goto out;
+		skb_pull(skb, VLAN_HLEN);
+		skb_reset_mac_header(skb);
 
-	skb->dev = vi->vlan_dev;
+		skb_pull_rcsum(skb, ETH_HLEN);
+		skb_reset_network_header(skb);
+		skb_reset_transport_header(skb);
+
+		proto = eth_hdr(skb)->h_proto;
+	}
+
 	skb->protocol = proto;
+	skb->dev = vi->vlan_dev;
 	skb->ip_summed = CHECKSUM_NONE;
 	vi->vlan_dev->stats.rx_bytes += skb->len;
 	vi->vlan_dev->stats.rx_packets++;
@@ -174,37 +188,65 @@ struct yavlan_netdev_priv {
 
 #define vlan_netdev_to_vi(dev) (((struct yavlan_netdev_priv *)netdev_priv(dev))->vi)
 
-static int yavlan_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static struct sk_buff *__headroom_and_unshare(struct sk_buff *skb, unsigned headroom)
 {
-	struct yavlan_info *vi = vlan_netdev_to_vi(dev);
-
-	if (skb_headroom(skb) < VLAN_HLEN) {
-		struct sk_buff *__skb = skb_realloc_headroom(skb, VLAN_HLEN);
-		if (!__skb) {
-			dev->stats.tx_dropped++;
-			goto out;
-		}
+	if (skb_headroom(skb) < headroom) {
+		struct sk_buff *__skb = skb_realloc_headroom(skb, headroom);
 		kfree_skb(skb);
 		skb = __skb;
 	} else {
-		if (!(skb = skb_unshare(skb, GFP_ATOMIC))) {
-			dev->stats.tx_dropped++;
-			goto out;
-		}
+		skb = skb_unshare(skb, GFP_ATOMIC);
 	}
+
+	if (!skb)
+		return NULL;
 
 	skb_orphan(skb);
 	skb_dst_drop(skb);
 	nf_reset(skb);
-
 	skb_reset_mac_header(skb);
 
-	if (enable_packip && eth_hdr(skb)->h_proto == __constant_htons(ETH_P_IP)) {
+	return skb;
+}
+
+static int yavlan_start_xmit(struct sk_buff *skb, struct net_device *dev)
+{
+	struct yavlan_info *vi = vlan_netdev_to_vi(dev);
+
+	if (!is_zero_ether_addr(vi->peer_hwaddr)) {
+		/* Fixed peer address mode. */
+		struct ethhdr *__eh;
+
+		if (!(skb = __headroom_and_unshare(skb, VLAN_ETH_HLEN)))
+			goto out;
+
+		__eh = eth_hdr(skb);
+		skb_push(skb, VLAN_ETH_HLEN);
+		skb_reset_mac_header(skb);
+
+		/* Fill the outer VLAN header. */
+		memcpy(vlan_eth_hdr(skb)->h_dest, vi->peer_hwaddr, ETH_ALEN);
+		memcpy(vlan_eth_hdr(skb)->h_source, vi->phy_dev->dev_addr, ETH_ALEN);
+		vlan_eth_hdr(skb)->h_vlan_proto = htons(base_proto_id);
+		vlan_eth_hdr(skb)->h_vlan_TCI = htons(vi->vid);
+		/* NOTICE: Set it 0 here to let peer receive it in the correct mode. */
+		vlan_eth_hdr(skb)->h_vlan_encapsulated_proto = 0;
+	} else if (enable_packip && eth_hdr(skb)->h_proto == __constant_htons(ETH_P_IP)) {
+		/* IPv4 packing mode. */
+		if (!(skb = __headroom_and_unshare(skb, 0)))
+			goto out;
 		eth_hdr(skb)->h_proto = htons(base_proto_id + vi->vid);
 	} else if (enable_packip6 && eth_hdr(skb)->h_proto == __constant_htons(ETH_P_IPV6)) {
+		/* IPv6 packing mode. */
+		if (!(skb = __headroom_and_unshare(skb, 0)))
+			goto out;
 		eth_hdr(skb)->h_proto = htons(base_proto_id - PACKIP_V4V6_PROTO_DIFF + vi->vid);
 	} else {
+		/* Regular VLAN mode with custom ethernet protocol. */
 		struct ethhdr eh;
+
+		if (!(skb = __headroom_and_unshare(skb, VLAN_HLEN)))
+			goto out;
 
 		eh = *eth_hdr(skb);
 		skb_push(skb, VLAN_HLEN);
@@ -226,7 +268,6 @@ static int yavlan_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	return NETDEV_TX_OK;
 
 out:
-	kfree_skb(skb);
 	return NETDEV_TX_OK;
 }
 
@@ -400,27 +441,31 @@ static int generate_vlan_defs_by_param(const char *vlan_defs)
 
 	cp = __vlans;
 	do {
-		char *cp_vid = NULL, *cp_pname = NULL, *cp_vname = NULL;
+		char *cp_vid = NULL, *cp_pname = NULL, *cp_vname = NULL, *cp_peera = NULL;
 		unsigned vid = 0;
 		struct yavlan_info *vi;
 
-		/* VLAN id. */
+		/* @@@ VLAN id. */
 		cp_vid = cp;
 		if ((cp = strchr(cp, ','))) {
 			*(cp++) = '\0';
 		}
-
-		/* Physical interface name. */
+		/* @@@ Physical interface name. */
 		if (!(cp_pname = strchr(cp_vid, '@'))) {
 			printk(KERN_WARNING "YaVLAN: Invalid VLAN description: '%s'\n", cp_vid);
 			goto out;
 		}
 		*(cp_pname++) = '\0';
-		/* Custom VLAN interface name. */
-		if ((cp_vname = strchr(cp_pname, '@'))) {
+		/* @@@ Custom VLAN interface name. Empty name will be ignored. */
+		if (cp_pname && (cp_vname = strchr(cp_pname, '@'))) {
 			*(cp_vname++) = '\0';
 		}
+		/* @@@ Peer MAC address. */
+		if (cp_vname && (cp_peera = strchr(cp_vname, '@'))) {
+			*(cp_peera++) = '\0';
+		}
 
+		/* %%% Check VLAN id. */
 		if (sscanf(cp_vid, "%u", &vid) != 1) {
 			printk(KERN_WARNING "YaVLAN: Invalid VLAN ID: '%s'\n", cp_vid);
 			goto out;
@@ -430,7 +475,7 @@ static int generate_vlan_defs_by_param(const char *vlan_defs)
 			goto out;
 		}
 
-		/* Duplication check. */
+		/* %%% Check physical interface name, with duplication check. */
 		if (yavlan_get_by_phyname_vid(cp_pname, (unsigned short)vid)) {
 			printk(KERN_WARNING "YaVLAN: Duplicate VLAN definition: %u@%s\n",
 					vid, cp_pname);
@@ -446,12 +491,27 @@ static int generate_vlan_defs_by_param(const char *vlan_defs)
 		memset(vi, 0x0, sizeof(*vi));
 		vi->vid = (unsigned short)vid;
 		strncpy(vi->phy_ifname, cp_pname, IFNAMSIZ);
-		if (cp_vname) {
+
+		/* %%% Check custom VLAN interface name and apply. */
+		if (cp_vname && strlen(cp_vname) > 0) {
 			strncpy(vi->vlan_ifname, cp_vname, IFNAMSIZ);
 		} else {
 			snprintf(vi->vlan_ifname, IFNAMSIZ, "%s-%u", vi->phy_ifname, vi->vid);
 		}
 
+		/* %%% Check peer address and apply. */
+		if (cp_peera && strlen(cp_peera) > 0) {
+			if (sscanf(cp_peera, "%2hhx:%2hhx:%2hhx:%2hhx:%2hhx:%2hhx",
+				&vi->peer_hwaddr[0], &vi->peer_hwaddr[1], &vi->peer_hwaddr[2],
+				&vi->peer_hwaddr[3], &vi->peer_hwaddr[4], &vi->peer_hwaddr[5]) != 6 ||
+				is_zero_ether_addr(vi->peer_hwaddr)) {
+				printk(KERN_WARNING "YaVLAN: Invalid MAC address: %s\n", cp_peera);
+				goto out;
+			}
+		} else {
+			memset(vi->peer_hwaddr, 0x0, ETH_ALEN);
+		}
+	
 		if (yavlan_list_count >= YAVLAN_LIST_SIZE) {
 			printk(KERN_WARNING "YaVLAN: VLAN definition list is full\n");
 			kfree(vi);
@@ -588,5 +648,5 @@ module_exit(yavlan_exit);
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Jianying Liu");
 MODULE_DESCRIPTION("YaVLAN - Yet another VLAN implementation");
-MODULE_VERSION("0.0.1");
+MODULE_VERSION("0.1.0");
 
