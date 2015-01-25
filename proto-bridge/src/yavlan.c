@@ -169,9 +169,10 @@ static int yavlan_ext_rcv(struct sk_buff *skb, struct net_device *dev,
 	skb->dev = vi->vlan_dev;
 	skb->protocol = real_proto;
 	skb->ip_summed = CHECKSUM_NONE;
-	vi->vlan_dev->stats.rx_bytes += skb->len;
-	vi->vlan_dev->stats.rx_packets++;
-	netif_rx(skb);
+	if (likely(netif_rx(skb) == NET_RX_SUCCESS)) {
+		vi->vlan_dev->stats.rx_bytes += skb->len;
+		vi->vlan_dev->stats.rx_packets++;
+	}
 
 	return 0;
 
