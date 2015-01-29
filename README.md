@@ -1,5 +1,5 @@
-# openwrt-feeds
-OpenWrt extension packages for special applications
+# network-feeds
+Network extensions for special applications in OpenWrt package format
 
 ### Components
 * ipset-lists: 'ipset' lists with China IP assignments (data from apnic.net)
