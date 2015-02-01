@@ -26,7 +26,7 @@ struct yavlan_info {
 	unsigned short vid;
 	struct net_device *phy_dev;
 	struct net_device *vlan_dev;
-	bool enable_packip;
+	bool disabled_packip;
 	unsigned char peer_hwaddr[ETH_ALEN];
 	char phy_ifname[IFNAMSIZ];
 	char vlan_ifname[IFNAMSIZ];
@@ -207,18 +207,8 @@ static int yavlan_start_xmit(struct sk_buff *skb, struct net_device *dev)
 {
 	struct yavlan_info *vi = vlan_netdev_to_vi(dev);
 
-	if (vi->enable_packip && eth_hdr(skb)->h_proto == __constant_htons(ETH_P_IP)) {
-		/* IPv4 packing mode. */
-		if (!(skb = __headroom_and_unshare(skb, 0)))
-			goto out;
-		eth_hdr(skb)->h_proto = htons(base_proto_id + vi->vid);
-	} else if (vi->enable_packip && eth_hdr(skb)->h_proto == __constant_htons(ETH_P_IPV6)) {
-		/* IPv6 packing mode. */
-		if (!(skb = __headroom_and_unshare(skb, 0)))
-			goto out;
-		eth_hdr(skb)->h_proto = htons(base_proto_id - PACKIP_V4V6_PROTO_DIFF + vi->vid);
-	} else if (!is_zero_ether_addr(vi->peer_hwaddr)) {
-		/* Fixed peer address mode. */
+	if (!is_zero_ether_addr(vi->peer_hwaddr)) {
+		/* Constant unicast peer address mode. */
 		struct ethhdr *__eh;
 
 		if (!(skb = __headroom_and_unshare(skb, VLAN_ETH_HLEN)))
@@ -235,6 +225,16 @@ static int yavlan_start_xmit(struct sk_buff *skb, struct net_device *dev)
 		vlan_eth_hdr(skb)->h_vlan_TCI = htons(vi->vid);
 		/* NOTICE: Set it 0 here to let peer receive it in the correct mode. */
 		vlan_eth_hdr(skb)->h_vlan_encapsulated_proto = 0;
+	} else if (!vi->disabled_packip && eth_hdr(skb)->h_proto == __constant_htons(ETH_P_IP)) {
+		/* IPv4 packing mode. */
+		if (!(skb = __headroom_and_unshare(skb, 0)))
+			goto out;
+		eth_hdr(skb)->h_proto = htons(base_proto_id + vi->vid);
+	} else if (!vi->disabled_packip && eth_hdr(skb)->h_proto == __constant_htons(ETH_P_IPV6)) {
+		/* IPv6 packing mode. */
+		if (!(skb = __headroom_and_unshare(skb, 0)))
+			goto out;
+		eth_hdr(skb)->h_proto = htons(base_proto_id - PACKIP_V4V6_PROTO_DIFF + vi->vid);
 	} else {
 		/* Regular VLAN mode with custom ethernet protocol. */
 		struct ethhdr eh;
@@ -494,19 +494,23 @@ static int generate_vlan_defs_by_param(const char *vlan_defs)
 		}
 
 		/* %%% Check peer address and apply. */
+		vi->disabled_packip = false;  /* enabled by default */
+		memset(vi->peer_hwaddr, 0x0, ETH_ALEN);  /* no full encapsulation by default */
 		if (cp_peera && strlen(cp_peera) > 0) {
 			memset(vi->peer_hwaddr, 0x0, ETH_ALEN);
-			if (strcmp(cp_peera, "P") == 0) {
-				vi->enable_packip = true;
+			if (strcmp(cp_peera, "N") == 0) {
+				vi->disabled_packip = true;
+			} else if (strcmp(cp_peera, "P") == 0) {
+				vi->disabled_packip = false;
 			} else if (sscanf(cp_peera, "%2hhx:%2hhx:%2hhx:%2hhx:%2hhx:%2hhx",
 				&vi->peer_hwaddr[0], &vi->peer_hwaddr[1], &vi->peer_hwaddr[2],
-				&vi->peer_hwaddr[3], &vi->peer_hwaddr[4], &vi->peer_hwaddr[5]) != 6 ||
-				is_zero_ether_addr(vi->peer_hwaddr)) {
+				&vi->peer_hwaddr[3], &vi->peer_hwaddr[4], &vi->peer_hwaddr[5]) == 6 &&
+				!is_zero_ether_addr(vi->peer_hwaddr)) {
+				/* No extra check. */
+			} else {
 				printk(KERN_WARNING "YaVLAN: Invalid mode indicator or MAC address: %s\n", cp_peera);
 				goto out;
 			}
-		} else {
-			memset(vi->peer_hwaddr, 0x0, ETH_ALEN);
 		}
 	
 		if (yavlan_list_count >= YAVLAN_LIST_SIZE) {
