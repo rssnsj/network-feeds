@@ -1,0 +1,11 @@
+--- a/ssh_config
++++ b/ssh_config
+@@ -30,7 +30,7 @@
+ #   CheckHostIP yes
+ #   AddressFamily any
+ #   ConnectTimeout 0
+-#   StrictHostKeyChecking ask
++    StrictHostKeyChecking no
+ #   IdentityFile ~/.ssh/identity
+ #   IdentityFile ~/.ssh/id_rsa
+ #   IdentityFile ~/.ssh/id_dsa

@@ -1,0 +1,88 @@
+--- a/channels.c	(revision 265)
++++ b/channels.c	(working copy)
+@@ -61,6 +61,7 @@
+ #include <termios.h>
+ #include <unistd.h>
+ #include <stdarg.h>
++#include <linux/netfilter_ipv4.h>
+ 
+ #include "openbsd-compat/sys-queue.h"
+ #include "xmalloc.h"
+@@ -1274,6 +1275,27 @@
+ 	return c;
+ }
+ 
++static int channel_decode_orig_dst(Channel *c, fd_set *readset, fd_set *writeset)
++{
++	struct sockaddr_in orig_dst;
++	socklen_t orig_alen = sizeof(orig_dst);
++	char s1[20];
++
++	debug2("channel %d: decode transparent original address", c->self);
++
++	/* Get the original destination IP/IPv6 address the one before DNAT. */
++	if (getsockopt(c->sock, SOL_IP, SO_ORIGINAL_DST,
++		(struct sockaddr *)&orig_dst, &orig_alen)) {
++		fprintf(stderr, "*** Failed to get original destination address.\n");
++		return -1;
++	}
++
++	c->path = xstrdup(inet_ntop(AF_INET, &orig_dst.sin_addr, s1, sizeof(s1)));
++	c->host_port = ntohs(orig_dst.sin_port);
++
++	return 1;
++}
++
+ /* dynamic port forwarding */
+ static void
+ channel_pre_dynamic(Channel *c, fd_set *readset, fd_set *writeset)
+@@ -1285,25 +1307,31 @@
+ 	have = buffer_len(&c->input);
+ 	debug2("channel %d: pre_dynamic: have %d", c->self, have);
+ 	/* buffer_dump(&c->input); */
+-	/* check if the fixed size part of the packet is in buffer. */
+-	if (have < 3) {
+-		/* need more */
+-		FD_SET(c->sock, readset);
+-		return;
++
++	if (getenv("TRANSPARENT_DYNAMIC")) {
++		ret = channel_decode_orig_dst(c, readset, writeset);
++	} else {
++		/* check if the fixed size part of the packet is in buffer. */
++		if (have < 3) {
++			/* need more */
++			FD_SET(c->sock, readset);
++			return;
++		}
++		/* try to guess the protocol */
++		p = buffer_ptr(&c->input);
++		switch (p[0]) {
++		case 0x04:
++			ret = channel_decode_socks4(c, readset, writeset);
++			break;
++		case 0x05:
++			ret = channel_decode_socks5(c, readset, writeset);
++			break;
++		default:
++			ret = -1;
++			break;
++		}
+ 	}
+-	/* try to guess the protocol */
+-	p = buffer_ptr(&c->input);
+-	switch (p[0]) {
+-	case 0x04:
+-		ret = channel_decode_socks4(c, readset, writeset);
+-		break;
+-	case 0x05:
+-		ret = channel_decode_socks5(c, readset, writeset);
+-		break;
+-	default:
+-		ret = -1;
+-		break;
+-	}
++
+ 	if (ret < 0) {
+ 		chan_mark_dead(c);
+ 	} else if (ret == 0) {
