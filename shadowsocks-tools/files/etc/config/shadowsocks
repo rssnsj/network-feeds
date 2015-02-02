@@ -1,10 +1,12 @@
 
-config shadowsocks
+config shadowsocks 'default'
 	option enabled '0'
 	option server '17.17.17.17'
 	option server_port '1717'
 	option password 'WaWaWaWa'
 	option method 'table'
+	option timeout '60'
+	option username ''
 	option proxy_mode 'M'
 	option safe_dns_tcp '1'
 

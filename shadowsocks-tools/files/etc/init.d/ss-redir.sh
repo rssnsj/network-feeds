@@ -5,7 +5,7 @@
 START=96
 
 #
-# Data source of /etc/g.list:
+# Data source of /etc/gfwlist.list:
 #  https://github.com/zhiyi7/ddwrt/blob/master/jffs/vpn/dnsmasq-gfw.txt
 #  http://code.google.com/p/autoproxy-gfwlist/
 #
@@ -104,7 +104,7 @@ EOF
 		start_pdnsd "$ss_safe_dns"
 		(
 			local gfw_host
-			cat /etc/g.list |
+			cat /etc/gfwlist.list |
 			while read gfw_host; do
 				[ -z "$gfw_host" ] && continue
 				echo "server=/$gfw_host/127.0.0.1#$PDNSD_LOCAL_PORT"
@@ -113,7 +113,7 @@ EOF
 	elif [ -n "$ss_safe_dns" ]; then
 		(
 			local gfw_host
-			cat /etc/g.list |
+			cat /etc/gfwlist.list |
 			while read gfw_host; do
 				[ -z "$gfw_host" ] && continue
 				echo "server=/$gfw_host/$ss_safe_dns#$ss_safe_dns_port"
@@ -128,7 +128,7 @@ EOF
 	if [ "$ss_proxy_mode" = M ]; then
 		(
 			local gfw_host
-			cat /etc/g.list |
+			cat /etc/gfwlist.list |
 			while read gfw_host; do
 				[ -z "$gfw_host" ] && continue
 				echo "ipset=/$gfw_host/gfwlist"
