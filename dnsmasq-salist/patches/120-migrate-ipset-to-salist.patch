@@ -1,0 +1,63 @@
+diff --git a/src/ipset.c-- b/src/ipset.c
+index 6de5952..873c453 100755
+--- a/src/ipset.c--
++++ b/src/ipset.c
+@@ -87,31 +87,6 @@ static inline void add_attr(struct nlmsghdr *nlh, uint16_t type, size_t len, con
+ 
+ void ipset_init(void)
+ {
+-  struct utsname utsname;
+-  int version;
+-  char *split;
+-  
+-  if (uname(&utsname) < 0)
+-    die(_("failed to find kernel version: %s"), NULL, EC_MISC);
+-  
+-  split = strtok(utsname.release, ".");
+-  version = (split ? atoi(split) : 0);
+-  split = strtok(NULL, ".");
+-  version = version * 256 + (split ? atoi(split) : 0);
+-  split = strtok(NULL, ".");
+-  version = version * 256 + (split ? atoi(split) : 0);
+-  old_kernel = (version < KERNEL_VERSION(2,6,32));
+-  
+-  if (old_kernel && (ipset_sock = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) != -1)
+-    return;
+-  
+-  if (!old_kernel && 
+-      (buffer = safe_malloc(BUFF_SZ)) &&
+-      (ipset_sock = socket(AF_NETLINK, SOCK_RAW, NETLINK_NETFILTER)) != -1 &&
+-      (bind(ipset_sock, (struct sockaddr *)&snl, sizeof(snl)) != -1))
+-    return;
+-  
+-  die (_("failed to create IPset control socket: %s"), NULL, EC_MISC);
+ }
+ 
+ static int new_add_to_ipset(const char *setname, const struct all_addr *ipaddr, int af, int remove)
+@@ -212,6 +187,8 @@ static int old_add_to_ipset(const char *setname, const struct all_addr *ipaddr,
+ int add_to_ipset(const char *setname, const struct all_addr *ipaddr, int flags, int remove)
+ {
+   int af = AF_INET;
++	FILE *fp;
++	char filename[30];
+ 
+ #ifdef HAVE_IPV6
+   if (flags & F_IPV6)
+@@ -223,6 +200,17 @@ int add_to_ipset(const char *setname, const struct all_addr *ipaddr, int flags,
+     }
+ #endif
+   
++	sprintf(filename, "/proc/nf_salist/%s", setname);
++	if ((fp = fopen(filename, "w"))) {
++		char tbuf[30], s1[40];
++		fprintf(fp, "%s\n", inet_ntop(af, &ipaddr->addr.addr4, s1, sizeof(s1)));
++		fclose(fp);
++		printf("+%s\n", inet_ntop(af, &ipaddr->addr.addr4, s1, sizeof(s1)));
++		return 0;
++	} else {
++		return -1;
++	}
++
+   return old_kernel ? old_add_to_ipset(setname, ipaddr, remove) : new_add_to_ipset(setname, ipaddr, af, remove);
+ }
+ 
