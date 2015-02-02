@@ -1,0 +1,205 @@
+<%
+
+--[[
+Shadowsocks - Shadowsocks configuration page
+Author: Justin <rssnsj@gmail.com>
+Copyright: 2014
+]]--
+
+local ver = require "luci.version"
+local adv_menu = luci.util.get_adv_menu()
+local request_uri = luci.http.getenv("REQUEST_URI")
+local vanillass = require "luci.vanillass"
+
+-- -------------------------------------------------
+
+%>
+<%
+
+local page_action = tostring(luci.http.formvalue("PAGE_ACTION"))
+
+if page_action == "save_params" then
+	vanillass.do_ss_save_params()
+	os.exit(0)
+elseif page_action == "get_status" then
+	vanillass.do_ss_get_status()
+	os.exit(0)
+elseif page_action == "start_ss" then
+	vanillass.do_ss_start()
+	os.exit(0)
+elseif page_action == "stop_ss" then
+	vanillass.do_ss_stop()
+	os.exit(0)
+else
+	local param = vanillass.get_params_in_table()
+%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="format-detection" content="telephone=no" />
+<title>HiWiFi 路由器</title>
+<link rel="stylesheet" href="<%=resource%>/web/css/style.css?v=<%=ver.svnRevNum%>" type="text/css"/>
+<script type="text/javascript" src="<%=resource%>/web/js/jquery-1.8.1.min.js?v=<%=ver.svnRevNum%>"></script>
+<script type="text/javascript" src="<%=resource%>/web/js/artDialog/jquery.artDialog.js?skin=blueskin"></script>
+<script src="<%=resource%>/web/js/artDialog/plugins/iframeTools.source.js?v=<%=ver.svnRevNum%>"></script>
+<style type="text/css">
+table.zone td.tor { text-align:right;width:120px;line-height:14px; }
+#con_stauts { width:300px; }
+</style>
+<script type="text/javascript">
+$(document).ready(function () {
+
+	function set_status_text(status, msg) {
+		var text = "未知", color = "grey";
+		switch (status) {
+		case "starting":
+			text = "正在启动..."; color = "#555555";
+			break;
+		case "stopping":
+			text = "正在停止..."; color = "#555555";
+			break;
+		case "configuring":
+			text = "配置中..."; color = "#555555";
+			break;
+		case "flushing":
+			text = "刷新中..."; color = "#555555";
+			break;
+		case "running":
+			text = "运行中"; color = "green";
+			break;
+		case "stopped":
+			text = "未启动"; color = "red";
+			break;
+		}
+		document.getElementById("status_text").innerHTML = "<font color='" + color + "'>" + text + "</font>";
+		if (msg) {
+			document.getElementById("failure_msg").innerHTML = msg;
+		} else {
+			document.getElementById("failure_msg").innerHTML = "";
+		}
+	}
+	function __get_ss_status() {
+		set_status_text("flushing");
+		var req_data = [ { name:"PAGE_ACTION", value:"get_status" } ];
+		$.getJSON("<%=luci.dispatcher.build_url("admin_web", "plugin", "shadowsocks")%>", req_data, function (rsp_data) {
+			set_status_text(rsp_data.status);
+		});
+	}
+
+	__get_ss_status();
+	$("#flush_button").on("click", __get_ss_status);
+	$("#start_button").on("click", function () {
+		set_status_text("starting");
+		var req_data = [ { name:"PAGE_ACTION", value:"start_ss" } ];
+		$.getJSON("<%=luci.dispatcher.build_url("admin_web", "plugin", "shadowsocks")%>", req_data, function (rsp_data) {
+			set_status_text(rsp_data.status);
+		});
+	});
+	$("#stop_button").on("click", function () {
+		set_status_text("stopping");
+		var req_data = [ { name:"PAGE_ACTION", value:"stop_ss" } ];
+		$.getJSON("<%=luci.dispatcher.build_url("admin_web", "plugin", "shadowsocks")%>", req_data, function (rsp_data) {
+			set_status_text(rsp_data.status);
+		});
+	});
+
+	$("#save_button").on("click", function () {
+		set_status_text("configuring");
+		var req_data = $("#form1").serializeArray(); 
+		$.post("<%=luci.dispatcher.build_url("admin_web", "plugin", "shadowsocks")%>", req_data, function (rsp_data) {
+			if (rsp_data.code == "0") {
+				set_status_text(rsp_data.status, "");
+			} else {
+				set_status_text(rsp_data.status, rsp_data.msg);
+			}
+		}, "json");
+	});
+});
+</script>
+</head>
+<body>
+<div class="title">
+	<h2>高级设置<i>设置路由器安全 , 及其他高级设置</i></h2>
+</div>
+<div class="menu">
+	<% include("admin_web/menu/adv_menu") %>
+</div>
+<div class="box setup_box" style="height:auto;overflow:auto;">
+<form id="form1" method="POST" action="<%=luci.dispatcher.build_url("admin_web", "plugin","shadowsocks")%>">
+<ul class="ullist">
+	<li class="ipt_from">
+		<div class="memu row">
+			<input type="hidden" name="PAGE_ACTION" value="save_params" />
+			<p>
+				<label><font color="red">*</font> 服务器地址</label>
+				<input type="text" name="SS_SERVER_ADDR" class="txt" value="<%=param.SS_SERVER_ADDR%>" />
+			</p>
+			<p>
+				<label><font color="red">*</font> 服务器端口</label>
+				<input type="text" name="SS_SERVER_PORT" class="txt" value="<%=param.SS_SERVER_PORT%>" />
+			</p>
+			<p>
+				<label><font color="red">*</font> 加密密钥</label>
+				<input type="password" id="ss_key_box" name="SS_SERVER_PASSWORD" class="txt" value="<%=param.SS_SERVER_PASSWORD%>" />
+				<input type="checkbox" id="key_box_sw" onclick="var e = document.getElementById('ss_key_box'); e.type = this.checked ? 'text' : 'password';">&nbsp;
+				<label for="key_box_sw">显示</label>
+			</p>
+			<p>
+				<label><font color="red">*</font> 加密类型</label>
+				<select name="SS_SERVER_METHOD" class="txt"><%
+					local ss_methods = { "table", "rc4", "rc4-md5", "aes-128-cfb", "aes-192-cfb", "aes-256-cfb",
+							"bf-cfb", "camellia-128-cfb", "camellia-192-cfb", "camellia-256-cfb", "cast5-cfb",
+							"des-cfb", "idea-cfb", "rc2-cfb", "seed-cfb" }
+					for __k, __v in pairs(ss_methods) do
+						if __v == param.SS_SERVER_METHOD then
+							print("<option selected=\"selected\" value=\"" .. __v .. "\">" .. __v .. "</option>")
+						else
+							print("<option value=\"" .. __v .. "\">" .. __v .. "</option>")
+						end
+					end
+				%></select>
+			</p>
+			<p>
+				<label>&nbsp; 安全DNS</label>
+				<input type="text" name="SAFE_DNS_SERVER" class="txt" style="width:130px;" value="<%=param.SAFE_DNS_SERVER%>" />
+				<label>端口</label>
+				<input type="text" name="SAFE_DNS_PORT" class="txt" style="margin-left:40px;width:50px;" value="<%=param.SAFE_DNS_PORT%>" />
+			</p>
+			<p>
+				<label>&nbsp; 模式</label>
+				<select name="SS_MODE" class="txt"><%
+					local s0 = param.SS_MODE == "0" and "selected=\"selected\"" or ""
+					local s1 = param.SS_MODE == "1" and "selected=\"selected\"" or ""
+				%>
+					<option value="0" <%=s0%>>智能模式</option>
+					<option value="1" <%=s1%>>全局模式</option>
+				</select>
+			</p>
+
+			<div class="form-row">
+				<p>
+					<label>&nbsp; 状态:</label>
+					<span id="status_text" style="margin:0px 30px 0px 100px;">
+						<% if vanillass.is_shadowsocks_on() then %>
+						<font color="green">运行中</font>
+						<% else %>
+						<font color="red">未启动</font>
+						<% end %>
+					</span>
+					<a href="javascript:void(0);" id="start_button">启动</a> 
+					<a href="javascript:void(0);" id="stop_button">停止</a>
+					<a href="javascript:void(0);" id="flush_button">刷新</a>
+					<span id="failure_msg" style="margin:0px 0px 0px 50px;color:#ff0000;"></span>
+				</p>
+			</div>
+		</div>
+	</li>
+	<li  class="ipt_from"><div class="btnbox"><input id="save_button" type="button" value="保存" class="btn" /></div></li>
+</ul></form>
+</div>
+</body>
+</html>
+<%
+end
+%>
