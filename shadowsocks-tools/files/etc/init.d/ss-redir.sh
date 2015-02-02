@@ -5,7 +5,7 @@
 START=96
 
 #
-# Data source of /etc/gfwlist.list:
+# Data source of /etc/g.list:
 #  https://github.com/zhiyi7/ddwrt/blob/master/jffs/vpn/dnsmasq-gfw.txt
 #  http://code.google.com/p/autoproxy-gfwlist/
 #
@@ -33,18 +33,9 @@ start()
 	local local_addresses=`uci get shadowsocks.@shadowsocks[0].local_addresses 2>/dev/null`
 
 	/etc/init.d/pdnsd disable 2>/dev/null
+	insmod ipt_REDIRECT 2>/dev/null
 
 	# -----------------------------------------------------------------
-	if [ "$ss_enabled" = 0 ]; then
-		echo "WARNING: Shadowsocks is disabled."
-		return 1
-	fi
-
-	if [ -z "$ss_server_addr" -o -z "$ss_server_port" ]; then
-		echo "WARNING: Shadowsocks not fully configured, not starting."
-		return 1
-	fi
-
 	[ -z "$ss_proxy_mode" ] && ss_proxy_mode=S
 	[ -z "$ss_method" ] && ss_method=table
 	[ -z "$ss_timeout" ] && ss_timeout=60
@@ -55,14 +46,22 @@ start()
 	[ -z "$local_addresses" ] && network_get_ipaddr local_addresses lan
 
 	# -----------------------------------------------------------------
-	###### shadowsocks ######
-	ss-redir -b:: -l$SS_REDIR_PORT -s$ss_server_addr -p$ss_server_port \
-		-k"$ss_password" -m$ss_method -t$ss_timeout -f $SS_REDIR_PIDFILE || return 1
+	###### SSH / Shadowsocks ######
+	if [ "$ss_method" = ssh ]; then
+		# NOTICE: Need not start any daemon here since 'ssh' is
+		# already running once entering this callback script
+		:
+	else
+		local ss_redir_bin="/usr/lib/vanillass/ss-redir"
+		[ -x "$ss_redir_bin" ] || ss_redir_bin=ss-redir
+		$ss_redir_bin -b:: -l$SS_REDIR_PORT -s$ss_server_addr -p$ss_server_port \
+			-k"$ss_password" -m$ss_method -t$ss_timeout -f $SS_REDIR_PIDFILE || return 1
+	fi
 
 	# IPv4 firewall rules
 	iptables -t nat -N shadowsocks_pre
 	iptables -t nat -F shadowsocks_pre
-	iptables -t nat -A shadowsocks_pre -m set --match-set local dst -j RETURN || {
+	iptables -t nat -A shadowsocks_pre -m salist --salist local --match-dip -j RETURN || {
 		iptables -t nat -A shadowsocks_pre -d 10.0.0.0/8 -j RETURN
 		iptables -t nat -A shadowsocks_pre -d 127.0.0.0/8 -j RETURN
 		iptables -t nat -A shadowsocks_pre -d 172.16.0.0/12 -j RETURN
@@ -70,16 +69,17 @@ start()
 		iptables -t nat -A shadowsocks_pre -d 127.0.0.0/8 -j RETURN
 		iptables -t nat -A shadowsocks_pre -d 224.0.0.0/3 -j RETURN
 	}
+	iptables -t nat -A shadowsocks_pre -m salist --salist hiwifi --match-dip -j RETURN
 	iptables -t nat -A shadowsocks_pre -d $ss_server_addr -j RETURN
 	case "$ss_proxy_mode" in
 		G) : ;;
 		S)
-			iptables -t nat -A shadowsocks_pre -m set --match-set china dst -j RETURN
+			iptables -t nat -A shadowsocks_pre -m salist --salist china --match-dip -j RETURN
 			;;
 		M)
-			ipset create gfwlist hash:ip maxelem 65536
-			iptables -t nat -A shadowsocks_pre -m set ! --match-set gfwlist dst -j RETURN
-			iptables -t nat -A shadowsocks_pre -m set --match-set china dst -j RETURN
+			echo +gfwlist > /proc/nf_salist/control 2>/dev/null
+			iptables -t nat -A shadowsocks_pre -m salist ! --match-dip --salist gfwlist -j RETURN
+			iptables -t nat -A shadowsocks_pre -m salist --salist china --match-dip -j RETURN
 			;;
 	esac
 	local subnet
@@ -90,6 +90,7 @@ start()
 
 	# -----------------------------------------------------------------
 	###### dnsmasq main configuration ######
+	rm -rf /var/etc/dnsmasq-go.d
 	mkdir -p /var/etc/dnsmasq-go.d
 	cat > /var/etc/dnsmasq-go.conf <<EOF
 conf-dir=/var/etc/dnsmasq-go.d
@@ -103,7 +104,7 @@ EOF
 		start_pdnsd "$ss_safe_dns"
 		(
 			local gfw_host
-			cat /etc/gfwlist.list |
+			cat /etc/g.list |
 			while read gfw_host; do
 				[ -z "$gfw_host" ] && continue
 				echo "server=/$gfw_host/127.0.0.1#$PDNSD_LOCAL_PORT"
@@ -112,7 +113,7 @@ EOF
 	elif [ -n "$ss_safe_dns" ]; then
 		(
 			local gfw_host
-			cat /etc/gfwlist.list |
+			cat /etc/g.list |
 			while read gfw_host; do
 				[ -z "$gfw_host" ] && continue
 				echo "server=/$gfw_host/$ss_safe_dns#$ss_safe_dns_port"
@@ -127,7 +128,7 @@ EOF
 	if [ "$ss_proxy_mode" = M ]; then
 		(
 			local gfw_host
-			cat /etc/gfwlist.list |
+			cat /etc/g.list |
 			while read gfw_host; do
 				[ -z "$gfw_host" ] && continue
 				echo "ipset=/$gfw_host/gfwlist"
@@ -139,7 +140,12 @@ EOF
 	# -----------------------------------------------------------------
 	###### Start dnsmasq service ######
 	if ls /var/etc/dnsmasq-go.d/* >/dev/null 2>&1; then
-		dnsmasq -C /var/etc/dnsmasq-go.conf -p $DNSMASQ_PORT -x $DNSMASQ_PIDFILE || return 1
+		# NOTICE: We have to use a process name other than containing
+		# string 'dnsmasq' to avoid being killed by
+		# /etc/init.d/dnsmasq:stop() >> pkill -9 dnsmasq <<. Fucking it!
+		local dnsmasq_bin="/usr/lib/vanillass/dnsmask"
+		[ -x "$dnsmasq_bin" ] || dnsmasq_bin=dnsmasq
+		$dnsmasq_bin -C /var/etc/dnsmasq-go.conf -p $DNSMASQ_PORT -u root -x $DNSMASQ_PIDFILE || return 1
 
 		# IPv4 firewall rules
 		iptables -t nat -N dnsmasq_go_pre
@@ -175,7 +181,7 @@ stop()
 		iptables -t nat -X shadowsocks_pre 2>/dev/null
 	fi
 
-	ipset destroy gfwlist 2>/dev/null
+	echo -gfwlist > /proc/nf_salist/control 2>/dev/null
 
 	if [ -f $SS_REDIR_PIDFILE ]; then
 		kill -9 `cat $SS_REDIR_PIDFILE`
@@ -224,7 +230,7 @@ EOF
 
 	# Access TCP DNS server through Shadowsocks tunnel
 	if iptables -t nat -N pdnsd_output; then
-		iptables -t nat -A pdnsd_output -m set --match-set china dst -j RETURN
+		iptables -t nat -A pdnsd_output -m salist --salist china --match-dip -j RETURN
 		iptables -t nat -A pdnsd_output -p tcp -j REDIRECT --to $SS_REDIR_PORT
 	fi
 	iptables -t nat -I OUTPUT -p tcp --dport 53 -j pdnsd_output
