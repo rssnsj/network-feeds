@@ -1,0 +1,78 @@
+diff --git a/autossh.c b/autossh.c
+index bc99a9c..7a25305 100644
+--- a/autossh.c
++++ b/autossh.c
+@@ -683,6 +683,26 @@ get_env_args(void)
+ }
+ 
+ /*
++ * switch redsocks
++ */
++void
++redsocks_switch(int sw)
++{
++	static int sw_status = 0; /*status of redsocks*/
++	int	rv;
++
++	if( sw == 1 && sw_status == 0 ) {
++		sw_status = 1;
++		rv = system("/etc/init.d/ss-redir.sh start");
++		errlog(LOG_INFO,"start ss-redir.sh: res =  %d", rv);
++	} else if ( sw == 0 && sw_status == 1 ) {
++		sw_status = 0;
++		rv = system("/etc/init.d/ss-redir.sh stop");
++		errlog(LOG_INFO,"stop ss-redir.sh: res =  %d", rv);
++	}
++}
++
++/*
+  * Run ssh
+  */
+ void
+@@ -690,6 +710,7 @@ ssh_run(int sock, char **av)
+ {
+ 	struct	sigaction act;
+ 	struct	timeval tv;
++	int		rv;
+ 
+ 	act.sa_handler = sig_catch;
+ 	sigemptyset(&act.sa_mask);
+@@ -741,8 +762,9 @@ ssh_run(int sock, char **av)
+ 			break;
+ 		default:
+ 			errlog(LOG_INFO, "ssh child pid is %d", (int)cchild);
+-			if (ssh_watch(sock) == P_EXIT)
+-				return;
++			rv = ssh_watch(sock);
++			redsocks_switch(0);
++			if( rv == P_EXIT ) return;
+ 			break;
+ 		}
+ 	}
+@@ -821,17 +843,20 @@ ssh_watch(int sock)
+ 				return P_EXIT;
+ 				break;
+ 			case SIGALRM:
++				errlog(LOG_DEBUG, "alarm!");
+ 				if (exceeded_lifetime()) {
+ 					ssh_kill();
+ 					return P_EXIT;
+ 				}
+ 
+-				if (writep && sock != -1 &&
+-				    !conn_test(sock, mhost, writep)) {
+-					errlog(LOG_INFO, 
+-					    "port down, restarting ssh");
+-					ssh_kill();
+-					return P_RESTART;
++				if (writep && sock != -1 ) {
++				    if (!conn_test(sock, mhost, writep)) {
++						errlog(LOG_INFO, "port down, restarting ssh");
++						ssh_kill();
++						return P_RESTART;
++					} else {
++							redsocks_switch(1);
++					}
+ 				}
+ #ifdef TOUCH_PIDFILE
+ 				/*
