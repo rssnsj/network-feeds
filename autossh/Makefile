@@ -39,7 +39,6 @@ endef
 define Package/autossh/install
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/autossh $(1)/usr/sbin/
-	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_CONF) ./files/autossh.config $(1)/etc/config/autossh
 endef

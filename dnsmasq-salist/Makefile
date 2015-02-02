@@ -30,7 +30,7 @@ define Package/dnsmasq-salist/Default
   CATEGORY:=Network
   TITLE:=A port of dnsmasq with 'ipset' migrated to 'salist'
   URL:=http://www.thekelleys.org.uk/dnsmasq/
-  DEPENDS:=+kmod-salist
+##  DEPENDS:=+kmod-salist
 endef
 
 define Package/dnsmasq-salist
