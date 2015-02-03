@@ -1,15 +1,164 @@
 <%
 
 --[[
-Shadowsocks - Shadowsocks configuration page
+shadowsocks.htm - Shadowsocks configuration page
 Author: Justin <rssnsj@gmail.com>
-Copyright: 2014
+Copyright: 2015
 ]]--
 
 local ver = require "luci.version"
 local adv_menu = luci.util.get_adv_menu()
 local request_uri = luci.http.getenv("REQUEST_URI")
-local vanillass = require "luci.vanillass"
+local uci = require "luci.model.uci"
+local os, io, print, tostring, tonumber, string = os, io, print, tostring, tonumber, string
+local luci = require "luci"
+
+-- -------------------------------------------------
+function is_shadowsocks_on()
+	local rc = os.execute([[
+if iptables-save | grep 'shadowsocks_pre.*REDIRECT' >/dev/null && pidof ss-redir >/dev/null; then
+	exit 0
+else
+	exit 1
+fi
+]])
+	if rc == 0 then
+		return true
+	else
+		return false
+	end
+end
+
+function is_shadowsocks_en()
+	if os.execute("/etc/init.d/ss-ssh.sh enabled || /etc/init.d/ss-ssh.sh enabled") == 0 then
+		return true
+	else
+		return false
+	end
+end
+
+-- -------------------------------------------------
+
+function do_ss_save_params()
+	local ss_server = tostring(luci.http.formvalue("server"))
+	local ss_server_port = tonumber(luci.http.formvalue("server_port"))
+	local ss_password = tostring(luci.http.formvalue("password"))
+	local ss_method = tostring(luci.http.formvalue("method"))
+	local ss_username = tostring(luci.http.formvalue("username"))
+	local ss_proxy_mode = tostring(luci.http.formvalue("proxy_mode"))
+	local ss_safe_dns = tostring(luci.http.formvalue("safe_dns"))
+	local ss_safe_dns_port = tonumber(luci.http.formvalue("safe_dns_port"))
+	local ss_safe_dns_tcp = tonumber(luci.http.formvalue("safe_dns_tcp"))
+
+	local failure_msg = nil
+
+	-- Check hostanme
+	if not string.match(ss_server, '^[0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+$') and
+		not string.match(ss_server, '^[A-Za-z0-9_:\.-]\+$') then
+		failure_msg = "配置错误：无效的服务器IP地址或域名"
+	end
+
+	-- Check encryption method and method-specific parameters
+	if ss_method == "ssh" then
+		if ss_server_port == nil then
+			ss_server_port = 22
+		end
+		if ss_username == nil or ss_username == "" then
+			failure_msg = "配置错误：没有指定SSH用户名"
+		end
+	else
+		if ss_server_port == nil then
+			failure_msg = "配置错误：无效的服务器端口号"
+		end
+	end
+
+	-- Check safe DNS server address and port if user specifies
+	if ss_safe_dns ~= nil and ss_safe_dns ~= "" then
+		if not string.match(ss_safe_dns, '^[0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+$') and
+		   not string.match(ss_safe_dns, '^[0-9a-f:\.]\+$') then
+			failure_msg = "配置错误：无效的DNS服务器IP"
+		end
+		if ss_safe_dns_port == nil or ss_safe_dns_port <= 0 or ss_safe_dns_port > 65535 then
+			ss_safe_dns_port = 53
+		end
+		if ss_safe_dns_tcp == nil then
+			ss_safe_dns_tcp = 0
+		end
+	else
+		if ss_safe_dns_tcp == nil then
+			ss_safe_dns_tcp = 1
+		end
+	end
+
+	local code, msg, status = 0, "", ""
+	if failure_msg then
+		code = -1
+		msg = failure_msg
+		status = "stopped"
+	else
+		-- Write parameters to UCI configuration
+		os.execute("touch /etc/config/shadowsocks")
+		local _uci_real = uci.cursor()
+		_uci_real:set("shadowsocks", "default", "shadowsocks")
+		_uci_real:set("shadowsocks", "default", "enabled", 1)
+		_uci_real:set("shadowsocks", "default", "server", ss_server)
+		_uci_real:set("shadowsocks", "default", "server_port", ss_server_port)
+		_uci_real:set("shadowsocks", "default", "password", ss_password)
+		_uci_real:set("shadowsocks", "default", "method", ss_method)
+		_uci_real:set("shadowsocks", "default", "username", ss_username)
+		_uci_real:set("shadowsocks", "default", "proxy_mode", ss_proxy_mode)
+		_uci_real:set("shadowsocks", "default", "safe_dns_tcp", ss_safe_dns_tcp)
+		_uci_real:save("shadowsocks")
+		_uci_real:commit("shadowsocks")
+
+		if is_shadowsocks_en() or is_shadowsocks_on() then
+			if os.execute("/etc/init.d/ss-ssh.sh restart") == 0 then
+				code = 0
+				msg = "OK"
+			else
+				code = -1
+				msg = "配置成功，但启动失败"
+			end
+		else
+			code = 0
+			msg = "OK"
+		end
+	end
+
+	if is_shadowsocks_on() then
+		status = "running"
+	else
+		status = "stopped"
+	end
+
+	print("{\"code\":\"" .. code .. "\", \"msg\":\"" .. msg .. "\", \"status\":\"" .. status .. "\"}")
+end
+
+function do_ss_get_status()
+	if is_shadowsocks_on() then
+		print("{\"status\":\"running\"}")
+	else
+		print("{\"status\":\"stopped\"}")
+	end
+end
+
+function do_ss_start()
+	os.execute("/etc/init.d/ss-ssh.sh start || exit 1; /etc/init.d/ss-ssh.sh enable || :")
+	if is_shadowsocks_on() then
+		print("{\"status\":\"running\"}")
+	else
+		print("{\"status\":\"stopped\"}")
+	end
+end
+
+function do_ss_stop()
+	os.execute("/etc/init.d/ss-ssh.sh stop; /etc/init.d/ss-ssh.sh disable")
+	if is_shadowsocks_on() then
+		print("{\"status\":\"running\"}")
+	else
+		print("{\"status\":\"stopped\"}")
+	end
+end
 
 -- -------------------------------------------------
 
@@ -19,19 +168,29 @@ local vanillass = require "luci.vanillass"
 local page_action = tostring(luci.http.formvalue("PAGE_ACTION"))
 
 if page_action == "save_params" then
-	vanillass.do_ss_save_params()
+	do_ss_save_params()
 	os.exit(0)
 elseif page_action == "get_status" then
-	vanillass.do_ss_get_status()
+	do_ss_get_status()
 	os.exit(0)
 elseif page_action == "start_ss" then
-	vanillass.do_ss_start()
+	do_ss_start()
 	os.exit(0)
 elseif page_action == "stop_ss" then
-	vanillass.do_ss_stop()
+	do_ss_stop()
 	os.exit(0)
 else
-	local param = vanillass.get_params_in_table()
+	local _uci_real = uci.cursor(nil, "/etc/config")
+	local ss_server = _uci_real:get("shadowsocks", "default", "server")
+	local ss_server_port = _uci_real:get("shadowsocks", "default", "server_port")
+	local ss_password = _uci_real:get("shadowsocks", "default", "password")
+	local ss_method = _uci_real:get("shadowsocks", "default", "method")
+	local ss_username = _uci_real:get("shadowsocks", "default", "username")
+	local ss_proxy_mode = _uci_real:get("shadowsocks", "default", "proxy_mode")
+	local ss_safe_dns = _uci_real:get("shadowsocks", "default", "safe_dns")
+	local ss_safe_dns_port = _uci_real:get("shadowsocks", "default", "safe_dns_port")
+	local ss_safe_dns_tcp = _uci_real:get("shadowsocks", "default", "safe_dns_tcp")
+
 %>
 <!DOCTYPE html>
 <html>
@@ -133,47 +292,59 @@ $(document).ready(function () {
 			<input type="hidden" name="PAGE_ACTION" value="save_params" />
 			<p>
 				<label><font color="red">*</font> 服务器地址</label>
-				<input type="text" name="SS_SERVER_ADDR" class="txt" value="<%=param.SS_SERVER_ADDR%>" />
+				<input type="text" name="server" class="txt" value="<%=ss_server%>" />
 			</p>
 			<p>
 				<label><font color="red">*</font> 服务器端口</label>
-				<input type="text" name="SS_SERVER_PORT" class="txt" value="<%=param.SS_SERVER_PORT%>" />
+				<input type="text" name="server_port" class="txt" value="<%=ss_server_port%>" />
+			</p>
+			<p>
+				<label>&nbsp; SSH用户名</label>
+				<input type="text" name="username" class="txt" value="<%=ss_username%>" />
+				（仅对SSH模式有效）
 			</p>
 			<p>
 				<label><font color="red">*</font> 加密密钥</label>
-				<input type="password" id="ss_key_box" name="SS_SERVER_PASSWORD" class="txt" value="<%=param.SS_SERVER_PASSWORD%>" />
+				<input type="password" id="ss_key_box" name="password" class="txt" value="<%=ss_password%>" />
 				<input type="checkbox" id="key_box_sw" onclick="var e = document.getElementById('ss_key_box'); e.type = this.checked ? 'text' : 'password';">&nbsp;
 				<label for="key_box_sw">显示</label>
 			</p>
 			<p>
 				<label><font color="red">*</font> 加密类型</label>
-				<select name="SS_SERVER_METHOD" class="txt"><%
-					local ss_methods = { "table", "rc4", "rc4-md5", "aes-128-cfb", "aes-192-cfb", "aes-256-cfb",
-							"bf-cfb", "camellia-128-cfb", "camellia-192-cfb", "camellia-256-cfb", "cast5-cfb",
-							"des-cfb", "idea-cfb", "rc2-cfb", "seed-cfb" }
-					for __k, __v in pairs(ss_methods) do
-						if __v == param.SS_SERVER_METHOD then
-							print("<option selected=\"selected\" value=\"" .. __v .. "\">" .. __v .. "</option>")
+				<select name="method" class="txt"><%
+					local ss_methods = { "ssh", "table", "rc4", "rc4-md5", "aes-128-cfb", "aes-192-cfb",
+						"aes-256-cfb", "bf-cfb", "camellia-128-cfb", "camellia-192-cfb", "camellia-256-cfb",
+						"cast5-cfb", "des-cfb", "idea-cfb", "rc2-cfb", "seed-cfb" }
+					for __k, __v, __n in pairs(ss_methods) do
+						if __v == "ssh" then
+							__n = "SSH（SSH加速模式）"
 						else
-							print("<option value=\"" .. __v .. "\">" .. __v .. "</option>")
+							__n = __v
+						end
+						if __v == ss_method then
+							print("<option selected=\"selected\" value=\"" .. __v .. "\">" .. __n .. "</option>")
+						else
+							print("<option value=\"" .. __v .. "\">" .. __n .. "</option>")
 						end
 					end
 				%></select>
 			</p>
 			<p>
 				<label>&nbsp; 安全DNS</label>
-				<input type="text" name="SAFE_DNS_SERVER" class="txt" style="width:130px;" value="<%=param.SAFE_DNS_SERVER%>" />
+				<input type="text" name="safe_dns" class="txt" style="width:130px;" value="<%=ss_safe_dns%>" />
 				<label>端口</label>
-				<input type="text" name="SAFE_DNS_PORT" class="txt" style="margin-left:40px;width:50px;" value="<%=param.SAFE_DNS_PORT%>" />
+				<input type="text" name="safe_dns_port" class="txt" style="margin-left:40px;width:50px;" value="<%=ss_safe_dns_port%>" />
 			</p>
 			<p>
-				<label>&nbsp; 模式</label>
-				<select name="SS_MODE" class="txt"><%
-					local s0 = param.SS_MODE == "0" and "selected=\"selected\"" or ""
-					local s1 = param.SS_MODE == "1" and "selected=\"selected\"" or ""
+				<label>&nbsp; 代理模式</label>
+				<select name="proxy_mode" class="txt" style="width:230px"><%
+					local ms = ss_proxy_mode == "S" and "selected=\"selected\"" or ""
+					local mg = ss_proxy_mode == "G" and "selected=\"selected\"" or ""
+					local mm = ss_proxy_mode == "M" and "selected=\"selected\"" or ""
 				%>
-					<option value="0" <%=s0%>>智能模式</option>
-					<option value="1" <%=s1%>>全局模式</option>
+					<option value="S" <%=ms%>>国外IP模式</option>
+					<option value="G" <%=mg%>>全局模式</option>
+					<option value="M" <%=ms%>>基于gfwlist的最小流量模式</option>
 				</select>
 			</p>
 
@@ -181,7 +352,7 @@ $(document).ready(function () {
 				<p>
 					<label>&nbsp; 状态:</label>
 					<span id="status_text" style="margin:0px 30px 0px 100px;">
-						<% if vanillass.is_shadowsocks_on() then %>
+						<% if is_shadowsocks_on() then %>
 						<font color="green">运行中</font>
 						<% else %>
 						<font color="red">未启动</font>

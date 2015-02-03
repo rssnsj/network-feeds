@@ -2,7 +2,7 @@
 # Copyright (C) 2014 Justin Liu <rssnsj@gmail.com>
 # https://github.com/rssnsj/openwrt-feeds
 
-START=96
+## START=96
 
 #
 # Data source of /etc/gfwlist.list:

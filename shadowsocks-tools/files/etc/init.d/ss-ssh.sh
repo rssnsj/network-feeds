@@ -16,21 +16,26 @@ get_random_port()
 start()
 {
 	local ss_enabled=`uci get shadowsocks.@shadowsocks[0].enabled`
-	local ss_server_addr=`uci get shadowsocks.@shadowsocks[0].server`
+	local ss_server=`uci get shadowsocks.@shadowsocks[0].server`
 	local ss_server_port=`uci get shadowsocks.@shadowsocks[0].server_port`
 	local ss_username=`uci get shadowsocks.@shadowsocks[0].username`
 	local ss_password=`uci get shadowsocks.@shadowsocks[0].password`
+	local ss_proxy_mode=`uci get shadowsocks.@shadowsocks[0].proxy_mode`
 	local monitor_port=`get_random_port`
 
 	# -----------------------------------------------------------------
 	if [ "$ss_enabled" = 0 ]; then
 		echo "WARNING: SSH proxy was disabled in /etc/config/shadowsocks."
 		return 1
-	else
+	fi
+
+	if [ "$ss_proxy_mode" = ssh ]; then
+		## /etc/init.d/ss-redir.sh disable
 		export SSH_PASSWORD="$ss_password"
 		export AUTOSSH_GATETIME=0
 		export AUTOSSH_POLL=30
 		export AUTOSSH_FIRST_POLL="10"
+		export AUTOSSH_PATH="/usr/lib/vanillass/ssh"
 		# NOTICE: TRANSPARENT_DYNAMIC=1 makes 'ssh' running in
 		# transparent proxy mode, important!!!
 		export TRANSPARENT_DYNAMIC=1
@@ -38,8 +43,10 @@ start()
 		service_start /usr/sbin/autossh -M $monitor_port \
 			-f -CNg -D 0.0.0.0:$SS_REDIR_PORT -p ${ss_server_port:-22} \
 			-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-			-l ${ss_username:-root} $ss_server_addr
-		/etc/init.d/ss-redir.sh disable
+			-l ${ss_username:-root} $ss_server
+	else
+		## /etc/init.d/ss-redir.sh disable
+		/etc/init.d/ss-redir.sh start
 	fi
 }
 
@@ -47,7 +54,7 @@ stop()
 {
 	service_stop /usr/sbin/autossh
 	rm -f /var/run/openssh.status
-	/etc/init.d/redsocks stop >/dev/null 2>&1
+	/etc/init.d/ss-redir.sh stop >/dev/null 2>&1
 	return 0
 }
 
