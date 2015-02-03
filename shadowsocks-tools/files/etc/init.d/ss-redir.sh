@@ -99,8 +99,8 @@ EOF
 
 	# -----------------------------------------------------------------
 	###### Anti-pollution configuration ######
-	if [ "$ss_safe_dns_tcp" = 1 ]; then
-		# Just use 8.8.x.x when $ss_safe_dns left empty
+	if [ -z "$ss_safe_dns" -o "$ss_safe_dns_tcp" = 1 ]; then
+		# NOTICE: Just use 8.8.x.x when $ss_safe_dns left empty
 		start_pdnsd "$ss_safe_dns"
 		(
 			local gfw_host
@@ -111,6 +111,7 @@ EOF
 			done
 		) > /var/etc/dnsmasq-go.d/01-pollution.conf
 	elif [ -n "$ss_safe_dns" ]; then
+		# NOTICE: Must be 'ss_safe_dns_tcp = 0' while entering this clause
 		(
 			local gfw_host
 			cat /etc/gfwlist.list |

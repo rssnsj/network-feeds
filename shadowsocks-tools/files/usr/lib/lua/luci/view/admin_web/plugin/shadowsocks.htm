@@ -16,11 +16,8 @@ local luci = require "luci"
 -- -------------------------------------------------
 function is_shadowsocks_on()
 	local rc = os.execute([[
-if iptables-save | grep 'shadowsocks_pre.*REDIRECT' >/dev/null && pidof ss-redir >/dev/null; then
-	exit 0
-else
-	exit 1
-fi
+iptables-save | grep 'shadowsocks_pre.*REDIRECT' >/dev/null || exit 1
+pidof ss-redir >/dev/null || pidof ssh >/dev/null
 ]])
 	if rc == 0 then
 		return true
@@ -73,7 +70,7 @@ function do_ss_save_params()
 	end
 
 	-- Check safe DNS server address and port if user specifies
-	if ss_safe_dns ~= nil and ss_safe_dns ~= "" then
+	if ss_safe_dns and ss_safe_dns ~= "" then
 		if not string.match(ss_safe_dns, '^[0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+$') and
 		   not string.match(ss_safe_dns, '^[0-9a-f:\.]\+$') then
 			failure_msg = "配置错误：无效的DNS服务器IP"
@@ -81,13 +78,9 @@ function do_ss_save_params()
 		if ss_safe_dns_port == nil or ss_safe_dns_port <= 0 or ss_safe_dns_port > 65535 then
 			ss_safe_dns_port = 53
 		end
-		if ss_safe_dns_tcp == nil then
-			ss_safe_dns_tcp = 0
-		end
-	else
-		if ss_safe_dns_tcp == nil then
-			ss_safe_dns_tcp = 1
-		end
+	end
+	if ss_safe_dns_tcp == nil then
+		ss_safe_dns_tcp = 0
 	end
 
 	local code, msg, status = 0, "", ""
@@ -143,7 +136,7 @@ function do_ss_get_status()
 end
 
 function do_ss_start()
-	os.execute("/etc/init.d/ss-ssh.sh start || exit 1; /etc/init.d/ss-ssh.sh enable || :")
+	os.execute("/etc/init.d/ss-ssh.sh restart || exit 1; /etc/init.d/ss-ssh.sh enable || :")
 	if is_shadowsocks_on() then
 		print("{\"status\":\"running\"}")
 	else
@@ -189,7 +182,7 @@ else
 	local ss_proxy_mode = _uci_real:get("shadowsocks", "default", "proxy_mode")
 	local ss_safe_dns = _uci_real:get("shadowsocks", "default", "safe_dns")
 	local ss_safe_dns_port = _uci_real:get("shadowsocks", "default", "safe_dns_port")
-	local ss_safe_dns_tcp = _uci_real:get("shadowsocks", "default", "safe_dns_tcp")
+	local ss_safe_dns_tcp = tonumber(_uci_real:get("shadowsocks", "default", "safe_dns_tcp"))
 
 %>
 <!DOCTYPE html>
@@ -304,7 +297,7 @@ $(document).ready(function () {
 				（仅对SSH模式有效）
 			</p>
 			<p>
-				<label><font color="red">*</font> 加密密钥</label>
+				<label><font color="red">*</font> 密码</label>
 				<input type="password" id="ss_key_box" name="password" class="txt" value="<%=ss_password%>" />
 				<input type="checkbox" id="key_box_sw" onclick="var e = document.getElementById('ss_key_box'); e.type = this.checked ? 'text' : 'password';">&nbsp;
 				<label for="key_box_sw">显示</label>
@@ -334,6 +327,12 @@ $(document).ready(function () {
 				<input type="text" name="safe_dns" class="txt" style="width:130px;" value="<%=ss_safe_dns%>" />
 				<label>端口</label>
 				<input type="text" name="safe_dns_port" class="txt" style="margin-left:40px;width:50px;" value="<%=ss_safe_dns_port%>" />
+				<input type="checkbox" name="safe_dns_tcp" style="margin-left:5px" value="1" id="sdt" <%
+					if ss_safe_dns_tcp and ss_safe_dns_tcp > 0 then
+						print("checked=\"checked\"")
+					end
+					%> />
+				<label for="sdt">&nbsp;使用TCP</label>
 			</p>
 			<p>
 				<label>&nbsp; 代理模式</label>
@@ -344,7 +343,7 @@ $(document).ready(function () {
 				%>
 					<option value="S" <%=ms%>>国外IP模式</option>
 					<option value="G" <%=mg%>>全局模式</option>
-					<option value="M" <%=ms%>>基于gfwlist的最小流量模式</option>
+					<option value="M" <%=mm%>>基于gfwlist的最小流量模式</option>
 				</select>
 			</p>
 

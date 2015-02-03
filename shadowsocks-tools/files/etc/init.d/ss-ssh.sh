@@ -20,16 +20,16 @@ start()
 	local ss_server_port=`uci get shadowsocks.@shadowsocks[0].server_port`
 	local ss_username=`uci get shadowsocks.@shadowsocks[0].username`
 	local ss_password=`uci get shadowsocks.@shadowsocks[0].password`
-	local ss_proxy_mode=`uci get shadowsocks.@shadowsocks[0].proxy_mode`
+	local ss_method=`uci get shadowsocks.@shadowsocks[0].method`
 	local monitor_port=`get_random_port`
 
 	# -----------------------------------------------------------------
 	if [ "$ss_enabled" = 0 ]; then
-		echo "WARNING: SSH proxy was disabled in /etc/config/shadowsocks."
+		echo "WARNING: SSH / Shadowsocks proxy was disabled in /etc/config/shadowsocks."
 		return 1
 	fi
 
-	if [ "$ss_proxy_mode" = ssh ]; then
+	if [ "$ss_method" = ssh ]; then
 		## /etc/init.d/ss-redir.sh disable
 		export SSH_PASSWORD="$ss_password"
 		export AUTOSSH_GATETIME=0
@@ -53,6 +53,7 @@ start()
 stop()
 {
 	service_stop /usr/sbin/autossh
+	killall -9 ssh 2>/dev/null
 	rm -f /var/run/openssh.status
 	/etc/init.d/ss-redir.sh stop >/dev/null 2>&1
 	return 0
