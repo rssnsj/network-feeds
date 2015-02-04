@@ -37,4 +37,10 @@ define Package/shadowsocks-tools/install
 	$(CP) -a files/* $(1)/
 endef
 
+define Package/shadowsocks-tools/postinst
+#!/bin/sh
+echo "Cleaning LuCI index caches ..."
+rm /tmp/luci-indexcache -f
+endef
+
 $(eval $(call BuildPackage,shadowsocks-tools))
