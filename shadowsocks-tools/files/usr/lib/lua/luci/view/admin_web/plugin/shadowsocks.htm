@@ -79,6 +79,9 @@ function do_ss_save_params()
 			ss_safe_dns_port = 53
 		end
 	end
+	if ss_safe_dns_port == nil then
+		ss_safe_dns_port = ""
+	end
 	if ss_safe_dns_tcp == nil then
 		ss_safe_dns_tcp = 0
 	end
