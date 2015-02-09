@@ -100,7 +100,7 @@ EOF
 	# -----------------------------------------------------------------
 	###### Anti-pollution configuration ######
 	if [ -z "$ss_safe_dns" -o "$ss_safe_dns_tcp" = 1 ]; then
-		# NOTICE: Just use 8.8.x.x when $ss_safe_dns left empty
+		# NOTICE: 8.8.x.x will be used if $ss_safe_dns is left empty
 		start_pdnsd "$ss_safe_dns"
 		(
 			local gfw_host
@@ -204,7 +204,7 @@ start_pdnsd()
 global {
 	perm_cache=256;
 	cache_dir="/var/pdnsd";
-	pid_file = /var/run/pdnsd.pid;
+	pid_file = /var/run/pdnsd-go.pid;
 	run_as="nobody";
 	server_ip = 127.0.0.1;
 	server_port = $PDNSD_LOCAL_PORT;
