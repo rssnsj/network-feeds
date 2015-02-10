@@ -1,5 +1,7 @@
 #!/bin/sh
 
+H ?= rssn.cn
+
 copy: .c/ralink .c/ar71xx
 	@mkdir -p hc5x61 hc6361
 	@cp -vf .c/ralink/packages/autossh_*_ralink.ipk \
@@ -21,5 +23,5 @@ copy: .c/ralink .c/ar71xx
 	ln -s ~/hc6361/platform/bin/ar71xx .c/ar71xx
 
 up: copy
-	rsync -rlptD -v hc5x61 hc6361 root@rssn.cn:/www/network-feeds/
+	rsync -rlptD -v hc5x61 hc6361 root@$(H):/www/network-feeds/
 
