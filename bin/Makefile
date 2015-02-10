@@ -1,5 +1,7 @@
 #!/bin/sh
 
+H ?= rssn.cn
+
 copy: .c/ramips .c/ar71xx
 	@mkdir -p ramips ar71xx
 	@cp -vf .c/ramips/packages/base/dnsmasq_*.ipk \
@@ -21,5 +23,5 @@ copy: .c/ramips .c/ar71xx
 	ln -s ~/openwrt-hc6361/openwrt-ar71xx/bin/ar71xx .c/ar71xx
 
 up: copy
-	rsync -rlptD -v ar71xx ramips root@rssn.cn:/www/network-feeds/
+	rsync -rlptD -v ar71xx ramips root@$(H):/www/network-feeds/
 
