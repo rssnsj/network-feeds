@@ -101,23 +101,11 @@ EOF
 	if [ "$ss_safe_dns_tcp" = 1 ]; then
 		# Just use 8.8.x.x when $ss_safe_dns left empty
 		start_pdnsd "$ss_safe_dns"
-		(
-			local gfw_host
-			cat /etc/gfwlist.list |
-			while read gfw_host; do
-				[ -z "$gfw_host" ] && continue
-				echo "server=/$gfw_host/127.0.0.1#$PDNSD_LOCAL_PORT"
-			done
-		) > /var/etc/dnsmasq-go.d/01-pollution.conf
+		awk -vs="127.0.0.1#$PDNSD_LOCAL_PORT" '!/^$/&&!/^#/{printf("server=/%s/%s\n",$0,s)}' \
+			/etc/gfwlist.list > /var/etc/dnsmasq-go.d/01-pollution.conf
 	elif [ -n "$ss_safe_dns" ]; then
-		(
-			local gfw_host
-			cat /etc/gfwlist.list |
-			while read gfw_host; do
-				[ -z "$gfw_host" ] && continue
-				echo "server=/$gfw_host/$ss_safe_dns#$ss_safe_dns_port"
-			done
-		) > /var/etc/dnsmasq-go.d/01-pollution.conf
+		awk -vs="$ss_safe_dns#$ss_safe_dns_port" '!/^$/&&!/^#/{printf("server=/%s/%s\n",$0,s)}' \
+			/etc/gfwlist.list > /var/etc/dnsmasq-go.d/01-pollution.conf
 	else
 		echo "WARNING: Not using secure DNS, DNS resolution might be polluted."
 	fi
@@ -125,15 +113,8 @@ EOF
 	# -----------------------------------------------------------------
 	###### dnsmasq-to-ipset configuration ######
 	if [ "$ss_proxy_mode" = M ]; then
-		(
-			local gfw_host
-			cat /etc/gfwlist.list |
-			while read gfw_host; do
-				[ -z "$gfw_host" ] && continue
-				echo "ipset=/$gfw_host/gfwlist"
-			done
-		) > /var/etc/dnsmasq-go.d/02-ipset.conf
-
+		awk '!/^$/&&!/^#/{printf("ipset=/%s/gfwlist\n",$0)}' \
+			/etc/gfwlist.list > /var/etc/dnsmasq-go.d/02-ipset.conf
 	fi
 
 	# -----------------------------------------------------------------
