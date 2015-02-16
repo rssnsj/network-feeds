@@ -8,8 +8,16 @@ References:
 
 local fs = require "nixio.fs"
 
+local state_msg = ""
+local ss_redir_on = (luci.sys.call("pidof ss-redir > /dev/null") == 0)
+if ss_redir_on then	
+	state_msg = "<b><font color=\"green\">" .. translate("Running") .. "</font></b>"
+else
+	state_msg = "<b><font color=\"red\">" .. translate("Not running") .. "</font></b>"
+end
+
 m = Map("shadowsocks", translate("Shadowsocks Transparent Proxy"),
-	translatef("A fast tunnel proxy that help you get through firewalls.<br />Here you can setup a Shadowsocks Proxy on your router, and you should have a remote server."))
+	translatef("A fast secure tunnel proxy that help you get through firewalls on your router") .. " - " .. state_msg)
 
 s = m:section(TypedSection, "shadowsocks", translate("Settings"))
 s.anonymous = true
@@ -62,24 +70,24 @@ proxy_mode:value("S", translate("All non-China IPs"))
 proxy_mode:value("M", translate("GFW-List based auto-proxy"))
 
 safe_dns = s:taboption("general", Value, "safe_dns", translate("Safe DNS"),
-	translate("8.8.8.8, 8.8.4.4 will be added by default."))
+	translate("8.8.8.8, 8.8.4.4 will be added by default"))
 safe_dns.datatype = "ip4addr"
 safe_dns.optional = false
 
 safe_dns_port = s:taboption("general", Value, "safe_dns_port", translate("Safe DNS Port"),
-	translate("Foreign DNS on UDP port 53 might be polluted."))
+	translate("Foreign DNS on UDP port 53 might be polluted"))
 safe_dns_port.datatype = "range(1,65535)"
 safe_dns_port.placeholder = "53"
 safe_dns_port.optional = false
 
 safe_dns_tcp = s:taboption("general", Flag, "safe_dns_tcp", translate("DNS uses TCP"),
-	translate("TCP DNS queries will be done over Shadowsocks tunnel."))
+	translate("TCP DNS queries will be done over Shadowsocks tunnel"))
 safe_dns_tcp.rmempty = false
 
 -- ---------------------------------------------------
 glist = s:taboption("gfwlist", Value, "_tmpl",
 	translate("Domain Names"),
-	translate("Content of /etc/gfwlist.list which will be used for anti-DNS-pollution and GFW-List based auto-proxy."))
+	translate("Content of /etc/gfwlist.list which will be used for anti-DNS-pollution and GFW-List based auto-proxy"))
 glist.template = "cbi/tvalue"
 glist.rows = 24
 function glist.cfgvalue(self, section)
@@ -96,7 +104,7 @@ end
 -- ---------------------------------------------------
 local apply = luci.http.formvalue("cbi.apply")
 if apply then
-	os.execute("/etc/init.d/ss-redir.sh restart &")
+	os.execute("/etc/init.d/ss-redir.sh restart >/dev/null 2>&1 &")
 end
 
 return m
