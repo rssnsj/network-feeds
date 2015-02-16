@@ -8,6 +8,13 @@ References:
 
 local fs = require "nixio.fs"
 
+-- ---------------------------------------------------
+local apply = luci.http.formvalue("cbi.apply")
+if apply then
+	os.execute("/etc/init.d/ss-redir.sh restart >/dev/null 2>&1 &")
+end
+
+-- ---------------------------------------------------
 local state_msg = ""
 local ss_redir_on = (luci.sys.call("pidof ss-redir > /dev/null") == 0)
 if ss_redir_on then	
@@ -64,8 +71,8 @@ timeout.datatype = "range(0,10000)"
 timeout.placeholder = "60"
 timeout.optional = false
 
-fast_open = s:taboption("general", Flag, "fast_open", translate("TCP Fast Open"),
-	translate("Enable TCP fast open, only available on kernel > 3.7.0"))
+-- fast_open = s:taboption("general", Flag, "fast_open", translate("TCP Fast Open"),
+--	translate("Enable TCP fast open, only available on kernel > 3.7.0"))
 
 proxy_mode = s:taboption("general", ListValue, "proxy_mode", translate("Proxy Scope"))
 proxy_mode:value("G", translate("All Public IPs"))
@@ -102,12 +109,6 @@ function glist.write(self, section, value)
 	if value ~= old_value then
 		nixio.fs.writefile("/etc/gfwlist.list", value)
 	end
-end
-
--- ---------------------------------------------------
-local apply = luci.http.formvalue("cbi.apply")
-if apply then
-	os.execute("/etc/init.d/ss-redir.sh restart >/dev/null 2>&1 &")
 end
 
 return m
