@@ -87,7 +87,10 @@ function glist.cfgvalue(self, section)
 end
 function glist.write(self, section, value)
 	value = value:gsub("\r\n?", "\n")
-	nixio.fs.writefile("/etc/gfwlist.list", value)
+	local old_value = nixio.fs.readfile("/etc/gfwlist.list")
+	if value ~= old_value then
+		nixio.fs.writefile("/etc/gfwlist.list", value)
+	end
 end
 
 -- ---------------------------------------------------
