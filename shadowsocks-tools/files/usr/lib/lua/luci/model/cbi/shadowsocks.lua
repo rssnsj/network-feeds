@@ -15,7 +15,7 @@ s = m:section(TypedSection, "shadowsocks", translate("Settings"))
 s.anonymous = true
 
 s:tab("general", translate("General Settings"))
-s:tab("gfwlist", translate("Edit GFW-List"))
+s:tab("gfwlist", translate("Customize Domain Names"))
 
 -- ---------------------------------------------------
 switch = s:taboption("general", Flag, "enabled", translate("Enable"))
@@ -59,7 +59,7 @@ timeout.optional = false
 proxy_mode = s:taboption("general", ListValue, "proxy_mode", translate("Proxy Scope"))
 proxy_mode:value("G", translate("All Public IPs"))
 proxy_mode:value("S", translate("All non-China IPs"))
-proxy_mode:value("M", translate("GFW-list based Smart Proxy"))
+proxy_mode:value("M", translate("GFW-List based auto-proxy"))
 
 safe_dns = s:taboption("general", Value, "safe_dns", translate("Safe DNS"),
 	translate("8.8.8.8, 8.8.4.4 will be added by default."))
@@ -78,8 +78,8 @@ safe_dns_tcp.rmempty = false
 
 -- ---------------------------------------------------
 glist = s:taboption("gfwlist", Value, "_tmpl",
-	translate("GFW-List"),
-	translate("Content of /etc/gfwlist.list which will be used for anti-DNS-pollution and hostname based on-demand proxy."))
+	translate("Domain Names"),
+	translate("Content of /etc/gfwlist.list which will be used for anti-DNS-pollution and GFW-List based auto-proxy."))
 glist.template = "cbi/tvalue"
 glist.rows = 24
 function glist.cfgvalue(self, section)
