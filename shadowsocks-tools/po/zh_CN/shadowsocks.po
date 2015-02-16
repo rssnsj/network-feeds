@@ -28,6 +28,9 @@ msgstr "域名列表"
 msgid "Enable"
 msgstr "启用"
 
+msgid "Enable TCP fast open, only available on kernel > 3.7.0"
+msgstr "启用TCP快速打开，仅限于3.7.0以上内核"
+
 msgid "Encryption Method"
 msgstr "加密方法"
 
@@ -72,6 +75,9 @@ msgstr "运行中"
 
 msgid "TCP DNS queries will be done over Shadowsocks tunnel"
 msgstr "使用TCP的DNS会通过Shadowsocks代理通道解析"
+
+msgid "TCP Fast Open"
+msgstr "TCP快速打开"
 
 msgid "Timeout"
 msgstr "超时"

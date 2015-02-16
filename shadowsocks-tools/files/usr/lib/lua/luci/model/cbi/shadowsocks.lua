@@ -64,6 +64,9 @@ timeout.datatype = "range(0,10000)"
 timeout.placeholder = "60"
 timeout.optional = false
 
+fast_open = s:taboption("general", Flag, "fast_open", translate("TCP Fast Open"),
+	translate("Enable TCP fast open, only available on kernel > 3.7.0"))
+
 proxy_mode = s:taboption("general", ListValue, "proxy_mode", translate("Proxy Scope"))
 proxy_mode:value("G", translate("All Public IPs"))
 proxy_mode:value("S", translate("All non-China IPs"))

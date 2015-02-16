@@ -24,6 +24,7 @@ start()
 	local ss_password=`uci get shadowsocks.@shadowsocks[0].password 2>/dev/null`
 	local ss_method=`uci get shadowsocks.@shadowsocks[0].method`
 	local ss_timeout=`uci get shadowsocks.@shadowsocks[0].timeout 2>/dev/null`
+	local ss_fast_open=`uci get shadowsocks.@shadowsocks[0].fast_open 2>/dev/null`
 	local ss_safe_dns=`uci get shadowsocks.@shadowsocks[0].safe_dns 2>/dev/null`
 	local ss_safe_dns_port=`uci get shadowsocks.@shadowsocks[0].safe_dns_port 2>/dev/null`
 	local ss_safe_dns_tcp=`uci get shadowsocks.@shadowsocks[0].safe_dns_tcp 2>/dev/null`
@@ -56,8 +57,12 @@ start()
 
 	# -----------------------------------------------------------------
 	###### shadowsocks ######
+	local extra_opts=
+	[ "$ss_fast_open" = 1 ] && extra_opts="${extra_opts}--fast-open "
+
 	ss-redir -b:: -l$SS_REDIR_PORT -s$ss_server_addr -p$ss_server_port \
-		-k"$ss_password" -m$ss_method -t$ss_timeout -f $SS_REDIR_PIDFILE || return 1
+		-k"$ss_password" -m$ss_method -t$ss_timeout -f $SS_REDIR_PIDFILE \
+		$extra_opts || return 1
 
 	# IPv4 firewall rules
 	iptables -t nat -N shadowsocks_pre
