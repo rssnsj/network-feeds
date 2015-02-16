@@ -8,13 +8,6 @@ References:
 
 local fs = require "nixio.fs"
 
--- ---------------------------------------------------
-local apply = luci.http.formvalue("cbi.apply")
-if apply then
-	os.execute("/etc/init.d/ss-redir.sh restart >/dev/null 2>&1 &")
-end
-
--- ---------------------------------------------------
 local state_msg = ""
 local ss_redir_on = (luci.sys.call("pidof ss-redir > /dev/null") == 0)
 if ss_redir_on then	
@@ -95,7 +88,7 @@ safe_dns_tcp = s:taboption("general", Flag, "safe_dns_tcp", translate("DNS uses 
 safe_dns_tcp.rmempty = false
 
 -- ---------------------------------------------------
-glist = s:taboption("gfwlist", Value, "_tmpl",
+glist = s:taboption("gfwlist", Value, "_glist",
 	translate("Domain Names"),
 	translate("Content of /etc/gfwlist.list which will be used for anti-DNS-pollution and GFW-List based auto-proxy"))
 glist.template = "cbi/tvalue"
@@ -109,6 +102,12 @@ function glist.write(self, section, value)
 	if value ~= old_value then
 		nixio.fs.writefile("/etc/gfwlist.list", value)
 	end
+end
+
+-- ---------------------------------------------------
+local apply = luci.http.formvalue("cbi.apply")
+if apply then
+	os.execute("/etc/init.d/ss-redir.sh restart >/dev/null 2>&1 &")
 end
 
 return m
