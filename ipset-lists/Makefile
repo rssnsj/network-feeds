@@ -20,6 +20,10 @@ define Package/ipset-lists
   DEPENDS:=+ipset
 endef
 
+define Package/ipset-lists/conffiles
+/etc/gfwlist.list
+endef
+
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
 endef
