@@ -1,6 +1,8 @@
 #!/bin/sh /etc/rc.common
+#
 # Copyright (C) 2014 Justin Liu <rssnsj@gmail.com>
-# https://github.com/rssnsj/openwrt-feeds
+# https://github.com/rssnsj/network-feeds
+#
 
 START=96
 
