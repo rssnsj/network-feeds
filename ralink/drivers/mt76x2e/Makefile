@@ -72,6 +72,7 @@ define Build/Compile
 		ARCH="$(LINUX_KARCH)" \
 		SUBDIRS="$(PKG_BUILD_DIR)/build/" \
 		$(foreach c, $(PKG_KCONFIG),$(if $(CONFIG_MT76X2E_$c),CONFIG_$(c)=$(CONFIG_MT76X2E_$c)))\
+		CONFIG_SUPPORT_OPENWRT=y \
 		modules
 endef
 
@@ -89,6 +90,7 @@ define KernelPackage/mt76x2e/install
 	if [ "$$(CONFIG_MT76X2E_RT_SECOND_CARD)" = "7612" ] || [ "$$(CONFIG_MT76X2E_RT_SECOND_CARD)" = "7612e" ]; then \
 		$(INSTALL_DIR) $(1)/etc/wireless/mt7612e/ ; \
 		$(INSTALL_BIN) ./files/mt7612e.sh $(1)/lib/wifi/ ; \
+		$(INSTALL_BIN) ../mt7610e/files/ralink_common.sh $(1)/lib/wifi/ ; \
 		$(INSTALL_BIN) ./files/mt7612e.dat $(1)/etc/wireless/mt7612e/ ; \
 		$(INSTALL_BIN) ./files/mt7612e*.bin $(1)/etc/wireless/mt7612e/ ; \
 		$(INSTALL_BIN) ./files/SingleSKU.dat $(1)/etc/wireless/mt7612/SingleSKU.dat ; \
