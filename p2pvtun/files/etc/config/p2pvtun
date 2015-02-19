@@ -1,0 +1,13 @@
+
+config p2pvtun
+	option enabled '0'
+	option network 'go0'
+	option server '17.17.17.17'
+	option server_port '1717'
+	option password 'WaWaWaWa'
+	option local_ipaddr '10.6.0.11'
+	option remote_ipaddr '10.6.0.1'
+	option local_ip6pair '7008:2:2:2::10/64'
+	option safe_dns '8.8.8.8'
+	option proxy_mode 'M'
+
