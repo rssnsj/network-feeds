@@ -32,6 +32,8 @@ define Build/Prepare
 endef
 
 define Package/p2pvtun/install
+	mkdir -p $(1)/usr/sbin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/p2pvtund $(1)/usr/sbin
 	$(CP) -a files/* $(1)/
 	mkdir -p $(1)/usr/lib/lua/luci/i18n
 	$(BUILD_DIR)/luci/build/po2lmo po/zh_CN/p2pvtun.po $(1)/usr/lib/lua/luci/i18n/p2pvtun.zh-cn.lmo || :
