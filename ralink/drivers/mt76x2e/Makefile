@@ -43,7 +43,7 @@ define KernelPackage/mt76x2e
   CATEGORY:=Ralink Properties
   TITLE:=Ralink mt76x2e wifi AP driver
   FILES:=$(PKG_BUILD_DIR)/build/mt76x2e.ko
-  DEPENDS:=+kmod-cfg80211
+  DEPENDS:=+kmod-cfg80211 +uci2dat +8021xd
   AUTOLOAD:=$(call AutoLoad,91,mt76x2e)
   SUBMENU:=Drivers
   MENU:=1

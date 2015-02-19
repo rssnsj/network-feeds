@@ -1,7 +1,7 @@
 Index: build/Makefile
 ===================================================================
---- build/Makefile	(revision 270)
-+++ build/Makefile	(working copy)
+--- a/build/Makefile	(revision 270)
++++ b/build/Makefile	(working copy)
 @@ -7,6 +7,7 @@
  DRV_NAME = rlt_wifi
  RT_WIFI_DIR = ../rlt_wifi
@@ -20,8 +20,8 @@ Index: build/Makefile
  ifeq ($(CONFIG_MULTI_INF_SUPPORT),y)
 Index: src/os/linux/rt_flash.c
 ===================================================================
---- src/os/linux/rt_flash.c	(revision 0)
-+++ src/os/linux/rt_flash.c	(revision 0)
+--- a/src/os/linux/rt_flash.c	(revision 0)
++++ b/src/os/linux/rt_flash.c	(revision 0)
 @@ -0,0 +1,132 @@
 +#include <linux/module.h>
 +#include <linux/types.h>
@@ -157,8 +157,8 @@ Index: src/os/linux/rt_flash.c
 +MODULE_LICENSE("GPL");
 Index: src/os/linux/rt_linux.c
 ===================================================================
---- src/os/linux/rt_linux.c	(revision 270)
-+++ src/os/linux/rt_linux.c	(working copy)
+--- a/src/os/linux/rt_linux.c	(revision 270)
++++ b/src/os/linux/rt_linux.c	(working copy)
 @@ -328,7 +328,7 @@
  #ifdef RA_MTD_RW_BY_NUM
  	ra_mtd_read(MTD_NUM_FACTORY, 0, (size_t) b, p);
