@@ -1,11 +1,8 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
-msgid "8.8.8.8, 8.8.4.4 will be added by default"
-msgstr "默认会使用 8.8.8.8, 8.8.4.4"
-
-msgid "A fast secure tunnel proxy that help you get through firewalls on your router"
-msgstr "路由器上用于穿越防火墙的快速、安全的代理服务"
+msgid "Non-standard VPN that helps you to get through firewalls"
+msgstr "用于穿越防火墙的非标准VPN技术"
 
 msgid "All Public IPs"
 msgstr "所有公网IP"
@@ -19,29 +16,23 @@ msgstr "/etc/gfwlist.list 文件内容，用于DNS防污染和基于GFW-List的�
 msgid "Customize Domain Names"
 msgstr "自定义域名列表"
 
-msgid "DNS uses TCP"
-msgstr "DNS使用TCP"
-
 msgid "Domain Names"
 msgstr "域名列表"
 
 msgid "Enable"
 msgstr "启用"
 
-msgid "Enable TCP fast open, only available on kernel > 3.7.0"
-msgstr "启用TCP快速打开，仅限于3.7.0以上内核"
-
-msgid "Encryption Method"
-msgstr "加密方法"
-
-msgid "Foreign DNS on UDP port 53 might be polluted"
-msgstr "使用UDP 53端口的国外DNS可能会被污染"
-
 msgid "GFW-List based auto-proxy"
 msgstr "基于GFW-List的自动代理"
 
 msgid "General Settings"
 msgstr "基本设置"
+
+msgid "Local Virtual IP"
+msgstr "本地虚拟IP"
+
+msgid "Remote Virtual IP"
+msgstr "远端虚拟IP"
 
 msgid "Password"
 msgstr "密码"
@@ -64,8 +55,8 @@ msgstr "服务器端口"
 msgid "Settings"
 msgstr "设置"
 
-msgid "Shadowsocks Transparent Proxy"
-msgstr "Shadowsocks透明代理"
+msgid "P2P-based Virtual Tunneller"
+msgstr "基于P2P技术的虚拟隧道服务"
 
 msgid "Not running"
 msgstr "未运行"
@@ -73,11 +64,3 @@ msgstr "未运行"
 msgid "Running"
 msgstr "运行中"
 
-msgid "TCP DNS queries will be done over Shadowsocks tunnel"
-msgstr "使用TCP的DNS会通过Shadowsocks代理通道解析"
-
-msgid "TCP Fast Open"
-msgstr "TCP快速打开"
-
-msgid "Timeout"
-msgstr "超时"

@@ -8,7 +8,7 @@
 local fs = require "nixio.fs"
 
 local state_msg = ""
-local service_on = (luci.sys.call("pidof p2pvtund > /dev/null") == 0)
+local service_on = (luci.sys.call("pidof p2pvtund >/dev/null && iptables-save | grep p2pvtun_ >/dev/null") == 0)
 if service_on then	
 	state_msg = "<b><font color=\"green\">" .. translate("Running") .. "</font></b>"
 else
@@ -54,8 +54,7 @@ proxy_mode:value("G", translate("All Public IPs"))
 proxy_mode:value("S", translate("All non-China IPs"))
 proxy_mode:value("M", translate("GFW-List based auto-proxy"))
 
-safe_dns = s:taboption("general", Value, "safe_dns", translate("Safe DNS"),
-	translate("8.8.8.8, 8.8.4.4 will be added by default"))
+safe_dns = s:taboption("general", Value, "safe_dns", translate("Safe DNS"))
 safe_dns.datatype = "ip4addr"
 safe_dns.optional = false
 
