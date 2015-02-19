@@ -32,6 +32,7 @@ define KernelPackage/mt7610e
   FILES:=$(PKG_BUILD_DIR)/build/mt7610e.ko
   AUTOLOAD:=$(call AutoLoad,91,mt7610e)
   SUBMENU:=Drivers
+  DEPENDS:=+uci2dat +8021xd
   MENU:=1
 endef
 
