@@ -135,11 +135,41 @@ Index: src/os/linux/rt_flash.c
 +MODULE_AUTHOR("Steven Liu <steven_liu@ralinktech.com.tw>");
 +MODULE_DESCRIPTION("Ralink APSoC Flash Map");
 +MODULE_LICENSE("GPL");
+Index: src/os/linux/rt_linux.c
+===================================================================
+--- a/src/os/linux/rt_linux.c	(revision 268)
++++ b/src/os/linux/rt_linux.c	(working copy)
+@@ -291,7 +291,7 @@
+ #ifdef RA_MTD_RW_BY_NUM
+ 	ra_mtd_read(MTD_NUM_FACTORY, 0, (size_t) b, p);
+ #else
+-	ra_mtd_read_nm("Factory", a&0xFFFF, (size_t) b, p);
++	ra_mtd_read_nm("factory", a&0xFFFF, (size_t) b, p);
+ #endif
+ #endif /* CONFIG_RALINK_FLASH_API */
+ }
+@@ -307,7 +307,7 @@
+ #ifdef RA_MTD_RW_BY_NUM
+ 	ra_mtd_write(MTD_NUM_FACTORY, 0, (size_t) b, p);
+ #else
+-	ra_mtd_write_nm("Factory", a&0xFFFF, (size_t) b, p);
++	ra_mtd_write_nm("factory", a&0xFFFF, (size_t) b, p);
+ #endif
+ #endif /* CONFIG_RALINK_FLASH_API */
+ }
 Index: build/Makefile
 ===================================================================
 --- a/build/Makefile	(revision 267)
 +++ b/build/Makefile	(working copy)
-@@ -30,6 +30,7 @@
+@@ -10,6 +10,7 @@
+ SRC_DIR = .
+ obj-$(CONFIG_MT7610_AP) += $(DRV_NAME).o
+ endif
++EXTRA_CFLAGS += -DPRE_ASSIGN_MAC_ADDR
+ 
+ obj-$(CONFIG_MT7610_AP) += MT7610_ap.o
+ 
+@@ -30,6 +31,7 @@
  $(DRV_NAME)-objs += $(SRC_DIR)/os/linux/rt_linux.o
  $(DRV_NAME)-objs += $(SRC_DIR)/os/linux/rt_proc.o
  $(DRV_NAME)-objs += $(SRC_DIR)/os/linux/rt_main_dev.o
