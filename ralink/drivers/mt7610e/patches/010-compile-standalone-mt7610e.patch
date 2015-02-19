@@ -1,7 +1,7 @@
 Index: src/os/linux/rt_flash.c
 ===================================================================
---- src/os/linux/rt_flash.c	(revision 0)
-+++ src/os/linux/rt_flash.c	(revision 0)
+--- a/src/os/linux/rt_flash.c	(revision 0)
++++ b/src/os/linux/rt_flash.c	(revision 0)
 @@ -0,0 +1,132 @@
 +#include <linux/module.h>
 +#include <linux/types.h>
@@ -137,8 +137,8 @@ Index: src/os/linux/rt_flash.c
 +MODULE_LICENSE("GPL");
 Index: build/Makefile
 ===================================================================
---- build/Makefile	(revision 267)
-+++ build/Makefile	(working copy)
+--- a/build/Makefile	(revision 267)
++++ b/build/Makefile	(working copy)
 @@ -30,6 +30,7 @@
  $(DRV_NAME)-objs += $(SRC_DIR)/os/linux/rt_linux.o
  $(DRV_NAME)-objs += $(SRC_DIR)/os/linux/rt_proc.o
