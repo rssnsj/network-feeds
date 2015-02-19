@@ -66,7 +66,7 @@ endef
 
 define KernelPackage/mt7610e/install
 	$(INSTALL_DIR) $(1)/lib/wifi/
-	$(INSTALL_BIN) ./files/mt7610e.sh $(1)/lib/wifi/
+	$(INSTALL_BIN) ./files/mt7610e.sh ./files/ralink_common.sh $(1)/lib/wifi/
 	$(INSTALL_DIR) $(1)/etc/wireless/mt7610e/
 	$(INSTALL_BIN) ./files/mt7610e.dat $(1)/etc/wireless/mt7610e/
 	-$(INSTALL_BIN) ./files/mt7610e.eeprom.bin $(1)/etc/wireless/mt7610e/
