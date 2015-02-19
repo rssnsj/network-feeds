@@ -58,6 +58,9 @@ msgstr "设置"
 msgid "P2P-based Virtual Tunneller"
 msgstr "基于P2P技术的虚拟隧道服务"
 
+msgid "P2P Virtual Tunneller"
+msgstr "P2P虚拟隧道"
+
 msgid "Not running"
 msgstr "未运行"
 
