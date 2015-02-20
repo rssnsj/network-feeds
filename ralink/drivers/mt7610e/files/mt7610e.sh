@@ -21,11 +21,10 @@ enable_mt7610e() {
 
 detect_mt7610e() {
 #	detect_ralink_wifi mt7610e mt7610e
-	#ssid=mt7610e-`ifconfig eth0 | grep HWaddr | cut -c 51- | sed 's/://g'`
 	cd /sys/module
 	[ -d $module ] || return
-        [ -e /etc/config/wireless ] && return
-         cat <<EOF
+	uci get wireless.mt7610e >/dev/null 2>&1 && return
+	cat <<EOF
 config wifi-device mt7610e
 	option type mt7610e
 	option vendor ralink
@@ -42,7 +41,6 @@ config wifi-iface
 	option encryption none
 
 EOF
-
 
 }
 

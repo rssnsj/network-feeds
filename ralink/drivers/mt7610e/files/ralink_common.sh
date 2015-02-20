@@ -208,7 +208,7 @@ disable_ralink_wifi() {
     done
 
     # kill any running ap_clients
-    killall ap_client || true
+    killall ap_client 2>/dev/null || true
 }
 
 enable_ralink_wifi() {
