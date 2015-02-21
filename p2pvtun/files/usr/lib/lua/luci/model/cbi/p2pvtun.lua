@@ -54,6 +54,12 @@ proxy_mode:value("G", translate("All Public IPs"))
 proxy_mode:value("S", translate("All non-China IPs"))
 proxy_mode:value("M", translate("GFW-List based auto-proxy"))
 
+-- protocols = s:taboption("general", MultiValue, "protocols", translate("Protocols"))
+-- protocols:value("T", translate("TCP"))
+-- protocols:value("U", translate("UDP"))
+-- protocols:value("I", translate("ICMP"))
+-- protocols:value("O", translate("Others"))
+
 safe_dns = s:taboption("general", Value, "safe_dns", translate("Safe DNS"))
 safe_dns.datatype = "ip4addr"
 safe_dns.optional = false

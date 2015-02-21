@@ -24,6 +24,7 @@ start()
 	local vt_safe_dns=`uci get p2pvtun.@p2pvtun[0].safe_dns 2>/dev/null`
 	local vt_safe_dns_port=`uci get p2pvtun.@p2pvtun[0].safe_dns_port 2>/dev/null`
 	local vt_proxy_mode=`uci get p2pvtun.@p2pvtun[0].proxy_mode`
+	local vt_protocols=`uci get p2pvtun.@p2pvtun[0].protocols`
 	# $covered_subnets, $local_addresses are not required
 	local covered_subnets=`uci get p2pvtun.@p2pvtun[0].covered_subnets 2>/dev/null`
 	local local_addresses=`uci get p2pvtun.@p2pvtun[0].local_addresses 2>/dev/null`

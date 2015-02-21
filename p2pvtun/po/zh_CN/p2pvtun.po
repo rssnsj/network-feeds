@@ -40,6 +40,9 @@ msgstr "密码"
 msgid "Proxy Scope"
 msgstr "代理范围"
 
+msgid "Protocols"
+msgstr "协议"
+
 msgid "Safe DNS"
 msgstr "安全DNS"
 
