@@ -15,8 +15,22 @@ else
 	state_msg = "<b><font color=\"red\">" .. translate("Not running") .. "</font></b>"
 end
 
+local __c = uci.cursor()
+local __c_port = "<b>" .. __c:get_first("p2pvtun", "p2pvtun", "server_port", "(null)") .. "</b>"
+local __c_lip = "<b>" .. __c:get_first("p2pvtun", "p2pvtun", "local_ipaddr", "(null)") .. "</b>"
+local __c_rip = "<b>" .. __c:get_first("p2pvtun", "p2pvtun", "remote_ipaddr", "(null)") .. "</b>"
+local __c_pwd = "<b>" .. __c:get_first("p2pvtun", "p2pvtun", "password", "(null)") .. "</b>"
+local __c_net = "<b>" .. __c:get_first("p2pvtun", "p2pvtun", "network", "go") .. "</b>"
+
 m = Map("p2pvtun", translate("P2P-based Virtual Tunneller"),
-	translatef("Non-standard VPN that helps you to get through firewalls") .. " - " .. state_msg)
+	translate("Non-standard VPN that helps you to get through firewalls") .. " - " .. state_msg .. "<br />" ..
+	translate("Add the following commands to <b>/etc/rc.local</b> of your server based on your settings") .. ":<br />" ..
+	"<pre>" ..
+	"/usr/sbin/p2pvtund -l 0.0.0.0:" .. __c_port .. " -a " .. __c_rip .. "/" .. __c_lip .. " -n p2pvtun-" .. __c_net .. " -e '" .. __c_pwd .. "' -d\n" ..
+	"iptables -t nat -A POSTROUTING ! -o lo -j MASQUERADE   # Ensure NAT is enabled\n" .. 
+	"echo 1 > /proc/sys/net/ipv4/ip_forward\n" ..
+	"</pre>")
+
 
 s = m:section(TypedSection, "p2pvtun", translate("Settings"))
 s.anonymous = true

@@ -17,7 +17,7 @@ else
 end
 
 m = Map("shadowsocks", translate("Shadowsocks Transparent Proxy"),
-	translatef("A fast secure tunnel proxy that help you get through firewalls on your router") .. " - " .. state_msg)
+	translate("A fast secure tunnel proxy that help you get through firewalls on your router") .. " - " .. state_msg)
 
 s = m:section(TypedSection, "shadowsocks", translate("Settings"))
 s.anonymous = true
