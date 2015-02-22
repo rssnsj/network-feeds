@@ -14,7 +14,7 @@ p2pvtund: p2pvtund.o
 %.o: %.c $(HEADERS)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-install: all
+install: p2pvtund
 	cp -f p2pvtund /usr/sbin/
 
 clean:
