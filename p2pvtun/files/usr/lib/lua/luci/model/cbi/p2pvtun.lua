@@ -27,7 +27,7 @@ m = Map("p2pvtun", translate("Non-standard Virtual Tunneller"),
 	translate("Add the following commands to <b>/etc/rc.local</b> of your server according to your settings") .. ":<br />" ..
 	"<pre>" ..
 	"/usr/sbin/p2pvtund -l 0.0.0.0:" .. __c_port .. " -a " .. __c_rip .. "/" .. __c_lip .. " -n p2pvtun-" .. __c_net .. " -e '" .. __c_pwd .. "' -d\n" ..
-	"iptables -t nat -A POSTROUTING ! -o lo -j MASQUERADE   # Ensure NAT is enabled\n" .. 
+	"iptables -t nat -A POSTROUTING ! -o lo -j MASQUERADE   # " .. translate("Ensure NAT is enabled") .. "\n" .. 
 	"echo 1 > /proc/sys/net/ipv4/ip_forward\n" ..
 	"</pre>")
 

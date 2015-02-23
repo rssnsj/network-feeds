@@ -4,6 +4,12 @@ msgstr "Content-Type: text/plain; charset=UTF-8"
 msgid "Non-standard VPN that helps you to get through firewalls"
 msgstr "用于穿越防火墙的非标准VPN技术"
 
+msgid "Add the following commands to <b>/etc/rc.local</b> of your server according to your settings"
+msgstr "根据你的配置，将以下命令添加到你的服务器的 <b>/etc/rc.local</b> 文件中"
+
+msgid "Ensure NAT is enabled"
+msgstr "确保NAT启用"
+
 msgid "All Public IPs"
 msgstr "所有公网IP"
 
