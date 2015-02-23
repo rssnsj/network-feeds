@@ -22,6 +22,7 @@ static const char *g_uuid = NULL;
 static const char *g_expected_uuid = NULL;
 static const char *g_log_file = NULL;
 static const char *g_pid_file = NULL;
+static const char *g_status_file = NULL;
 static unsigned g_tun_mtu = 1408;
 static unsigned g_keepalive_timeo = 7;
 static unsigned g_renegotiate_timeo = 26;
@@ -153,7 +154,6 @@ static int tun_alloc(char *dev)
 	return fd;
 }
 
-
 static void print_help(int argc, char *argv[])
 {
 	printf("P2P-based virtual tunneller.\n");
@@ -161,7 +161,8 @@ static void print_help(int argc, char *argv[])
 	printf("  %s [options]\n", argv[0]);
 	printf("Options:\n");
 	printf("  -u <uuid>             specify my UUID string\n");
-	printf("  -U <expected_uuid>    specify peer UUID to connect (P2P trial mode)\n");
+	printf("  -U <expected_uuid>    specify peer UUID to connect (P2P negotiation mode)\n");
+	printf("  -s <ip:port>          P2P negotiation server address (P2P negotiation mode)\n");
 	printf("  -l <ip:port>          IP:port of local binding\n");
 	printf("  -r <ip:port>          IP:port of peer device\n");
 	printf("  -a <tun_lip/tun_rip>  tunnel IP pair\n");
@@ -171,8 +172,10 @@ static void print_help(int argc, char *argv[])
 	printf("  -n <ifname>           tunnel interface name\n");
 	printf("  -o <log_file>         log file path, only used with '-d'\n");
 	printf("  -p <pid_file>         PID file of the daemon\n");
+	printf("  -S <status_file>      file to store the latest negotiation status (P2P negotiation mode)\n");
 	printf("  -e <encrypt_key>      shared password for data encryption\n");
 	printf("  -N                    turn off encryption for tunnelling data\n");
+	printf("  -v                    verbose print (P2P negotiation mode)\n");
 	printf("  -d                    run as daemon process\n");
 	printf("  -h                    print this help\n");
 }
@@ -199,6 +202,8 @@ static void __cleanup_and_exit(int sig)
 	}
 	if (g_pid_file)
 		unlink(g_pid_file);
+	if (g_status_file)
+		unlink(g_status_file);
 	exit(sig);
 }
 
@@ -215,7 +220,7 @@ int main(int argc, char *argv[])
 	int opt, rc;
 #define is_in_p2pcat_mode() (0)
 
-	while ((opt = getopt(argc, argv, "u:U:r:l:a:A:m:t:n:o:p:e:Ndh")) != -1) {
+	while ((opt = getopt(argc, argv, "u:U:s:r:l:a:A:m:t:n:o:p:S:e:Nvdh")) != -1) {
 		switch (opt) {
 		case 'u':
 			g_uuid = optarg;
@@ -250,6 +255,9 @@ int main(int argc, char *argv[])
 			break;
 		case 'p':
 			g_pid_file = optarg;
+			break;
+		case 'S':
+			g_status_file = optarg;
 			break;
 		case 'e':
 			g_crypto_passwd = optarg;
