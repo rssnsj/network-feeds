@@ -7,12 +7,14 @@ copy: .c/ramips .c/ar71xx
 		.c/ramips/packages/base/kmod-proto-bridge_*.ipk \
 		.c/ramips/packages/base/shadowsocks-libev_*.ipk \
 		.c/ramips/packages/base/shadowsocks-tools_*.ipk \
+		.c/ramips/packages/base/p2pvtun_*.ipk \
 		ramips/
 	@cp -vf .c/ar71xx/packages/base/dnsmasq_*.ipk \
 		.c/ar71xx/packages/base/ipset-lists_*.ipk \
 		.c/ar71xx/packages/base/kmod-proto-bridge_*.ipk \
 		.c/ar71xx/packages/base/shadowsocks-libev_*.ipk \
 		.c/ar71xx/packages/base/shadowsocks-tools_*.ipk \
+		.c/ar71xx/packages/base/p2pvtun_*.ipk \
 		ar71xx/
 
 .c/ramips .c/ar71xx:
