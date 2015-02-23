@@ -1,0 +1,12 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8"
+
+msgid "Content of /etc/gfwlist.list which will be used for anti-DNS-pollution and GFW-List based auto-proxy"
+msgstr "/etc/gfwlist.list 文件内容，用于DNS防污染和基于GFW-List的自动代理"
+
+msgid "Proxy Domain Settings"
+msgstr "代理域名设置"
+
+msgid "Proxy Domains"
+msgstr "代理域名设置"
+

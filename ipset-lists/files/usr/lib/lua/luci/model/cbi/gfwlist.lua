@@ -15,7 +15,7 @@ function sync_value_to_file(value, file)
 	end
 end
 
-m = SimpleForm("gfwlist", translate("Proxy Domains"))
+m = SimpleForm("gfwlist", translate("Proxy Domain Settings"))
 
 -- ---------------------------------------------------
 glist = m:field(TextValue, "gfwlist", nil,

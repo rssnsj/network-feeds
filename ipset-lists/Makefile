@@ -35,6 +35,8 @@ Build/Compile = $(Build/Compile/Default)
 
 define Package/ipset-lists/install
 	$(CP) -a files/* $(1)/
+	mkdir -p $(1)/usr/lib/lua/luci/i18n
+	$(BUILD_DIR)/luci/build/po2lmo po/zh_CN/gfwlist.po $(1)/usr/lib/lua/luci/i18n/gfwlist.zh-cn.lmo || :
 endef
 
 $(eval $(call BuildPackage,ipset-lists))

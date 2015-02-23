@@ -13,17 +13,8 @@ msgstr "所有公网IP"
 msgid "All non-China IPs"
 msgstr "所有非中国的IP"
 
-msgid "Content of /etc/gfwlist.list which will be used for anti-DNS-pollution and GFW-List based auto-proxy"
-msgstr "/etc/gfwlist.list 文件内容，用于DNS防污染和基于GFW-List的自动代理"
-
-msgid "Customize Domain Names"
-msgstr "自定义域名列表"
-
 msgid "DNS uses TCP"
 msgstr "DNS使用TCP"
-
-msgid "Domain Names"
-msgstr "域名列表"
 
 msgid "Enable"
 msgstr "启用"
@@ -81,3 +72,7 @@ msgstr "TCP快速打开"
 
 msgid "Timeout"
 msgstr "超时"
+
+msgid "Click here to customize your GFW-List"
+msgstr "点击此处自定义GFW-List"
+

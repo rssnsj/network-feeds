@@ -22,7 +22,7 @@ local __c_rip = "<b>" .. __c:get_first("p2pvtun", "p2pvtun", "remote_ipaddr", "(
 local __c_pwd = "<b>" .. __c:get_first("p2pvtun", "p2pvtun", "password", "(null)") .. "</b>"
 local __c_net = "<b>" .. __c:get_first("p2pvtun", "p2pvtun", "network", "go") .. "</b>"
 
-m = Map("p2pvtun", translate("P2P-based Virtual Tunneller"),
+m = Map("p2pvtun", translate("Non-standard Virtual Tunneller"),
 	translate("Non-standard VPN that helps you to get through firewalls") .. " - " .. state_msg .. "<br />" ..
 	translate("Add the following commands to <b>/etc/rc.local</b> of your server according to your settings") .. ":<br />" ..
 	"<pre>" ..
@@ -60,7 +60,10 @@ remote_ipaddr = s:option(Value, "remote_ipaddr", translate("Remote Virtual IP"))
 remote_ipaddr.datatype = "ip4addr"
 remote_ipaddr.optional = false
 
-proxy_mode = s:option(ListValue, "proxy_mode", translate("Proxy Scope"))
+proxy_mode = s:option(ListValue, "proxy_mode", translate("Proxy Scope"),
+	"<a href=\"" .. luci.dispatcher.build_url("admin", "services", "gfwlist") .. "\">" ..
+	translate("Click here to customize your GFW-List") ..
+	"</a>")
 proxy_mode:value("G", translate("All Public IPs"))
 proxy_mode:value("S", translate("All non-China IPs"))
 proxy_mode:value("M", translate("GFW-List based auto-proxy"))
