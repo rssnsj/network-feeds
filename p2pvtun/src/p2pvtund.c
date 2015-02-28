@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2015 Justin Liu
+ * Author: Justin Liu <rssnsj@gmail.com>
+ * https://github.com/rssnsj/network-feeds
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

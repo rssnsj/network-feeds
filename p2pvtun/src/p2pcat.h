@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2015 Justin Liu
+ * Author: Justin Liu <rssnsj@gmail.com>
+ * https://github.com/rssnsj/network-feeds
+ */
+
 #ifndef __P2PCAT_H
 #define __P2PCAT_H
 
