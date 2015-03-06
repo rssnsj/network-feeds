@@ -10,4 +10,5 @@ config p2pvtun
 	option local_ip6pair '7008:2:2:2::10/64'
 	option safe_dns '8.8.8.8'
 	option proxy_mode 'M'
+	option gfwlist 'china-banned'
 

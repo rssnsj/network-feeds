@@ -1,5 +1,5 @@
 --[[
- Customize /etc/gfwlist.list content
+ Customize firewall-banned domain lists - /etc/gfwlist/
  Copyright (c) 2015 Justin Liu
  Author: Justin Liu <rssnsj@gmail.com>
  https://github.com/rssnsj/network-feeds
@@ -19,15 +19,15 @@ m = SimpleForm("gfwlist", translate("Proxy Domain Settings"))
 
 -- ---------------------------------------------------
 glist = m:field(TextValue, "gfwlist", nil,
-	translate("Content of /etc/gfwlist.list which will be used for anti-DNS-pollution and GFW-List based auto-proxy"))
+	translate("Content of /etc/gfwlist/china-banned which will be used for anti-DNS-pollution and GFW-List based auto-proxy"))
 glist.rmempty = false
 glist.rows = 24
 
 function glist.cfgvalue()
-	return nixio.fs.readfile("/etc/gfwlist.list") or ""
+	return nixio.fs.readfile("/etc/gfwlist/china-banned") or ""
 end
 function glist.write(self, section, value)
-	sync_value_to_file(value, "/etc/gfwlist.list")
+	sync_value_to_file(value, "/etc/gfwlist/china-banned")
 end
 
 -- ---------------------------------------------------

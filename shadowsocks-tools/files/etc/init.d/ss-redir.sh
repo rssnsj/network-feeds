@@ -7,7 +7,7 @@
 START=96
 
 #
-# Data source of /etc/gfwlist.list:
+# Data source of /etc/gfwlist/china-banned:
 #  https://github.com/zhiyi7/ddwrt/blob/master/jffs/vpn/dnsmasq-gfw.txt
 #  http://code.google.com/p/autoproxy-gfwlist/
 #
@@ -30,6 +30,7 @@ start()
 	local ss_safe_dns_port=`uci get shadowsocks.@shadowsocks[0].safe_dns_port 2>/dev/null`
 	local ss_safe_dns_tcp=`uci get shadowsocks.@shadowsocks[0].safe_dns_tcp 2>/dev/null`
 	local ss_proxy_mode=`uci get shadowsocks.@shadowsocks[0].proxy_mode`
+	local ss_gfwlist=`uci get shadowsocks.@shadowsocks[0].gfwlist`
 	# $covered_subnets, $local_addresses are not required
 	local covered_subnets=`uci get shadowsocks.@shadowsocks[0].covered_subnets 2>/dev/null`
 	local local_addresses=`uci get shadowsocks.@shadowsocks[0].local_addresses 2>/dev/null`
@@ -104,10 +105,10 @@ EOF
 		# Just use 8.8.x.x when $ss_safe_dns left empty
 		start_pdnsd "$ss_safe_dns"
 		awk -vs="127.0.0.1#$PDNSD_LOCAL_PORT" '!/^$/&&!/^#/{printf("server=/%s/%s\n",$0,s)}' \
-			/etc/gfwlist.list > /var/etc/dnsmasq-go.d/01-pollution.conf
+			/etc/gfwlist/$ss_gfwlist > /var/etc/dnsmasq-go.d/01-pollution.conf
 	elif [ -n "$ss_safe_dns" ]; then
 		awk -vs="$ss_safe_dns#$ss_safe_dns_port" '!/^$/&&!/^#/{printf("server=/%s/%s\n",$0,s)}' \
-			/etc/gfwlist.list > /var/etc/dnsmasq-go.d/01-pollution.conf
+			/etc/gfwlist/$ss_gfwlist > /var/etc/dnsmasq-go.d/01-pollution.conf
 	else
 		echo "WARNING: Not using secure DNS, DNS resolution might be polluted."
 	fi
@@ -116,7 +117,7 @@ EOF
 	###### dnsmasq-to-ipset configuration ######
 	if [ "$ss_proxy_mode" = M ]; then
 		awk '!/^$/&&!/^#/{printf("ipset=/%s/gfwlist\n",$0)}' \
-			/etc/gfwlist.list > /var/etc/dnsmasq-go.d/02-ipset.conf
+			/etc/gfwlist/$ss_gfwlist > /var/etc/dnsmasq-go.d/02-ipset.conf
 	fi
 
 	# -----------------------------------------------------------------

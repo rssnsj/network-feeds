@@ -6,5 +6,6 @@ config shadowsocks
 	option password 'WaWaWaWa'
 	option method 'table'
 	option proxy_mode 'M'
+	option gfwlist 'china-banned'
 	option safe_dns_tcp '1'
 

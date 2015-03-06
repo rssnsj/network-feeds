@@ -25,6 +25,7 @@ start()
 	local vt_safe_dns_port=`uci get p2pvtun.@p2pvtun[0].safe_dns_port 2>/dev/null`
 	local vt_proxy_mode=`uci get p2pvtun.@p2pvtun[0].proxy_mode`
 	local vt_protocols=`uci get p2pvtun.@p2pvtun[0].protocols 2>/dev/null`
+	local vt_gfwlist=`uci get p2pvtun.@p2pvtun[0].gfwlist`
 	# $covered_subnets, $local_addresses are not required
 	local covered_subnets=`uci get p2pvtun.@p2pvtun[0].covered_subnets 2>/dev/null`
 	local local_addresses=`uci get p2pvtun.@p2pvtun[0].local_addresses 2>/dev/null`
@@ -134,7 +135,7 @@ EOF
 	###### Anti-pollution configuration ######
 	if [ -n "$vt_safe_dns" ]; then
 		awk -vs="$vt_safe_dns#$vt_safe_dns_port" '!/^$/&&!/^#/{printf("server=/%s/%s\n",$0,s)}' \
-			/etc/gfwlist.list > /var/etc/dnsmasq-go.d/01-pollution.conf
+			/etc/gfwlist/$vt_gfwlist > /var/etc/dnsmasq-go.d/01-pollution.conf
 	else
 		echo "WARNING: Not using secure DNS, DNS resolution might be polluted."
 	fi
@@ -143,7 +144,7 @@ EOF
 	###### dnsmasq-to-ipset configuration ######
 	if [ "$vt_proxy_mode" = M ]; then
 		awk '!/^$/&&!/^#/{printf("ipset=/%s/gfwlist\n",$0)}' \
-			/etc/gfwlist.list > /var/etc/dnsmasq-go.d/02-ipset.conf
+			/etc/gfwlist/$vt_gfwlist > /var/etc/dnsmasq-go.d/02-ipset.conf
 	fi
 
 	# -----------------------------------------------------------------

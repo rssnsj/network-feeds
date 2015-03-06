@@ -21,7 +21,7 @@ define Package/ipset-lists
 endef
 
 define Package/ipset-lists/conffiles
-/etc/gfwlist.list
+/etc/gfwlist/china-banned
 endef
 
 define Build/Prepare
