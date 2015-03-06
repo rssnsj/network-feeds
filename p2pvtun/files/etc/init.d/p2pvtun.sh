@@ -43,6 +43,7 @@ start()
 	[ -z "$vt_network" ] && vt_network="vt0"
 	[ -z "$vt_proxy_mode" ] && vt_proxy_mode=S
 	[ -z "$vt_safe_dns_port" ] && vt_safe_dns_port=53
+	[ -z "$vt_gfwlist" ] && vt_gfwlist="china-banned"
 	# Get LAN settings as default parameters
 	[ -f /lib/functions/network.sh ] && . /lib/functions/network.sh
 	[ -z "$covered_subnets" ] && network_get_subnet covered_subnets lan

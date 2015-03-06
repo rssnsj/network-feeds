@@ -52,6 +52,7 @@ start()
 	[ -z "$ss_method" ] && ss_method=table
 	[ -z "$ss_timeout" ] && ss_timeout=60
 	[ -z "$ss_safe_dns_port" ] && ss_safe_dns_port=53
+	[ -z "$ss_gfwlist" ] && ss_gfwlist="china-banned"
 	# Get LAN settings as default parameters
 	[ -f /lib/functions/network.sh ] && . /lib/functions/network.sh
 	[ -z "$covered_subnets" ] && network_get_subnet covered_subnets lan
