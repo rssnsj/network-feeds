@@ -63,14 +63,16 @@ start()
 		uci set network.$vt_network.ifname=$vt_ifname
 		uci commit network
 
-		# Attach this interface to firewall zone 'wan'
+		# Attach this interface to firewall zone "wan"
 		local i=0
 		while true; do
 			local __zone=`uci get firewall.@zone[$i].name`
 			[ -z "$__zone" ] && break
+			# Match zone "wan" to modify
 			if [ "$__zone" = wan ]; then
-				uci del_list firewall.@zone[$i].network=$vt_network 2>/dev/null
-				uci add_list firewall.@zone[$i].network=$vt_network
+				local __zone_nets=`uci get firewall.@zone[$i].network`
+				uci delete firewall.@zone[$i].network
+				uci set firewall.@zone[$i].network="$__zone_nets $vt_network"
 				uci commit firewall
 				break
 			fi
