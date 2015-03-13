@@ -73,7 +73,7 @@ proxy_mode = s:option(ListValue, "proxy_mode", translate("Proxy Scope"),
 	translate("Click here to customize your GFW-List") ..
 	"</a>")
 proxy_mode:value("G", translate("All Public IPs"))
-proxy_mode:value("S", translate("All non-China IPs"))
+proxy_mode:value("S", translate("All non-listed IPs above"))
 proxy_mode:value("M", translate("GFW-List based auto-proxy"))
 
 gfwlist = s:option(ListValue, "gfwlist", translate("GFW-List to Use"),
