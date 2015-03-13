@@ -60,27 +60,14 @@ remote_ipaddr = s:option(Value, "remote_ipaddr", translate("Remote Virtual IP"))
 remote_ipaddr.datatype = "ip4addr"
 remote_ipaddr.optional = false
 
-np_ipset = s:option(ListValue, "nonproxy_ipset", translate("Non-proxy IP Set"),
-	translate("Select ipset that does not need proxy. e.g., choose \"china\" if you are in China"))
-local e
-for e in fs.dir("/etc/ipset") do
-	np_ipset:value(e, e)
-end
-np_ipset:value("none", translate("-- None --"))
-
-proxy_mode = s:option(ListValue, "proxy_mode", translate("Proxy Scope"),
+proxy_mode = s:option(ListValue, "proxy_mode", translate("Proxy Mode"),
 	"<a href=\"" .. luci.dispatcher.build_url("admin", "services", "gfwlist") .. "\">" ..
 	translate("Click here to customize your GFW-List") ..
 	"</a>")
 proxy_mode:value("G", translate("All Public IPs"))
-proxy_mode:value("S", translate("All non-listed IPs above"))
+proxy_mode:value("S", translate("All non-China IPs"))
 proxy_mode:value("M", translate("GFW-List based auto-proxy"))
-
-gfwlist = s:option(ListValue, "gfwlist", translate("GFW-List to Use"),
-	translate("Effective in \"GFW-List based auto-proxy\" mode only"))
-for e in fs.dir("/etc/gfwlist") do
-	gfwlist:value(e, e)
-end
+proxy_mode:value("V", translate("Watching Youku overseas"))
 
 -- protocols = s:option(MultiValue, "protocols", translate("Protocols"))
 -- protocols:value("T", translate("TCP"))

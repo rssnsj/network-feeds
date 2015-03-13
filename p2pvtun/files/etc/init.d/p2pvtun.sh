@@ -24,9 +24,7 @@ start()
 	local vt_safe_dns=`uci get p2pvtun.@p2pvtun[0].safe_dns 2>/dev/null`
 	local vt_safe_dns_port=`uci get p2pvtun.@p2pvtun[0].safe_dns_port 2>/dev/null`
 	local vt_proxy_mode=`uci get p2pvtun.@p2pvtun[0].proxy_mode`
-	local vt_protocols=`uci get p2pvtun.@p2pvtun[0].protocols 2>/dev/null`
-	local vt_gfwlist=`uci get p2pvtun.@p2pvtun[0].gfwlist`
-	local vt_np_ipset=`uci get p2pvtun.@p2pvtun[0].nonproxy_ipset 2>/dev/null`
+	#local vt_protocols=`uci get p2pvtun.@p2pvtun[0].protocols 2>/dev/null`
 	# $covered_subnets, $local_addresses are not required
 	local covered_subnets=`uci get p2pvtun.@p2pvtun[0].covered_subnets 2>/dev/null`
 	local local_addresses=`uci get p2pvtun.@p2pvtun[0].local_addresses 2>/dev/null`
@@ -44,13 +42,13 @@ start()
 	[ -z "$vt_network" ] && vt_network="vt0"
 	[ -z "$vt_proxy_mode" ] && vt_proxy_mode=S
 	[ -z "$vt_safe_dns_port" ] && vt_safe_dns_port=53
-	[ -z "$vt_gfwlist" ] && vt_gfwlist="china-banned"
 	# Get LAN settings as default parameters
 	[ -f /lib/functions/network.sh ] && . /lib/functions/network.sh
 	[ -z "$covered_subnets" ] && network_get_subnet covered_subnets lan
 	[ -z "$local_addresses" ] && network_get_ipaddr local_addresses lan
-	[ "$vt_np_ipset" = none ] && vt_np_ipset=""
 	local vt_ifname="p2pvtun-$vt_network"
+	local vt_gfwlist="china-banned"
+	local vt_np_ipset="china"
 
 	# -----------------------------------------------------------------
 	p2pvtund -r $vt_server_addr:$vt_server_port -a $vt_local_ipaddr/$vt_remote_ipaddr \
@@ -118,6 +116,13 @@ start()
 			iptables -t mangle -A p2pvtun_$vt_network -m set ! --match-set gfwlist dst -j RETURN
 			[ -n "$vt_np_ipset" ] && iptables -t mangle -A p2pvtun_$vt_network -m set --match-set $vt_np_ipset dst -j RETURN
 			;;
+		V)
+			vt_np_ipset=""
+			vt_gfwlist="unblock-youku"
+			ipset create gfwlist hash:ip maxelem 65536
+			[ -n "$vt_safe_dns" ] && ipset add gfwlist $vt_safe_dns
+			iptables -t mangle -A p2pvtun_$vt_network -m set ! --match-set gfwlist dst -j RETURN
+			;;
 	esac
 	local subnet
 	for subnet in $covered_subnets; do
@@ -147,10 +152,12 @@ EOF
 
 	# -----------------------------------------------------------------
 	###### dnsmasq-to-ipset configuration ######
-	if [ "$vt_proxy_mode" = M ]; then
-		awk '!/^$/&&!/^#/{printf("ipset=/%s/gfwlist\n",$0)}' \
-			/etc/gfwlist/$vt_gfwlist > /var/etc/dnsmasq-go.d/02-ipset.conf
-	fi
+	case "$vt_proxy_mode" in
+		M|V)
+			awk '!/^$/&&!/^#/{printf("ipset=/%s/gfwlist\n",$0)}' \
+				/etc/gfwlist/$vt_gfwlist > /var/etc/dnsmasq-go.d/02-ipset.conf
+			;;
+	esac
 
 	# -----------------------------------------------------------------
 	###### Start dnsmasq service ######
