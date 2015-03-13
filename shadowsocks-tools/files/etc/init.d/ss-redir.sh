@@ -30,7 +30,6 @@ start()
 	local ss_safe_dns_port=`uci get shadowsocks.@shadowsocks[0].safe_dns_port 2>/dev/null`
 	local ss_safe_dns_tcp=`uci get shadowsocks.@shadowsocks[0].safe_dns_tcp 2>/dev/null`
 	local ss_proxy_mode=`uci get shadowsocks.@shadowsocks[0].proxy_mode`
-	local ss_gfwlist=`uci get shadowsocks.@shadowsocks[0].gfwlist`
 	# $covered_subnets, $local_addresses are not required
 	local covered_subnets=`uci get shadowsocks.@shadowsocks[0].covered_subnets 2>/dev/null`
 	local local_addresses=`uci get shadowsocks.@shadowsocks[0].local_addresses 2>/dev/null`
@@ -52,11 +51,12 @@ start()
 	[ -z "$ss_method" ] && ss_method=table
 	[ -z "$ss_timeout" ] && ss_timeout=60
 	[ -z "$ss_safe_dns_port" ] && ss_safe_dns_port=53
-	[ -z "$ss_gfwlist" ] && ss_gfwlist="china-banned"
 	# Get LAN settings as default parameters
 	[ -f /lib/functions/network.sh ] && . /lib/functions/network.sh
 	[ -z "$covered_subnets" ] && network_get_subnet covered_subnets lan
 	[ -z "$local_addresses" ] && network_get_ipaddr local_addresses lan
+	local ss_gfwlist="china-banned"
+	ss_np_ipset="china"  # Must be global variable
 
 	# -----------------------------------------------------------------
 	###### shadowsocks ######
@@ -78,12 +78,18 @@ start()
 	case "$ss_proxy_mode" in
 		G) : ;;
 		S)
-			iptables -t nat -A shadowsocks_pre -m set --match-set china dst -j RETURN
+			iptables -t nat -A shadowsocks_pre -m set --match-set $ss_np_ipset dst -j RETURN
 			;;
 		M)
 			ipset create gfwlist hash:ip maxelem 65536
 			iptables -t nat -A shadowsocks_pre -m set ! --match-set gfwlist dst -j RETURN
-			iptables -t nat -A shadowsocks_pre -m set --match-set china dst -j RETURN
+			iptables -t nat -A shadowsocks_pre -m set --match-set $ss_np_ipset dst -j RETURN
+			;;
+		V)
+			ss_np_ipset=""
+			ss_gfwlist="unblock-youku"
+			ipset create gfwlist hash:ip maxelem 65536
+			iptables -t nat -A shadowsocks_pre -m set ! --match-set gfwlist dst -j RETURN
 			;;
 	esac
 	local subnet
@@ -102,24 +108,27 @@ EOF
 
 	# -----------------------------------------------------------------
 	###### Anti-pollution configuration ######
-	if [ "$ss_safe_dns_tcp" = 1 ]; then
-		# Just use 8.8.x.x when $ss_safe_dns left empty
-		start_pdnsd "$ss_safe_dns"
-		awk -vs="127.0.0.1#$PDNSD_LOCAL_PORT" '!/^$/&&!/^#/{printf("server=/%s/%s\n",$0,s)}' \
-			/etc/gfwlist/$ss_gfwlist > /var/etc/dnsmasq-go.d/01-pollution.conf
-	elif [ -n "$ss_safe_dns" ]; then
-		awk -vs="$ss_safe_dns#$ss_safe_dns_port" '!/^$/&&!/^#/{printf("server=/%s/%s\n",$0,s)}' \
-			/etc/gfwlist/$ss_gfwlist > /var/etc/dnsmasq-go.d/01-pollution.conf
+	if [ -n "$ss_safe_dns" ]; then
+		if [ "$ss_safe_dns_tcp" = 1 ]; then
+			start_pdnsd "$ss_safe_dns"
+			awk -vs="127.0.0.1#$PDNSD_LOCAL_PORT" '!/^$/&&!/^#/{printf("server=/%s/%s\n",$0,s)}' \
+				/etc/gfwlist/$ss_gfwlist > /var/etc/dnsmasq-go.d/01-pollution.conf
+		else
+			awk -vs="$ss_safe_dns#$ss_safe_dns_port" '!/^$/&&!/^#/{printf("server=/%s/%s\n",$0,s)}' \
+				/etc/gfwlist/$ss_gfwlist > /var/etc/dnsmasq-go.d/01-pollution.conf
+		fi
 	else
-		echo "WARNING: Not using secure DNS, DNS resolution might be polluted."
+		echo "WARNING: Not using secure DNS, DNS resolution might be polluted if you are in China."
 	fi
 
 	# -----------------------------------------------------------------
 	###### dnsmasq-to-ipset configuration ######
-	if [ "$ss_proxy_mode" = M ]; then
-		awk '!/^$/&&!/^#/{printf("ipset=/%s/gfwlist\n",$0)}' \
-			/etc/gfwlist/$ss_gfwlist > /var/etc/dnsmasq-go.d/02-ipset.conf
-	fi
+	case "$ss_proxy_mode" in
+		M|V)
+			awk '!/^$/&&!/^#/{printf("ipset=/%s/gfwlist\n",$0)}' \
+				/etc/gfwlist/$ss_gfwlist > /var/etc/dnsmasq-go.d/02-ipset.conf
+			;;
+	esac
 
 	# -----------------------------------------------------------------
 	###### Start dnsmasq service ######
@@ -209,7 +218,7 @@ EOF
 
 	# Access TCP DNS server through Shadowsocks tunnel
 	if iptables -t nat -N pdnsd_output; then
-		iptables -t nat -A pdnsd_output -m set --match-set china dst -j RETURN
+		iptables -t nat -A pdnsd_output -m set --match-set $ss_np_ipset dst -j RETURN
 		iptables -t nat -A pdnsd_output -p tcp -j REDIRECT --to $SS_REDIR_PORT
 	fi
 	iptables -t nat -I OUTPUT -p tcp --dport 53 -j pdnsd_output

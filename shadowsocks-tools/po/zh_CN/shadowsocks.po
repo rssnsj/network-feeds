@@ -31,14 +31,14 @@ msgstr "使用UDP 53端口的国外DNS可能会被污染"
 msgid "GFW-List based auto-proxy"
 msgstr "基于GFW-List的自动代理"
 
-msgid "General Settings"
-msgstr "基本设置"
+msgid "Watching Youku overseas"
+msgstr "海外看优酷（回国加速）"
 
 msgid "Password"
 msgstr "密码"
 
-msgid "Proxy Scope"
-msgstr "代理范围"
+msgid "Proxy Mode"
+msgstr "代理模式"
 
 msgid "Safe DNS"
 msgstr "安全DNS"

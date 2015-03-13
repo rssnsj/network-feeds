@@ -108,13 +108,13 @@ start()
 	case "$vt_proxy_mode" in
 		G) : ;;
 		S)
-			[ -n "$vt_np_ipset" ] && iptables -t mangle -A p2pvtun_$vt_network -m set --match-set $vt_np_ipset dst -j RETURN
+			iptables -t mangle -A p2pvtun_$vt_network -m set --match-set $vt_np_ipset dst -j RETURN
 			;;
 		M)
 			ipset create gfwlist hash:ip maxelem 65536
 			[ -n "$vt_safe_dns" ] && ipset add gfwlist $vt_safe_dns
 			iptables -t mangle -A p2pvtun_$vt_network -m set ! --match-set gfwlist dst -j RETURN
-			[ -n "$vt_np_ipset" ] && iptables -t mangle -A p2pvtun_$vt_network -m set --match-set $vt_np_ipset dst -j RETURN
+			iptables -t mangle -A p2pvtun_$vt_network -m set --match-set $vt_np_ipset dst -j RETURN
 			;;
 		V)
 			vt_np_ipset=""
@@ -147,7 +147,7 @@ EOF
 		awk -vs="$vt_safe_dns#$vt_safe_dns_port" '!/^$/&&!/^#/{printf("server=/%s/%s\n",$0,s)}' \
 			/etc/gfwlist/$vt_gfwlist > /var/etc/dnsmasq-go.d/01-pollution.conf
 	else
-		echo "WARNING: Not using secure DNS, DNS resolution might be polluted."
+		echo "WARNING: Not using secure DNS, DNS resolution might be polluted if you are in China."
 	fi
 
 	# -----------------------------------------------------------------
