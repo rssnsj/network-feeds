@@ -26,6 +26,7 @@ start()
 	local vt_proxy_mode=`uci get p2pvtun.@p2pvtun[0].proxy_mode`
 	local vt_protocols=`uci get p2pvtun.@p2pvtun[0].protocols 2>/dev/null`
 	local vt_gfwlist=`uci get p2pvtun.@p2pvtun[0].gfwlist`
+	local vt_np_ipset=`uci get p2pvtun.@p2pvtun[0].nonproxy_ipset 2>/dev/null`
 	# $covered_subnets, $local_addresses are not required
 	local covered_subnets=`uci get p2pvtun.@p2pvtun[0].covered_subnets 2>/dev/null`
 	local local_addresses=`uci get p2pvtun.@p2pvtun[0].local_addresses 2>/dev/null`
@@ -48,6 +49,7 @@ start()
 	[ -f /lib/functions/network.sh ] && . /lib/functions/network.sh
 	[ -z "$covered_subnets" ] && network_get_subnet covered_subnets lan
 	[ -z "$local_addresses" ] && network_get_ipaddr local_addresses lan
+	[ "$vt_np_ipset" = none ] && vt_np_ipset=""
 	local vt_ifname="p2pvtun-$vt_network"
 
 	# -----------------------------------------------------------------
@@ -108,13 +110,13 @@ start()
 	case "$vt_proxy_mode" in
 		G) : ;;
 		S)
-			iptables -t mangle -A p2pvtun_$vt_network -m set --match-set china dst -j RETURN
+			[ -n "$vt_np_ipset" ] && iptables -t mangle -A p2pvtun_$vt_network -m set --match-set $vt_np_ipset dst -j RETURN
 			;;
 		M)
 			ipset create gfwlist hash:ip maxelem 65536
 			[ -n "$vt_safe_dns" ] && ipset add gfwlist $vt_safe_dns
 			iptables -t mangle -A p2pvtun_$vt_network -m set ! --match-set gfwlist dst -j RETURN
-			iptables -t mangle -A p2pvtun_$vt_network -m set --match-set china dst -j RETURN
+			[ -n "$vt_np_ipset" ] && iptables -t mangle -A p2pvtun_$vt_network -m set --match-set $vt_np_ipset dst -j RETURN
 			;;
 	esac
 	local subnet

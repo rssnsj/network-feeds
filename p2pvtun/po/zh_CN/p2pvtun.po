@@ -64,3 +64,15 @@ msgstr "运行中"
 msgid "Click here to customize your GFW-List"
 msgstr "点击此处自定义GFW-List"
 
+msgid "Non-proxy IP Set"
+msgstr "无需代理的IP列表"
+
+msgid "Select ipset that does not need proxy. e.g., choose \"china\" if you are in China"
+msgstr "选择不需要走代理的ipset. 例如: 选择在中国实用则选择“china”"
+
+msgid "GFW-List to Use"
+msgstr "使用的GFW-List"
+
+msgid "Effective in \"GFW-List based auto-proxy\" mode only"
+msgstr "仅在“基于GFW-List的自动代理”模式下有效"
+

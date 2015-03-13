@@ -15,30 +15,19 @@ function sync_value_to_file(value, file)
 	end
 end
 
-m = SimpleForm("gfwlist", translate("Proxy Domain Settings"))
+m = SimpleForm("gfwlist", translate("Domain Lists Settings"))
 
--- ---------------------------------------------------
-glist = m:field(TextValue, "gfwlist", nil,
-	translate("Content of /etc/gfwlist/china-banned which will be used for anti-DNS-pollution and GFW-List based auto-proxy"))
-glist.rmempty = false
-glist.rows = 24
+for e in fs.dir("/etc/gfwlist") do
+	glist = m:field(TextValue, e, e, nil)
+	glist.rmempty = false
+	glist.rows = 12
 
-function glist.cfgvalue()
-	return nixio.fs.readfile("/etc/gfwlist/china-banned") or ""
+	function glist.cfgvalue()
+		return nixio.fs.readfile("/etc/gfwlist/" .. e) or ""
+	end
+	function glist.write(self, section, value)
+		sync_value_to_file(value, "/etc/gfwlist/" .. e)
+	end
 end
-function glist.write(self, section, value)
-	sync_value_to_file(value, "/etc/gfwlist/china-banned")
-end
-
--- ---------------------------------------------------
--- ipchn = m:field(TextValue, "ipchn", translate("China IPSet"))
--- ipchn.rmempty = false
--- ipchn.rows = 20
--- function ipchn.cfgvalue()
--- 	return nixio.fs.readfile("/etc/ipset/china.ipset") or ""
--- end
--- function ipchn.write(self, section, value)
--- 	sync_value_to_file(value, "/etc/ipset/china.ipset")
--- end
 
 return m
