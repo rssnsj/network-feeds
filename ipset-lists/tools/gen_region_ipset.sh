@@ -25,12 +25,12 @@ $2==c&&$3=="ipv4"{printf("%s/%d\n",$4,tobits($5))}' |
 	awk -vt="$ctname" '{printf("add %s %s\n",t,$0)}'
 }
 
-gen_ipset_to_file()
+gen_apnic_to_file()
 {
 	local ctcode="$1"
 	local ctname="$2"
 
-	[ -n "$OUTPUT_LIST_FILE" ] || OUTPUT_LIST_FILE="../files/etc/ipset/$ctname.ipset"
+	[ -n "$OUTPUT_LIST_FILE" ] || OUTPUT_LIST_FILE="../files/etc/ipset/$ctname"
 
 	if [ "$OUTPUT_LIST_FILE" = "-" ]; then
 		gen_ipset_to_stdout $ctcode "$ctname"
@@ -42,18 +42,17 @@ gen_ipset_to_file()
 ##
 [ "$2" = "-o" ] && OUTPUT_LIST_FILE="$3" || :
 case "$1" in
-	CN) gen_ipset_to_file $1 china;;
-	TW) gen_ipset_to_file $1 taiwan;;
-	HK) gen_ipset_to_file $1 hongkong;;
-	SG) gen_ipset_to_file $1 singapore;;
-	JP) gen_ipset_to_file $1 japan;;
-	KR) gen_ipset_to_file $1 korea;;
-	MY) gen_ipset_to_file $1 malaysia;;
+	CN) gen_apnic_to_file $1 china;;
+	TW) gen_apnic_to_file $1 taiwan;;
+	HK) gen_apnic_to_file $1 hongkong;;
+	SG) gen_apnic_to_file $1 singapore;;
+	JP) gen_apnic_to_file $1 japan;;
+	KR) gen_apnic_to_file $1 korea;;
 	*)
 		echo "Usage:"
 		echo "  $0 <country_code|carrier_name> [-o output_file]"
 		echo "Supported countries:"
-		echo "  CN, TW, HK, SG, JP, KR, MY"
+		echo "  CN, TW, HK, SG, JP, KR"
 		echo "Examples:"
 		echo "  $0 CN"
 		echo "  $0 TW > ../files/etc/ipset/taiwan.ipset"

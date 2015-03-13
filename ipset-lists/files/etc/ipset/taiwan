@@ -127,6 +127,7 @@ add taiwan 103.42.228.0/22
 add taiwan 103.43.48.0/22
 add taiwan 103.46.144.0/22
 add taiwan 103.46.188.0/22
+add taiwan 103.51.140.0/22
 add taiwan 103.224.132.0/22
 add taiwan 103.224.192.0/22
 add taiwan 103.224.200.0/22
@@ -157,6 +158,7 @@ add taiwan 103.246.208.0/22
 add taiwan 103.247.112.0/22
 add taiwan 103.252.68.0/22
 add taiwan 103.252.244.0/24
+add taiwan 103.253.184.0/22
 add taiwan 106.1.0.0/16
 add taiwan 106.64.0.0/15
 add taiwan 106.104.0.0/14
