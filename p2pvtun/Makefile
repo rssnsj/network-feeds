@@ -19,7 +19,7 @@ define Package/p2pvtun
   TITLE:=Non-standard VPN that helps you to get through firewalls
   URL:=https://github.com/rssnsj/network-feeds
   MAINTAINER:=Justin Liu <rssnsj@gmail.com>
-  DEPENDS:=+ipset-lists +kmod-tun +libopenssl
+  DEPENDS:=+ipset-lists +kmod-tun +libopenssl +luci
 endef
 
 define Package/p2pvtun/conffiles
