@@ -298,6 +298,9 @@ static int netdev_attach_yavlan(struct net_device *phy_dev, struct yavlan_info *
 	dev_set_promiscuity(phy_dev, 1);
 
 	if (!(vlan_dev = alloc_netdev(sizeof(struct yavlan_netdev_priv), vi->vlan_ifname,
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 17, 0)
+		NET_NAME_UNKNOWN,
+#endif
 		yavlan_netdev_setup))) {
 		printk(KERN_ERR "YaVLAN: alloc_netdev() failed.\n");
 		err = -ENOMEM;
