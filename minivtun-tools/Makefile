@@ -15,7 +15,7 @@ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE_URL:=https://github.com/rssnsj/minivtun.git
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=aec3ca5f7a152a8550756d85f7fa900dfb4f09f6
+PKG_SOURCE_VERSION:=1aff41b7457690862c7bb3f62c6effb07ea04fdc
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -37,7 +37,8 @@ endef
 #endef
 
 define Build/Compile
-	$(MAKE) -C $(PKG_BUILD_DIR)/src $(MAKE_OPTS)
+	$(MAKE) -C $(PKG_BUILD_DIR)/src CC="$(TARGET_CROSS)gcc" \
+		CFLAGS="$(TARGET_CPPFLAGS) $(TARGET_CFLAGS)"
 endef
 
 define Package/minivtun/install
