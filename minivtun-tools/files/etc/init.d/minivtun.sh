@@ -13,25 +13,25 @@ DNSMASQ_PIDFILE=/var/run/dnsmasq-go.pid
 
 start()
 {
-	local vt_enabled=`uci get p2pvtun.@p2pvtun[0].enabled 2>/dev/null`
-	local vt_network=`uci get p2pvtun.@p2pvtun[0].network 2>/dev/null`
-	local vt_server_addr=`uci get p2pvtun.@p2pvtun[0].server`
-	local vt_server_port=`uci get p2pvtun.@p2pvtun[0].server_port`
-	local vt_password=`uci get p2pvtun.@p2pvtun[0].password 2>/dev/null`
-	local vt_local_ipaddr=`uci get p2pvtun.@p2pvtun[0].local_ipaddr 2>/dev/null`
-	local vt_remote_ipaddr=`uci get p2pvtun.@p2pvtun[0].remote_ipaddr 2>/dev/null`
-	local vt_local_ip6pair=`uci get p2pvtun.@p2pvtun[0].local_ip6pair 2>/dev/null`
-	local vt_safe_dns=`uci get p2pvtun.@p2pvtun[0].safe_dns 2>/dev/null`
-	local vt_safe_dns_port=`uci get p2pvtun.@p2pvtun[0].safe_dns_port 2>/dev/null`
-	local vt_proxy_mode=`uci get p2pvtun.@p2pvtun[0].proxy_mode`
-	#local vt_protocols=`uci get p2pvtun.@p2pvtun[0].protocols 2>/dev/null`
+	local vt_enabled=`uci get minivtun.@minivtun[0].enabled 2>/dev/null`
+	local vt_network=`uci get minivtun.@minivtun[0].network 2>/dev/null`
+	local vt_server_addr=`uci get minivtun.@minivtun[0].server`
+	local vt_server_port=`uci get minivtun.@minivtun[0].server_port`
+	local vt_password=`uci get minivtun.@minivtun[0].password 2>/dev/null`
+	local vt_local_ipaddr=`uci get minivtun.@minivtun[0].local_ipaddr 2>/dev/null`
+	local vt_remote_ipaddr=`uci get minivtun.@minivtun[0].remote_ipaddr 2>/dev/null`
+	local vt_local_ip6pair=`uci get minivtun.@minivtun[0].local_ip6pair 2>/dev/null`
+	local vt_safe_dns=`uci get minivtun.@minivtun[0].safe_dns 2>/dev/null`
+	local vt_safe_dns_port=`uci get minivtun.@minivtun[0].safe_dns_port 2>/dev/null`
+	local vt_proxy_mode=`uci get minivtun.@minivtun[0].proxy_mode`
+	#local vt_protocols=`uci get minivtun.@minivtun[0].protocols 2>/dev/null`
 	# $covered_subnets, $local_addresses are not required
-	local covered_subnets=`uci get p2pvtun.@p2pvtun[0].covered_subnets 2>/dev/null`
-	local local_addresses=`uci get p2pvtun.@p2pvtun[0].local_addresses 2>/dev/null`
+	local covered_subnets=`uci get minivtun.@minivtun[0].covered_subnets 2>/dev/null`
+	local local_addresses=`uci get minivtun.@minivtun[0].local_addresses 2>/dev/null`
 
 	# -----------------------------------------------------------------
 	if [ "$vt_enabled" = 0 ]; then
-		echo "WARNING: P2P-based Virtual Tunnelling is disabled."
+		echo "WARNING: Mini Virtual Tunneller is disabled."
 		return 1
 	fi
 
@@ -46,12 +46,12 @@ start()
 	[ -f /lib/functions/network.sh ] && . /lib/functions/network.sh
 	[ -z "$covered_subnets" ] && network_get_subnet covered_subnets lan
 	[ -z "$local_addresses" ] && network_get_ipaddr local_addresses lan
-	local vt_ifname="p2pvtun-$vt_network"
+	local vt_ifname="minivtun-$vt_network"
 	local vt_gfwlist="china-banned"
 	local vt_np_ipset="china"
 
 	# -----------------------------------------------------------------
-	p2pvtund -r $vt_server_addr:$vt_server_port -a $vt_local_ipaddr/$vt_remote_ipaddr \
+	minivtun -r $vt_server_addr:$vt_server_port -a $vt_local_ipaddr/$vt_remote_ipaddr \
 		-n $vt_ifname -e "$vt_password" -d -p /var/run/$vt_ifname.pid || return 1
 
 	# Create new interface if not exists
@@ -94,44 +94,44 @@ start()
 	fi
 	ip rule add fwmark $VPN_ROUTE_FWMARK table $VPN_IPROUTE_TABLE
 
-	iptables -t mangle -N p2pvtun_$vt_network
-	iptables -t mangle -F p2pvtun_$vt_network
-	iptables -t mangle -A p2pvtun_$vt_network -m set --match-set local dst -j RETURN || {
-		iptables -t mangle -A p2pvtun_$vt_network -d 10.0.0.0/8 -j RETURN
-		iptables -t mangle -A p2pvtun_$vt_network -d 127.0.0.0/8 -j RETURN
-		iptables -t mangle -A p2pvtun_$vt_network -d 172.16.0.0/12 -j RETURN
-		iptables -t mangle -A p2pvtun_$vt_network -d 192.168.0.0/16 -j RETURN
-		iptables -t mangle -A p2pvtun_$vt_network -d 127.0.0.0/8 -j RETURN
-		iptables -t mangle -A p2pvtun_$vt_network -d 224.0.0.0/3 -j RETURN
+	iptables -t mangle -N minivtun_$vt_network
+	iptables -t mangle -F minivtun_$vt_network
+	iptables -t mangle -A minivtun_$vt_network -m set --match-set local dst -j RETURN || {
+		iptables -t mangle -A minivtun_$vt_network -d 10.0.0.0/8 -j RETURN
+		iptables -t mangle -A minivtun_$vt_network -d 127.0.0.0/8 -j RETURN
+		iptables -t mangle -A minivtun_$vt_network -d 172.16.0.0/12 -j RETURN
+		iptables -t mangle -A minivtun_$vt_network -d 192.168.0.0/16 -j RETURN
+		iptables -t mangle -A minivtun_$vt_network -d 127.0.0.0/8 -j RETURN
+		iptables -t mangle -A minivtun_$vt_network -d 224.0.0.0/3 -j RETURN
 	}
-	iptables -t mangle -A p2pvtun_$vt_network -d $vt_server_addr -j RETURN
+	iptables -t mangle -A minivtun_$vt_network -d $vt_server_addr -j RETURN
 	case "$vt_proxy_mode" in
 		G) : ;;
 		S)
-			iptables -t mangle -A p2pvtun_$vt_network -m set --match-set $vt_np_ipset dst -j RETURN
+			iptables -t mangle -A minivtun_$vt_network -m set --match-set $vt_np_ipset dst -j RETURN
 			;;
 		M)
 			ipset create gfwlist hash:ip maxelem 65536
 			[ -n "$vt_safe_dns" ] && ipset add gfwlist $vt_safe_dns
-			iptables -t mangle -A p2pvtun_$vt_network -m set ! --match-set gfwlist dst -j RETURN
-			iptables -t mangle -A p2pvtun_$vt_network -m set --match-set $vt_np_ipset dst -j RETURN
+			iptables -t mangle -A minivtun_$vt_network -m set ! --match-set gfwlist dst -j RETURN
+			iptables -t mangle -A minivtun_$vt_network -m set --match-set $vt_np_ipset dst -j RETURN
 			;;
 		V)
 			vt_np_ipset=""
 			vt_gfwlist="unblock-youku"
 			ipset create gfwlist hash:ip maxelem 65536
 			[ -n "$vt_safe_dns" ] && ipset add gfwlist $vt_safe_dns
-			iptables -t mangle -A p2pvtun_$vt_network -m set ! --match-set gfwlist dst -j RETURN
+			iptables -t mangle -A minivtun_$vt_network -m set ! --match-set gfwlist dst -j RETURN
 			;;
 	esac
 	local subnet
 	for subnet in $covered_subnets; do
-		iptables -t mangle -A p2pvtun_$vt_network -s $subnet -j MARK --set-mark $VPN_ROUTE_FWMARK
+		iptables -t mangle -A minivtun_$vt_network -s $subnet -j MARK --set-mark $VPN_ROUTE_FWMARK
 	done
 	[ -n "$vt_safe_dns" ] && \
-		iptables -t mangle -A p2pvtun_$vt_network -d $vt_safe_dns -p udp --dport $vt_safe_dns_port -j MARK --set-mark $VPN_ROUTE_FWMARK
-	iptables -t mangle -I PREROUTING -j p2pvtun_$vt_network
-	iptables -t mangle -I OUTPUT -p udp --dport 53 -j p2pvtun_$vt_network  # To avoid DNS pollution
+		iptables -t mangle -A minivtun_$vt_network -d $vt_safe_dns -p udp --dport $vt_safe_dns_port -j MARK --set-mark $VPN_ROUTE_FWMARK
+	iptables -t mangle -I PREROUTING -j minivtun_$vt_network
+	iptables -t mangle -I OUTPUT -p udp --dport 53 -j minivtun_$vt_network  # To avoid DNS pollution
 
 	# -----------------------------------------------------------------
 	###### dnsmasq main configuration ######
@@ -179,9 +179,9 @@ EOF
 
 stop()
 {
-	local vt_network=`uci get p2pvtun.@p2pvtun[0].network 2>/dev/null`
+	local vt_network=`uci get minivtun.@minivtun[0].network 2>/dev/null`
 	[ -z "$vt_network" ] && vt_network="vt0"
-	local vt_ifname="p2pvtun-$vt_network"
+	local vt_ifname="minivtun-$vt_network"
 
 	# -----------------------------------------------------------------
 	if iptables -t nat -F dnsmasq_go_pre 2>/dev/null; then
@@ -197,10 +197,10 @@ stop()
 	rm -rf /var/etc/dnsmasq-go.d
 
 	# -----------------------------------------------------------------
-	if iptables -t mangle -F p2pvtun_$vt_network 2>/dev/null; then
-		while iptables -t mangle -D OUTPUT -p udp --dport 53 -j p2pvtun_$vt_network 2>/dev/null; do :; done
-		while iptables -t mangle -D PREROUTING -j p2pvtun_$vt_network 2>/dev/null; do :; done
-		iptables -t mangle -X p2pvtun_$vt_network 2>/dev/null
+	if iptables -t mangle -F minivtun_$vt_network 2>/dev/null; then
+		while iptables -t mangle -D OUTPUT -p udp --dport 53 -j minivtun_$vt_network 2>/dev/null; do :; done
+		while iptables -t mangle -D PREROUTING -j minivtun_$vt_network 2>/dev/null; do :; done
+		iptables -t mangle -X minivtun_$vt_network 2>/dev/null
 	fi
 
 	# -----------------------------------------------------------------

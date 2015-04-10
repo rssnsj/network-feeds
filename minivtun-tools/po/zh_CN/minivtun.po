@@ -55,8 +55,8 @@ msgstr "设置"
 msgid "Non-standard Virtual Tunneller"
 msgstr "非标准协议的虚拟隧道"
 
-msgid "P2P Virtual Tunneller"
-msgstr "P2P虚拟隧道"
+msgid "Mini Virtual Tunneller"
+msgstr "非标准VPN服务"
 
 msgid "Not running"
 msgstr "未运行"

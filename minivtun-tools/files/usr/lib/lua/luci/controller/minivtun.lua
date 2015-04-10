@@ -5,14 +5,14 @@
  https://github.com/rssnsj/network-feeds
 ]]--
 
-module("luci.controller.p2pvtun", package.seeall)
+module("luci.controller.minivtun", package.seeall)
 
 function index()
-	if not nixio.fs.access("/etc/config/p2pvtun") then
+	if not nixio.fs.access("/etc/config/minivtun") then
 		return
 	end
 
 	local page
-	page = entry({"admin", "services", "p2pvtun"}, cbi("p2pvtun"), _("P2P Virtual Tunneller"))
+	page = entry({"admin", "services", "minivtun"}, cbi("minivtun"), _("Mini Virtual Tunneller"))
 	page.dependent = true
 end

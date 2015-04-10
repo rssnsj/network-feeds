@@ -8,7 +8,7 @@
 local fs = require "nixio.fs"
 
 local state_msg = ""
-local service_on = (luci.sys.call("pidof p2pvtund >/dev/null && iptables-save | grep p2pvtun_ >/dev/null") == 0)
+local service_on = (luci.sys.call("pidof minivtun >/dev/null && iptables-save | grep minivtun_ >/dev/null") == 0)
 if service_on then	
 	state_msg = "<b><font color=\"green\">" .. translate("Running") .. "</font></b>"
 else
@@ -16,23 +16,23 @@ else
 end
 
 local __c = uci.cursor()
-local __c_port = "<b>" .. __c:get_first("p2pvtun", "p2pvtun", "server_port", "(null)") .. "</b>"
-local __c_lip = "<b>" .. __c:get_first("p2pvtun", "p2pvtun", "local_ipaddr", "(null)") .. "</b>"
-local __c_rip = "<b>" .. __c:get_first("p2pvtun", "p2pvtun", "remote_ipaddr", "(null)") .. "</b>"
-local __c_pwd = "<b>" .. __c:get_first("p2pvtun", "p2pvtun", "password", "(null)") .. "</b>"
-local __c_net = "<b>" .. __c:get_first("p2pvtun", "p2pvtun", "network", "go") .. "</b>"
+local __c_port = "<b>" .. __c:get_first("minivtun", "minivtun", "server_port", "(null)") .. "</b>"
+local __c_lip = "<b>" .. __c:get_first("minivtun", "minivtun", "local_ipaddr", "(null)") .. "</b>"
+local __c_rip = "<b>" .. __c:get_first("minivtun", "minivtun", "remote_ipaddr", "(null)") .. "</b>"
+local __c_pwd = "<b>" .. __c:get_first("minivtun", "minivtun", "password", "(null)") .. "</b>"
+local __c_net = "<b>" .. __c:get_first("minivtun", "minivtun", "network", "go") .. "</b>"
 
-m = Map("p2pvtun", translate("Non-standard Virtual Tunneller"),
+m = Map("minivtun", translate("Non-standard Virtual Tunneller"),
 	translate("Non-standard VPN that helps you to get through firewalls") .. " - " .. state_msg .. "<br />" ..
 	translate("Add the following commands to <b>/etc/rc.local</b> of your server according to your settings") .. ":<br />" ..
 	"<pre>" ..
-	"/usr/sbin/p2pvtund -l 0.0.0.0:" .. __c_port .. " -a " .. __c_rip .. "/" .. __c_lip .. " -n p2pvtun-" .. __c_net .. " -e '" .. __c_pwd .. "' -d\n" ..
+	"/usr/sbin/minivtun -l 0.0.0.0:" .. __c_port .. " -a " .. __c_rip .. "/" .. __c_lip .. " -n minivtun-" .. __c_net .. " -e '" .. __c_pwd .. "' -d\n" ..
 	"iptables -t nat -A POSTROUTING ! -o lo -j MASQUERADE   # " .. translate("Ensure NAT is enabled") .. "\n" .. 
 	"echo 1 > /proc/sys/net/ipv4/ip_forward\n" ..
 	"</pre>")
 
 
-s = m:section(TypedSection, "p2pvtun", translate("Settings"))
+s = m:section(TypedSection, "minivtun", translate("Settings"))
 s.anonymous = true
 
 -- ---------------------------------------------------
@@ -87,7 +87,7 @@ safe_dns_port.optional = false
 -- ---------------------------------------------------
 local apply = luci.http.formvalue("cbi.apply")
 if apply then
-	os.execute("/etc/init.d/p2pvtun.sh restart >/dev/null 2>&1 &")
+	os.execute("/etc/init.d/minivtun.sh restart >/dev/null 2>&1 &")
 end
 
 return m

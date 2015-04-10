@@ -1,5 +1,5 @@
 
-config p2pvtun
+config minivtun
 	option enabled '0'
 	option network 'go0'
 	option server '17.17.17.17'
