@@ -31,11 +31,6 @@ define Package/minivtun/conffiles
 /etc/config/minivtun
 endef
 
-#define Build/Prepare
-#	mkdir -p $(PKG_BUILD_DIR)
-#	$(CP) ./src/* $(PKG_BUILD_DIR)/
-#endef
-
 define Build/Compile
 	$(MAKE) -C $(PKG_BUILD_DIR)/src CC="$(TARGET_CROSS)gcc" \
 		CFLAGS="$(TARGET_CPPFLAGS) $(TARGET_CFLAGS)"
