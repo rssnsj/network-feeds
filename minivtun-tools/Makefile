@@ -15,7 +15,7 @@ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE_URL:=https://github.com/rssnsj/minivtun.git
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=1aff41b7457690862c7bb3f62c6effb07ea04fdc
+PKG_SOURCE_VERSION:=d489c572728b89f92ecf4638d8b5e3afd9aafeb9
 
 include $(INCLUDE_DIR)/package.mk
 
