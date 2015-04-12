@@ -17,7 +17,7 @@ define Package/shadowsocks-tools
   CATEGORY:=Network
   TITLE:=Shadowsocks configuration toolset for OpenWrt
   MAINTAINER:=Justin Liu <rssnsj@gmail.com>
-  DEPENDS:=+ipset-lists +shadowsocks-libev +luci
+  DEPENDS:=+ip +ipset-lists +shadowsocks-libev +luci
 endef
 
 define Package/shadowsocks-tools/conffiles
