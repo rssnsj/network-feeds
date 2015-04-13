@@ -22,11 +22,11 @@ msgstr "基于GFW-List的自动代理"
 msgid "Watching Youku overseas"
 msgstr "海外看优酷（回国加速）"
 
-msgid "Local Virtual IP"
-msgstr "本地虚拟IP"
+msgid "IPv4 address"
+msgstr "IPv4地址"
 
-msgid "Remote Virtual IP"
-msgstr "远端虚拟IP"
+msgid "IPv4 netmask"
+msgstr "IPv4掩码"
 
 msgid "Password"
 msgstr "密码"

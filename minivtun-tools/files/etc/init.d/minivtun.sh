@@ -11,6 +11,29 @@ VPN_IPROUTE_TABLE=virtual
 DNSMASQ_PORT=7053
 DNSMASQ_PIDFILE=/var/run/dnsmasq-go.pid
 
+__netmask_to_bits()
+{
+	local netmask="$1"
+	local __masklen=0
+	local __byte
+
+	for __byte in `echo "$netmask" | sed 's/\./ /g'`; do
+		case "$__byte" in
+			255) __masklen=`expr $__masklen + 8`;;
+			254) __masklen=`expr $__masklen + 7`;;
+			252) __masklen=`expr $__masklen + 6`;;
+			248) __masklen=`expr $__masklen + 5`;;
+			240) __masklen=`expr $__masklen + 4`;;
+			224) __masklen=`expr $__masklen + 3`;;
+			192) __masklen=`expr $__masklen + 2`;;
+			128) __masklen=`expr $__masklen + 1`;;
+			0) break;;
+		esac
+	done
+
+	echo "$__masklen"
+}
+
 start()
 {
 	local vt_enabled=`uci get minivtun.@minivtun[0].enabled 2>/dev/null`
@@ -19,7 +42,7 @@ start()
 	local vt_server_port=`uci get minivtun.@minivtun[0].server_port`
 	local vt_password=`uci get minivtun.@minivtun[0].password 2>/dev/null`
 	local vt_local_ipaddr=`uci get minivtun.@minivtun[0].local_ipaddr 2>/dev/null`
-	local vt_remote_ipaddr=`uci get minivtun.@minivtun[0].remote_ipaddr 2>/dev/null`
+	local vt_local_netmask=`uci get minivtun.@minivtun[0].local_netmask 2>/dev/null`
 	local vt_local_ip6pair=`uci get minivtun.@minivtun[0].local_ip6pair 2>/dev/null`
 	local vt_safe_dns=`uci get minivtun.@minivtun[0].safe_dns 2>/dev/null`
 	local vt_safe_dns_port=`uci get minivtun.@minivtun[0].safe_dns_port 2>/dev/null`
@@ -40,6 +63,7 @@ start()
 		return 1
 	fi
 	[ -z "$vt_network" ] && vt_network="vt0"
+	[ -z "$vt_local_netmask" ] && vt_local_netmask="255.255.255.0"
 	[ -z "$vt_proxy_mode" ] && vt_proxy_mode=S
 	[ -z "$vt_safe_dns_port" ] && vt_safe_dns_port=53
 	# Get LAN settings as default parameters
@@ -47,11 +71,12 @@ start()
 	[ -z "$covered_subnets" ] && network_get_subnet covered_subnets lan
 	[ -z "$local_addresses" ] && network_get_ipaddr local_addresses lan
 	local vt_ifname="minivtun-$vt_network"
+	local vt_local_prefix=`__netmask_to_bits "$vt_local_netmask"`
 	local vt_gfwlist="china-banned"
 	local vt_np_ipset="china"
 
 	# -----------------------------------------------------------------
-	minivtun -r $vt_server_addr:$vt_server_port -a $vt_local_ipaddr/$vt_remote_ipaddr \
+	minivtun -r $vt_server_addr:$vt_server_port -a $vt_local_ipaddr/$vt_local_prefix \
 		-n $vt_ifname -e "$vt_password" -d -p /var/run/$vt_ifname.pid || return 1
 
 	# Create new interface if not exists

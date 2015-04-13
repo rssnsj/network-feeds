@@ -46,12 +46,13 @@ local __c_port = __c:get_first("minivtun", "minivtun", "server_port", "0")
 local __c_pwd = __c:get_first("minivtun", "minivtun", "password", "(null)")
 local __c_net =  __c:get_first("minivtun", "minivtun", "network", "go")
 local __c_lip = __c:get_first("minivtun", "minivtun", "local_ipaddr", "0.0.0.0")
+local __c_mask = __c:get_first("minivtun", "minivtun", "local_netmask", "255.255.255.0")
 
 m = Map("minivtun", translate("Non-standard Virtual Tunneller"),
 	translate("Non-standard VPN that helps you to get through firewalls") .. " - " .. state_msg .. "<br />" ..
 	translate("Add the following commands to <b>/etc/rc.local</b> of your server according to your settings") .. ":<br />" ..
 	"<pre>" ..
-	"/usr/sbin/minivtun -l 0.0.0.0:" .. "<b>" .. __c_port .. "</b>" .. " -a " .. "<b>" .. ipv4_first_ip(__c_lip) .. "/" .. ipv4_mask_prefix("255.255.255.0") .. "</b>" .. " -n minivtun-" .. "<b>" ..__c_net .. "</b>" .. " -e '" .. "<b>" .. __c_pwd .. "</b>" .. "' -d\n" ..
+	"/usr/sbin/minivtun -l 0.0.0.0:" .. "<b>" .. __c_port .. "</b>" .. " -a " .. "<b>" .. ipv4_first_ip(__c_lip) .. "/" .. ipv4_mask_prefix(__c_mask) .. "</b>" .. " -n minivtun-" .. "<b>" ..__c_net .. "</b>" .. " -e '" .. "<b>" .. __c_pwd .. "</b>" .. "' -d\n" ..
 	"iptables -t nat -A POSTROUTING ! -o lo -j MASQUERADE   # " .. translate("Ensure NAT is enabled") .. "\n" .. 
 	"echo 1 > /proc/sys/net/ipv4/ip_forward\n" ..
 	"</pre>")
@@ -77,13 +78,17 @@ server_port.rmempty = false
 password = s:option(Value, "password", translate("Password"))
 password.password = true
 
-local_ipaddr = s:option(Value, "local_ipaddr", translate("Local Virtual IP"))
+local_ipaddr = s:option(Value, "local_ipaddr", translate("IPv4 address"))
 local_ipaddr.datatype = "ip4addr"
 local_ipaddr.optional = false
 
-remote_ipaddr = s:option(Value, "remote_ipaddr", translate("Remote Virtual IP"))
-remote_ipaddr.datatype = "ip4addr"
-remote_ipaddr.optional = false
+local_netmask = s:option(Value, "local_netmask", translate("IPv4 netmask"))
+local_netmask.datatype = "ip4addr"
+local_netmask:value("255.255.255.0")
+local_netmask:value("255.255.0.0")
+local_netmask:value("255.0.0.0")
+
+
 
 proxy_mode = s:option(ListValue, "proxy_mode", translate("Proxy Mode"),
 	"<a href=\"" .. luci.dispatcher.build_url("admin", "services", "gfwlist") .. "\">" ..
