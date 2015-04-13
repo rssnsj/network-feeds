@@ -5,7 +5,33 @@
  https://github.com/rssnsj/network-feeds
 ]]--
 
-local fs = require "nixio.fs"
+local fs = require("nixio.fs")
+local bit = require("bit")
+
+function ipv4_mask_prefix(mask)
+	local a, b, c, d = mask:match("^(%d+)%.(%d+)%.(%d+)%.(%d+)")
+	local m = bit.bnot(bit.lshift(a, 24) + bit.lshift(b, 16) + bit.lshift(c, 8) + d)
+	m = bit.band(m, 0xffffffff)
+	local b = 32
+	local i
+	for i = 32, 0, -1 do
+		if m == 0 then
+			b = i
+			break
+		end
+		m = bit.rshift(m, 1)
+	end
+	return b
+end
+
+function ipv4_first_ip(ip)
+	local a, d = ip:match("^(%d+%.%d+%.%d+%.)(%d+)")
+	if tonumber(d) == 1 then
+		return tostring(a) .. "2"
+	else
+		return tostring(a) .. "1"
+	end
+end
 
 local state_msg = ""
 local service_on = (luci.sys.call("pidof minivtun >/dev/null && iptables-save | grep minivtun_ >/dev/null") == 0)
@@ -16,17 +42,16 @@ else
 end
 
 local __c = uci.cursor()
-local __c_port = "<b>" .. __c:get_first("minivtun", "minivtun", "server_port", "(null)") .. "</b>"
-local __c_lip = "<b>" .. __c:get_first("minivtun", "minivtun", "local_ipaddr", "(null)") .. "</b>"
-local __c_rip = "<b>" .. __c:get_first("minivtun", "minivtun", "remote_ipaddr", "(null)") .. "</b>"
-local __c_pwd = "<b>" .. __c:get_first("minivtun", "minivtun", "password", "(null)") .. "</b>"
-local __c_net = "<b>" .. __c:get_first("minivtun", "minivtun", "network", "go") .. "</b>"
+local __c_port = __c:get_first("minivtun", "minivtun", "server_port", "0")
+local __c_pwd = __c:get_first("minivtun", "minivtun", "password", "(null)")
+local __c_net =  __c:get_first("minivtun", "minivtun", "network", "go")
+local __c_lip = __c:get_first("minivtun", "minivtun", "local_ipaddr", "0.0.0.0")
 
 m = Map("minivtun", translate("Non-standard Virtual Tunneller"),
 	translate("Non-standard VPN that helps you to get through firewalls") .. " - " .. state_msg .. "<br />" ..
 	translate("Add the following commands to <b>/etc/rc.local</b> of your server according to your settings") .. ":<br />" ..
 	"<pre>" ..
-	"/usr/sbin/minivtun -l 0.0.0.0:" .. __c_port .. " -a " .. __c_rip .. "/" .. __c_lip .. " -n minivtun-" .. __c_net .. " -e '" .. __c_pwd .. "' -d\n" ..
+	"/usr/sbin/minivtun -l 0.0.0.0:" .. "<b>" .. __c_port .. "</b>" .. " -a " .. "<b>" .. ipv4_first_ip(__c_lip) .. "/" .. ipv4_mask_prefix("255.255.255.0") .. "</b>" .. " -n minivtun-" .. "<b>" ..__c_net .. "</b>" .. " -e '" .. "<b>" .. __c_pwd .. "</b>" .. "' -d\n" ..
 	"iptables -t nat -A POSTROUTING ! -o lo -j MASQUERADE   # " .. translate("Ensure NAT is enabled") .. "\n" .. 
 	"echo 1 > /proc/sys/net/ipv4/ip_forward\n" ..
 	"</pre>")
