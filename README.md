@@ -42,7 +42,7 @@ Network extensions for special applications in OpenWrt package format
       
     reboot
 
-##### All-in-one firmware for HiWiFi and Xiaomi Mini routers
+##### All-in-one firmware for for market's major smart routers
 * HiWiFi HC5661/HC5761: https://github.com/rssnsj/openwrt-hc5761/releases
 * HiWiFi HC6361: https://github.com/rssnsj/openwrt-hc6361/releases
 * Xiaomi Mini: https://github.com/rssnsj/openwrt-xiaomi-mini/releases
