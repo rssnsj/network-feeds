@@ -96,6 +96,8 @@ add korea 45.112.164.0/22
 add korea 45.112.168.0/22
 add korea 45.113.44.0/22
 add korea 45.113.48.0/22
+add korea 45.114.128.0/22
+add korea 45.115.152.0/22
 add korea 49.1.0.0/16
 add korea 49.8.0.0/14
 add korea 49.16.0.0/12
@@ -240,6 +242,10 @@ add korea 103.51.244.0/22
 add korea 103.51.248.0/22
 add korea 103.51.252.0/22
 add korea 103.52.200.0/22
+add korea 103.53.114.0/24
+add korea 103.54.72.0/22
+add korea 103.55.35.0/24
+add korea 103.55.188.0/22
 add korea 103.226.72.0/22
 add korea 103.226.76.0/22
 add korea 103.226.96.0/22

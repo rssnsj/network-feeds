@@ -223,6 +223,10 @@ add singapore 103.51.62.0/24
 add singapore 103.51.160.0/22
 add singapore 103.52.32.0/22
 add singapore 103.52.133.0/24
+add singapore 103.53.172.0/22
+add singapore 103.54.152.0/22
+add singapore 103.55.124.0/22
+add singapore 103.55.138.0/24
 add singapore 103.224.116.0/22
 add singapore 103.224.164.0/22
 add singapore 103.225.64.0/23
@@ -407,6 +411,7 @@ add singapore 134.42.225.0/24
 add singapore 137.132.0.0/16
 add singapore 138.75.0.0/17
 add singapore 138.75.128.0/17
+add singapore 143.192.112.0/20
 add singapore 146.88.19.0/24
 add singapore 150.107.124.0/22
 add singapore 150.107.128.0/22
