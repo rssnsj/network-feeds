@@ -6,7 +6,7 @@ Network extensions for special applications in OpenWrt package format
 * proto-bridge: Protocol based bridging drivers and Yet another VLAN implementation
 * shadowsocks-libev: Shadowsocks - v1.6.2
 * shadowsocks-tools: Shadowsocks configuration toolset for OpenWrt
-* minivtun-tools: A fast secure VPN service in non-standard protocol for rapidly deploying VPN servers/clients or getting through firewalls
+* minivtun-tools: A fast secure VPN service in non-standard protocol for rapidly deploying VPN servers/clients or getting through firewalls (for server configration, please refer to: https://github.com/rssnsj/minivtun)
 
 ### How to install
 
@@ -42,7 +42,7 @@ Network extensions for special applications in OpenWrt package format
       
     reboot
 
-##### All-in-one firmware for for market's major smart routers
+##### OpenWrt firmwares for major smart routers with these toolset integrated
 * HiWiFi HC5661/HC5761: https://github.com/rssnsj/openwrt-hc5761/releases
 * HiWiFi HC6361: https://github.com/rssnsj/openwrt-hc6361/releases
 * Xiaomi Mini: https://github.com/rssnsj/openwrt-xiaomi-mini/releases
