@@ -422,8 +422,9 @@ EOF
 			fi
 		done
 		if [ "$dnsmasq_ok" != Y ]; then
-			rm -f /tmp/dnsmasq.d/dnsmasq-go.conf
 			echo "WARNING: Attached dnsmasq rules will cause the service startup failure. Removed those configurations."
+			rm -f /tmp/dnsmasq.d/dnsmasq-go.conf
+			/etc/init.d/dnsmasq restart
 		fi
 	fi
 
@@ -438,6 +439,7 @@ stop()
 	# -----------------------------------------------------------------
 	rm -f /tmp/dnsmasq.d/dnsmasq-go.conf
 	rm -rf /var/etc/dnsmasq-go.d
+	/etc/init.d/dnsmasq restart
 
 	# -----------------------------------------------------------------
 	if iptables -t mangle -F minivtun_$vt_network 2>/dev/null; then
