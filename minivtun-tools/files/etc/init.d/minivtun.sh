@@ -83,6 +83,11 @@ start()
 		-a $vt_local_ipaddr/$vt_local_prefix -n $vt_ifname -e "$vt_password" \
 		-d -p /var/run/$vt_ifname.pid || return 1
 
+	# IMPORTANT: 'rp_filter=1' will cause returned packets from
+	# virtual interface being dropped, so we have to fix it.
+	echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter
+	echo 0 > /proc/sys/net/ipv4/conf/$vt_ifname/rp_filter
+
 	# Create new interface if not exists
 	local __ifname=`uci get network.$vt_network.ifname 2>/dev/null`
 	if [ "$__ifname" != "$vt_ifname" ]; then
