@@ -6,7 +6,7 @@ OpenWrt下的网络加速扩展应用
 * proto-bridge: 区分协议的以太网桥接驱动，以及一种可压缩VLAN头的非标准VLAN技术（YaVLAN）
 * shadowsocks-libev: Shadowsocks - v2.1.4
 * shadowsocks-tools: OpenWrt下的Shadowsocks配置、启动脚本以及luci界面
-* minivtun-tools: 一种安全、快速、部署便捷的非标准协议VPN，可用于防火墙穿越（服务器配置方法请见：https://github.com/rssnsj/minivtun）
+* minivtun-tools: 一种安全、快速、部署便捷的非标准协议VPN，可用于防火墙穿越（服务器配置方法请见：[https://github.com/rssnsj/minivtun](https://github.com/rssnsj/minivtun)）
 
 ### 如何安装
 
