@@ -18,7 +18,7 @@ OpenWrt下的网络加速扩展应用
     opkg install http://rssn.cn/ar71xx/packages/base/ipset-lists_1-20150425_ar71xx.ipk
     opkg install http://rssn.cn/ar71xx/packages/base/shadowsocks-libev_2.1.4_ar71xx.ipk
     opkg install http://rssn.cn/ar71xx/packages/base/shadowsocks-tools_1-20150108_ar71xx.ipk
-    opkg install http://rssn.cn/ar71xx/packages/base/minivtun_20150425-22ce99fd7398a9281fc52cf388dbd5da110e8090_ar71xx.ipk
+    opkg install http://rssn.cn/ar71xx/packages/base/minivtun_20150425-81e7719443341748c4911416a1ee2b97e97d5023_ar71xx.ipk
     rm -f /tmp/luci-indexcache
     /etc/init.d/ipset.sh enable; /etc/init.d/ipset.sh restart
     /etc/init.d/minivtun.sh enable; /etc/init.d/minivtun.sh restart
@@ -34,7 +34,7 @@ OpenWrt下的网络加速扩展应用
     opkg install http://rssn.cn/ramips/packages/base/ipset-lists_1-20150425_ramips_24kec.ipk
     opkg install http://rssn.cn/ramips/packages/base/shadowsocks-libev_2.1.4_ramips_24kec.ipk
     opkg install http://rssn.cn/ramips/packages/base/shadowsocks-tools_1-20150108_ramips_24kec.ipk
-    opkg install http://rssn.cn/ramips/packages/base/minivtun_20150425-22ce99fd7398a9281fc52cf388dbd5da110e8090_ramips_24kec.ipk
+    opkg install http://rssn.cn/ramips/packages/base/minivtun_20150425-81e7719443341748c4911416a1ee2b97e97d5023_ramips_24kec.ipk
     rm -f /tmp/luci-indexcache
     /etc/init.d/ipset.sh enable; /etc/init.d/ipset.sh restart
     /etc/init.d/minivtun.sh enable; /etc/init.d/minivtun.sh restart
