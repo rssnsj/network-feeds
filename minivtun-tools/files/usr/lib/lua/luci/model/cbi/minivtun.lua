@@ -6,22 +6,31 @@
 ]]--
 
 local fs = require("nixio.fs")
-local bit = require("bit")
 
 function ipv4_mask_prefix(mask)
 	local a, b, c, d = mask:match("^(%d+)%.(%d+)%.(%d+)%.(%d+)")
-	local m = bit.bnot(bit.lshift(a, 24) + bit.lshift(b, 16) + bit.lshift(c, 8) + d)
-	m = bit.band(m, 0xffffffff)
-	local b = 32
-	local i
-	for i = 32, 0, -1 do
-		if m == 0 then
-			b = i
-			break
+	local k, v
+	local prefix = 0
+	for k, v in pairs({a, b, c, d}) do
+		if v == "255" then
+			prefix = prefix + 8
+		elseif v == "254" then
+			prefix = prefix + 7
+		elseif v == "252" then
+			prefix = prefix + 6
+		elseif v == "248" then
+			prefix = prefix + 5
+		elseif v == "240" then
+			prefix = prefix + 4
+		elseif v == "224" then
+			prefix = prefix + 3
+		elseif v == "192" then
+			prefix = prefix + 2
+		elseif v == "128" then
+			prefix = prefix + 1
 		end
-		m = bit.rshift(m, 1)
 	end
-	return b
+	return prefix
 end
 
 function ipv4_first_ip(ip)
