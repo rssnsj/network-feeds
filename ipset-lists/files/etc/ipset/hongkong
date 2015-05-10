@@ -13,6 +13,7 @@ add hongkong 14.198.224.0/20
 add hongkong 14.198.240.0/20
 add hongkong 14.199.0.0/16
 add hongkong 24.230.0.0/19
+add hongkong 24.235.24.0/21
 add hongkong 27.50.32.0/21
 add hongkong 27.98.192.0/20
 add hongkong 27.100.16.0/21
@@ -227,6 +228,13 @@ add hongkong 45.115.36.0/22
 add hongkong 45.115.40.0/22
 add hongkong 45.115.124.0/22
 add hongkong 45.115.160.0/22
+add hongkong 45.115.240.0/22
+add hongkong 45.116.8.0/22
+add hongkong 45.116.40.0/22
+add hongkong 45.116.76.0/22
+add hongkong 45.116.80.0/22
+add hongkong 45.116.144.0/22
+add hongkong 45.116.168.0/22
 add hongkong 49.130.0.0/15
 add hongkong 49.143.232.0/22
 add hongkong 49.213.0.0/20
@@ -542,6 +550,12 @@ add hongkong 103.55.112.0/23
 add hongkong 103.55.128.0/22
 add hongkong 103.55.200.0/22
 add hongkong 103.55.218.0/24
+add hongkong 103.56.24.0/22
+add hongkong 103.56.44.0/22
+add hongkong 103.56.112.0/22
+add hongkong 103.56.116.0/22
+add hongkong 103.56.136.0/22
+add hongkong 103.56.192.0/22
 add hongkong 103.224.20.0/24
 add hongkong 103.224.22.0/24
 add hongkong 103.224.56.0/22
@@ -1388,6 +1402,7 @@ add hongkong 203.223.178.0/24
 add hongkong 203.223.192.0/18
 add hongkong 204.152.224.0/21
 add hongkong 205.147.104.0/22
+add hongkong 208.87.166.0/23
 add hongkong 210.0.128.0/19
 add hongkong 210.0.160.0/19
 add hongkong 210.0.192.0/18
