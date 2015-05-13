@@ -16,7 +16,7 @@ OpenWrt下的网络加速扩展应用
     opkg remove dnsmasq; opkg install dnsmasq-full
     opkg install luci libopenssl ipset
     opkg install http://rssn.cn/ar71xx/packages/base/ipset-lists_20150510_ar71xx.ipk
-    opkg install http://rssn.cn/ar71xx/packages/base/shadowsocks-libev_2.1.4_ar71xx.ipk
+    opkg install http://rssn.cn/ar71xx/packages/base/shadowsocks-libev_2.2.1_ar71xx.ipk
     opkg install http://rssn.cn/ar71xx/packages/base/shadowsocks-tools_1-20150108_ar71xx.ipk
     opkg install http://rssn.cn/ar71xx/packages/base/minivtun_ba0f0e9cc42d779c90116cc41df37e7bee0b18f5_ar71xx.ipk
     rm -f /tmp/luci-indexcache
@@ -32,7 +32,7 @@ OpenWrt下的网络加速扩展应用
     opkg remove dnsmasq; opkg install dnsmasq-full
     opkg install luci libopenssl ipset
     opkg install http://rssn.cn/ramips/packages/base/ipset-lists_20150510_ramips_24kec.ipk
-    opkg install http://rssn.cn/ramips/packages/base/shadowsocks-libev_2.1.4_ramips_24kec.ipk
+    opkg install http://rssn.cn/ramips/packages/base/shadowsocks-libev_2.2.1_ramips_24kec.ipk
     opkg install http://rssn.cn/ramips/packages/base/shadowsocks-tools_1-20150108_ramips_24kec.ipk
     opkg install http://rssn.cn/ramips/packages/base/minivtun_ba0f0e9cc42d779c90116cc41df37e7bee0b18f5_ramips_24kec.ipk
     rm -f /tmp/luci-indexcache
