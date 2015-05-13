@@ -20,6 +20,7 @@ OpenWrt下的网络加速扩展应用
     opkg install http://rssn.cn/ar71xx/packages/base/shadowsocks-tools_20150412_ar71xx.ipk
     opkg install http://rssn.cn/ar71xx/packages/base/minivtun_20150510-ba0f0e9cc42d779c90116cc41df37e7bee0b18f5_ar71xx.ipk
     rm -f /tmp/luci-indexcache
+    /etc/init.d/uhttpd enable; /etc/init.d/uhttpd restart
     /etc/init.d/ipset.sh enable; /etc/init.d/ipset.sh restart
     /etc/init.d/minivtun.sh enable; /etc/init.d/minivtun.sh restart
     /etc/init.d/ss-redir.sh enable; /etc/init.d/ss-redir.sh restart
@@ -36,6 +37,7 @@ OpenWrt下的网络加速扩展应用
     opkg install http://rssn.cn/ramips/packages/base/shadowsocks-tools_20150412_ramips_24kec.ipk
     opkg install http://rssn.cn/ramips/packages/base/minivtun_20150510-ba0f0e9cc42d779c90116cc41df37e7bee0b18f5_ramips_24kec.ipk
     rm -f /tmp/luci-indexcache
+    /etc/init.d/uhttpd enable; /etc/init.d/uhttpd restart
     /etc/init.d/ipset.sh enable; /etc/init.d/ipset.sh restart
     /etc/init.d/minivtun.sh enable; /etc/init.d/minivtun.sh restart
     /etc/init.d/ss-redir.sh enable; /etc/init.d/ss-redir.sh restart
