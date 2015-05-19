@@ -35,8 +35,6 @@ Build/Compile = $(Build/Compile/Default)
 
 define Package/shadowsocks-tools/install
 	$(CP) -a files/* $(1)/
-	mkdir -p $(1)/usr/lib/lua/luci/i18n
-	$(BUILD_DIR)/luci/build/po2lmo po/zh_CN/shadowsocks.po $(1)/usr/lib/lua/luci/i18n/shadowsocks.zh-cn.lmo || :
 endef
 
 $(eval $(call BuildPackage,shadowsocks-tools))
