@@ -138,6 +138,7 @@ start()
 	# Check if the flash disk has been mounted
 	if ! [ -L $PRIMARY_DISK_LINK -a -d $PRIMARY_DISK_LINK ]; then
 		# Delay the startup if mount point check fails at system boot
+		udevtriggers
 		delay_startup_or_exit file-storage
 		exit 0
 	fi
