@@ -7,8 +7,11 @@ call_mount()
 
 	# Ignore major disk if it has partitions
 	case "$device" in
-		[sh]d[a-z]|mmcblk*)
+		[sh]d[a-z]*|mmcblk*)
 			ls /dev/$device?* >/dev/null 2>&1 && return 0 || :
+			;;
+		*)
+			return 0
 			;;
 	esac
 
