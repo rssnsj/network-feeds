@@ -13,6 +13,7 @@ call_unmount()
 	esac
 
 	umount $mount_dir
+	while umount $mount_dir 2>/dev/null; do :; done
 	rmdir $mount_dir
 	[ -d /tmp/data ] || rm -f /tmp/data
 }
