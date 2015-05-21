@@ -6,7 +6,7 @@
 START=61
 
 PRIMARY_DISK_LINK=/tmp/data
-DELAYED_TRIALS_MAX=10
+DELAYED_TRIALS_MAX=2
 DELAYED_INTERVAL=5
 
 #
@@ -138,7 +138,7 @@ start()
 	# Check if the flash disk has been mounted
 	if ! [ -L $PRIMARY_DISK_LINK -a -d $PRIMARY_DISK_LINK ]; then
 		# Delay the startup if mount point check fails at system boot
-		udevtriggers
+		udevtrigger
 		delay_startup_or_exit file-storage
 		exit 0
 	fi
