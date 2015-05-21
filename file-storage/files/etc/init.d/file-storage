@@ -1,0 +1,171 @@
+#!/bin/sh /etc/rc.common
+
+# Copyright (C) 2015 Justin Liu
+# https://github.com/rssnsj/network-feeds
+
+START=61
+
+PRIMARY_DISK_LINK=/tmp/data
+DELAYED_TRIALS_MAX=10
+DELAYED_INTERVAL=5
+
+#
+# $1 - file name of service's init.d script
+#
+delay_startup_or_exit()
+{
+	local service="$1"
+
+	if [ -z "$DELAY_TRIALS_LEFT" ]; then
+		export DELAY_TRIALS_LEFT=$DELAYED_TRIALS_MAX
+	elif [ $DELAY_TRIALS_LEFT -gt 0 ]; then
+		export DELAY_TRIALS_LEFT=`expr $DELAY_TRIALS_LEFT - 1`
+	else
+		echo "Startup trials of \"$service\" exceeded, given up."
+		exit 1
+	fi
+
+	echo "Delaying startup for \"$service\"."
+
+	# Hook a unique executable file to start-stop-daemon,
+	# to prevent duplicate process detection.
+	local call_script="/tmp/X-${service}.$$"
+	cat > $call_script <<EOF
+#!/bin/sh
+sleep $DELAYED_INTERVAL
+/etc/init.d/$service start
+rm -f $call_script
+EOF
+	chmod +x $call_script
+	start-stop-daemon -S -b -x $call_script --
+	exit 0
+}
+
+# Get mount point of specified storage device or
+# partition (e.g., /dev/sda1), empty for unmounted.
+__mount_point_of()
+{
+	local device="$1"
+	[ -b "$device" ] || return 1
+	awk -vd="$device" '$1==d{print $2; exit 0} END{exit 1}' /proc/mounts
+}
+
+__check_cfg_delete()
+{
+	local cfg=$1
+
+	local ident=`uci get samba.$cfg.ident 2>/dev/null`
+	[ -n "$ident" ] || return 0
+
+	local device=/dev/$ident
+	local mount_dir=`__mount_point_of "$device"`
+	if [ -z "$mount_dir" ]; then
+		uci delete samba.$cfg
+		echo "Deleted samba share for '$mount_dir'" >&2
+	fi
+}
+
+# Detect all attached disks and partitions (not only USB devices).
+# Return value: 0 - changed, non-zero - unchanged.
+detect_usb_storages()
+{
+	local FSN=/tmp/.fsn
+	local modified=N
+	local ident
+
+	rm -rf $FSN
+	mkdir -p $FSN
+
+	# Delete shares for detached devices
+	config_load samba
+	config_foreach __check_cfg_delete sambashare
+
+	# Probe new devices and add shares
+	local device
+	for device in /dev/sd* /dev/mmcblk*; do
+		[ -b "$device" ] || continue
+
+		local mount_dir=`__mount_point_of "$device"`
+		[ -n "$mount_dir" ] || continue
+
+		# Use device name as the config identifier
+		local ident=`basename "$device"`
+
+		# Use volume label as share name, UUID as fallback
+		local blkid_info=`blkid $device`
+		local sharename=`expr "$blkid_info" : '.*LABEL="\([^"]\+\)'`
+		# Fallback to UUID if LABEL is empty or contains Windows filename reserved chars
+		if [ -z "$sharename" ] || expr "$sharename" : '.*[<>:"/\\|?\*{}]' >/dev/null; then
+			sharename=`expr "$blkid_info" : '.*UUID="\([^"]\+\)'`
+			[ -z "$sharename" ] && sharename="$ident"
+			sharename="Disk-$sharename"
+		fi
+
+		# Fallback the name with a numeral suffix to resolve conflicts
+		if [ -e "$FSN/$sharename" ]; then
+			local j
+			# NOTICE: We don't expect to see many conflicts on a single name
+			for j in 2 3 4 5 6 7 8 9; do
+				if [ ! -e "$FSN/${sharename}_$j" ]; then
+					sharename="${sharename}_$j"
+					break
+				fi
+			done
+		fi
+		touch "$FSN/$sharename"
+
+		# Fix directory permission
+		chmod 777 $mount_dir
+
+		uci set samba.$ident=sambashare
+		uci set samba.$ident.ident=$ident
+		uci set samba.$ident.name="$sharename"
+		uci set samba.$ident.read_only=no
+		uci set samba.$ident.create_mask=0777
+		uci set samba.$ident.dir_mask=0777
+		uci set samba.$ident.path=$mount_dir
+		uci set samba.$ident.guest_ok=yes
+	done
+
+	rm -rf $FSN
+
+	uci commit samba
+	return 0
+}
+
+start()
+{
+	# Check if the flash disk has been mounted
+	if ! [ -L $PRIMARY_DISK_LINK -a -d $PRIMARY_DISK_LINK ]; then
+		# Delay the startup if mount point check fails at system boot
+		delay_startup_or_exit file-storage
+		exit 0
+	fi
+
+	# Detect new storages and delete non-existent items
+	detect_usb_storages
+
+	# Try to recreate each share directory and reset permission
+	local i=0
+	while uci get samba.@sambashare[$i] >/dev/null 2>&1; do
+		local path=`uci get samba.@sambashare[$i].path`
+		mkdir -p "$path"
+		chmod 777 "$path"
+		i=`expr $i + 1`
+	done
+
+	/etc/init.d/samba disable
+	/etc/init.d/samba restart
+}
+
+stop()
+{
+	/etc/init.d/samba stop
+}
+
+reload()
+{
+	detect_usb_storages
+	/etc/init.d/samba restart
+	return 0
+}
