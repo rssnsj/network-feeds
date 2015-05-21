@@ -47,7 +47,7 @@ __mount_point_of()
 {
 	local device="$1"
 	[ -b "$device" ] || return 1
-	awk -vd="$device" '$1==d{print $2; exit 0} END{exit 1}' /proc/mounts
+	awk -vd="$device" '$1==d{print $2}' /proc/mounts | grep '^\/...\/storage' | head -n1
 }
 
 __check_cfg_delete()
