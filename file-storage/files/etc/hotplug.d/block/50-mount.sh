@@ -2,21 +2,39 @@
 
 call_mount()
 {
-	local device=`basename $DEVPATH`
-	local mount_dir=/tmp/storage/$device
+	local name=`basename $DEVPATH`
+	local mount_dir=/tmp/storage/$name
 
 	# Ignore major disk if it has partitions
-	case "$device" in
+	case "$name" in
 		[sh]d[a-z]*|mmcblk*)
-			ls /dev/$device?* >/dev/null 2>&1 && return 0 || :
+			ls /dev/$name?* >/dev/null 2>&1 && return 0 || :
 			;;
 		*)
 			return 0
 			;;
 	esac
 
+	device=/dev/$name
+	local mount_opts=""
+	local blk_info=`blkid "$device"`
+	local fs_type=`"$blk_info" : '.*TYPE="\([^"]*\)'`
+
+	case "$fs_type" in
+		vfat|ntfs)
+			mount_opts="$mount_opts -t $fs_type -o dmask=0000,fmask=0000"
+			;;
+		"")
+			mount_opts="$mount_opts -o dmask=0000,fmask=0000"
+			;;
+		*)
+			mount_opts="$mount_opts -t $fs_type"
+			;;
+	esac
+
 	mkdir -p $mount_dir
-	if mount /dev/$device $mount_dir -t ext3 || mount /dev/$device $mount_dir -o dmask=0000,fmask=0000; then
+
+	if mount $device $mount_dir $mount_opts; then
 		chmod 777 $mount_dir
 		if [ ! -L /tmp/data ]; then
 			rm -rf /tmp/data

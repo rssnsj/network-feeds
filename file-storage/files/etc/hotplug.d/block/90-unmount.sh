@@ -2,13 +2,13 @@
 
 call_unmount()
 {
-	local device=`basename $DEVPATH`
-	local mount_dir=/tmp/storage/$device
+	local name=`basename $DEVPATH`
+	local mount_dir=/tmp/storage/$name
 
 	# Ignore major disk if it has partitions
-	case "$device" in
+	case "$name" in
 		[sh]d[a-z]*|mmcblk*)
-			ls /dev/$device?* >/dev/null 2>&1 && return 0 || :
+			ls /dev/$name?* >/dev/null 2>&1 && return 0 || :
 			;;
 		*)
 			return 0
