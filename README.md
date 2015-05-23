@@ -11,25 +11,13 @@ OpenWrt下的网络加速扩展应用
 
 ### 如何安装
 
-##### 基于ar71xx的路由器
-
     mkdir -p /etc/opkg
-    echo "src/gz rssnsj http://rssn.cn/openwrt-feeds/ar71xx" > /etc/opkg/rssnsj.conf
-    opkg update
-    opkg install ipset-lists shadowsocks-libev shadowsocks-tools minivtun file-storage
-    /etc/init.d/uhttpd enable
-    /etc/init.d/ipset.sh enable
-    /etc/init.d/ss-redir.sh enable
-    /etc/init.d/minivtun.sh enable
-    /etc/init.d/file-storage enable
+    # 以下两条根据你的路由器架构选择执行（不要两条都执行）
+    echo "src/gz rssnsj http://rssn.cn/openwrt-feeds/ar71xx" > /etc/opkg/rssnsj.conf  # 基于ar71xx的路由器
+    echo "src/gz rssnsj http://rssn.cn/openwrt-feeds/ramips" > /etc/opkg/rssnsj.conf  # 基于ramips的路由器
       
-    reboot
-
-##### 基于ramips的路由器
-
-    mkdir -p /etc/opkg
-    echo "src/gz rssnsj http://rssn.cn/openwrt-feeds/ramips" > /etc/opkg/rssnsj.conf
     opkg update
+    opkg install dnsmasq-full --force-overwrite
     opkg install ipset-lists shadowsocks-libev shadowsocks-tools minivtun file-storage
     /etc/init.d/uhttpd enable
     /etc/init.d/ipset.sh enable
