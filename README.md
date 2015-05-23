@@ -1,7 +1,7 @@
 # network-feeds
 OpenWrt下的网络加速扩展应用
 
-### Components
+### 包含的组件
 * ipset-lists: 包含所有中国IP地址段的ipset列表（数据来自 apnic.net）
 * proto-bridge: 区分协议的以太网桥接驱动，以及一种可压缩VLAN头的非标准VLAN技术（YaVLAN）
 * shadowsocks-libev: Shadowsocks - v2.1.4
