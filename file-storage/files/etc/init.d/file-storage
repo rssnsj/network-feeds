@@ -139,9 +139,10 @@ start()
 	if [ -f /tmp/delayed_mounts ]; then
 		local devpath
 		while read devpath; do
-			( DEVPATH=$devpath; ACTION=add; . /etc/hotplug.d/block/50-mounts.sh )
+			( DEVPATH=$devpath ACTION=add /sbin/hotplug-call block )
 		done < /tmp/delayed_mounts
 		rm -f /tmp/delayed_mounts
+		exit 0
 	fi
 
 	# Check if the flash disk has been mounted

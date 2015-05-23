@@ -18,7 +18,7 @@ call_mount()
 	device=/dev/$name
 	local mount_opts=""
 	local blk_info=`blkid "$device"`
-	local fs_type=`"$blk_info" : '.*TYPE="\([^"]*\)'`
+	local fs_type=`expr "$blk_info" : '.*TYPE="\([^"]*\)'`
 
 	case "$fs_type" in
 		vfat|ntfs)
