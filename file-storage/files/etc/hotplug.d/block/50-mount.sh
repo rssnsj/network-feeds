@@ -41,6 +41,16 @@ call_mount()
 			ln -s $mount_dir /tmp/data
 		fi
 	else
+		# Delay to mount by 'file-storage' if it fails due to kmod not ready
+		case "$fs_type" in
+			ext?|vfat|ntfs)
+				local __enabled_fs=`awk -vf=$fs_type '$NF==f{print $NF}' /proc/filesystems`
+				if [ -z "$__enabled_fs" ]; then
+					echo "$DEVPATH" >> /tmp/delayed_mounts
+				fi
+				;;
+		esac
+
 		rmdir $mount_dir
 	fi
 }

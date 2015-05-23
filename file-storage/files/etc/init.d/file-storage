@@ -135,6 +135,15 @@ detect_usb_storages()
 
 start()
 {
+	# Try mounting delayed disks
+	if [ -f /tmp/delayed_mounts ]; then
+		local devpath
+		while read devpath; do
+			( DEVPATH=$devpath; ACTION=add; . /etc/hotplug.d/block/50-mounts.sh )
+		done < /tmp/delayed_mounts
+		rm -f /tmp/delayed_mounts
+	fi
+
 	# Check if the flash disk has been mounted
 	if ! [ -L $PRIMARY_DISK_LINK -a -d $PRIMARY_DISK_LINK ]; then
 		# Delay the startup if mount point check fails at system boot
