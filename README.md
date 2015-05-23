@@ -7,44 +7,39 @@ OpenWrt下的网络加速扩展应用
 * shadowsocks-libev: Shadowsocks - v2.1.4
 * shadowsocks-tools: OpenWrt下的Shadowsocks配置、启动脚本以及luci界面
 * minivtun-tools: 一种安全、快速、部署便捷的非标准协议VPN，可用于防火墙穿越（服务器配置方法请见：[https://github.com/rssnsj/minivtun](https://github.com/rssnsj/minivtun)）
+* file-storage: USB存储、SD卡自动挂载与samba自动配置工具
 
 ### 如何安装
 
 ##### 基于ar71xx的路由器
 
+    mkdir -p /etc/opkg
+    echo "src/gz rssnsj http://rssn.cn/openwrt-feeds/ar71xx" > /etc/opkg/rssnsj.conf
     opkg update
-    opkg remove dnsmasq; opkg install dnsmasq-full
-    opkg install luci libopenssl ipset
-    opkg install http://rssn.cn/ar71xx/packages/base/ipset-lists_20150510_ar71xx.ipk
-    opkg install http://rssn.cn/ar71xx/packages/base/shadowsocks-libev_2.2.1_ar71xx.ipk
-    opkg install http://rssn.cn/ar71xx/packages/base/shadowsocks-tools_20150412_ar71xx.ipk
-    opkg install http://rssn.cn/ar71xx/packages/base/minivtun_20150510-ba0f0e9cc42d779c90116cc41df37e7bee0b18f5_ar71xx.ipk
-    rm -f /tmp/luci-indexcache
-    /etc/init.d/uhttpd enable; /etc/init.d/uhttpd restart
-    /etc/init.d/ipset.sh enable; /etc/init.d/ipset.sh restart
-    /etc/init.d/minivtun.sh enable; /etc/init.d/minivtun.sh restart
-    /etc/init.d/ss-redir.sh enable; /etc/init.d/ss-redir.sh restart
+    opkg install ipset-lists shadowsocks-libev shadowsocks-tools minivtun file-storage
+    /etc/init.d/uhttpd enable
+    /etc/init.d/ipset.sh enable
+    /etc/init.d/ss-redir.sh enable
+    /etc/init.d/minivtun.sh enable
+    /etc/init.d/file-storage enable
       
     reboot
 
 ##### 基于ramips的路由器
 
+    mkdir -p /etc/opkg
+    echo "src/gz rssnsj http://rssn.cn/openwrt-feeds/ramips" > /etc/opkg/rssnsj.conf
     opkg update
-    opkg remove dnsmasq; opkg install dnsmasq-full
-    opkg install luci libopenssl ipset
-    opkg install http://rssn.cn/ramips/packages/base/ipset-lists_20150510_ramips_24kec.ipk
-    opkg install http://rssn.cn/ramips/packages/base/shadowsocks-libev_2.2.1_ramips_24kec.ipk
-    opkg install http://rssn.cn/ramips/packages/base/shadowsocks-tools_20150412_ramips_24kec.ipk
-    opkg install http://rssn.cn/ramips/packages/base/minivtun_20150510-ba0f0e9cc42d779c90116cc41df37e7bee0b18f5_ramips_24kec.ipk
-    rm -f /tmp/luci-indexcache
-    /etc/init.d/uhttpd enable; /etc/init.d/uhttpd restart
-    /etc/init.d/ipset.sh enable; /etc/init.d/ipset.sh restart
-    /etc/init.d/minivtun.sh enable; /etc/init.d/minivtun.sh restart
-    /etc/init.d/ss-redir.sh enable; /etc/init.d/ss-redir.sh restart
+    opkg install ipset-lists shadowsocks-libev shadowsocks-tools minivtun file-storage
+    /etc/init.d/uhttpd enable
+    /etc/init.d/ipset.sh enable
+    /etc/init.d/ss-redir.sh enable
+    /etc/init.d/minivtun.sh enable
+    /etc/init.d/file-storage enable
       
     reboot
 
 ##### 集成本项目的OpenWrt固件（仅支持市面上主流智能路由）
-* 极路由HC5661/HC5761（极1S/极2）: https://github.com/rssnsj/openwrt-hc5761/releases
+* 极路由HC5661/HC5761/HC5861（极1S/极2/极3）: https://github.com/rssnsj/openwrt-hc5x61/releases
 * 极路由HC6361（极1）: https://github.com/rssnsj/openwrt-hc6361/releases
 * 小米路由mini: https://github.com/rssnsj/openwrt-xiaomi-mini/releases
