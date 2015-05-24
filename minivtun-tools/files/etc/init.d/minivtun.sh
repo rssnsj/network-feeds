@@ -37,6 +37,14 @@ __netmask_to_bits()
 # New implementation:
 # Attach rules to main 'dnsmasq' service and restart it.
 
+__gfwlist_by_mode()
+{
+	case "$1" in
+		V) echo unblock-youku;;
+		*) echo china-banned;;
+	esac
+}
+
 start()
 {
 	local vt_enabled=`uci get minivtun.@minivtun[0].enabled 2>/dev/null`
@@ -75,8 +83,8 @@ start()
 	[ -z "$local_addresses" ] && network_get_ipaddr local_addresses lan
 	local vt_ifname="minivtun-$vt_network"
 	local vt_local_prefix=`__netmask_to_bits "$vt_local_netmask"`
-	local vt_gfwlist="china-banned"
-	local vt_np_ipset="china"
+	local vt_gfwlist=`__gfwlist_by_mode $vt_proxy_mode`
+	vt_np_ipset="china"
 
 	# -----------------------------------------------------------------
 	/usr/sbin/minivtun -r $vt_server_addr:$vt_server_port \
@@ -145,17 +153,16 @@ start()
 			iptables -t mangle -A minivtun_$vt_network -m set --match-set $vt_np_ipset dst -j RETURN
 			;;
 		M)
-			ipset create gfwlist hash:ip maxelem 65536
-			[ -n "$vt_safe_dns" ] && ipset add gfwlist $vt_safe_dns
-			iptables -t mangle -A minivtun_$vt_network -m set ! --match-set gfwlist dst -j RETURN
+			ipset create $vt_gfwlist hash:ip maxelem 65536 2>/dev/null
+			[ -n "$vt_safe_dns" ] && ipset add $vt_gfwlist $vt_safe_dns 2>/dev/null
+			iptables -t mangle -A minivtun_$vt_network -m set ! --match-set $vt_gfwlist dst -j RETURN
 			iptables -t mangle -A minivtun_$vt_network -m set --match-set $vt_np_ipset dst -j RETURN
 			;;
 		V)
 			vt_np_ipset=""
-			vt_gfwlist="unblock-youku"
-			ipset create gfwlist hash:ip maxelem 65536
-			[ -n "$vt_safe_dns" ] && ipset add gfwlist $vt_safe_dns
-			iptables -t mangle -A minivtun_$vt_network -m set ! --match-set gfwlist dst -j RETURN
+			ipset create $vt_gfwlist hash:ip maxelem 65536 2>/dev/null
+			[ -n "$vt_safe_dns" ] && ipset add $vt_gfwlist $vt_safe_dns 2>/dev/null
+			iptables -t mangle -A minivtun_$vt_network -m set ! --match-set $vt_gfwlist dst -j RETURN
 			;;
 	esac
 	local subnet
@@ -180,7 +187,7 @@ start()
 	###### dnsmasq-to-ipset configuration ######
 	case "$vt_proxy_mode" in
 		M|V)
-			awk '!/^$/&&!/^#/{printf("ipset=/%s/gfwlist\n",$0)}' \
+			awk '!/^$/&&!/^#/{printf("ipset=/%s/'"$vt_gfwlist"'\n",$0)}' \
 				/etc/gfwlist/$vt_gfwlist > /var/etc/dnsmasq-go.d/02-ipset.conf
 			;;
 	esac
@@ -219,8 +226,10 @@ EOF
 stop()
 {
 	local vt_network=`uci get minivtun.@minivtun[0].network 2>/dev/null`
+	local vt_proxy_mode=`uci get minivtun.@minivtun[0].proxy_mode`
 	[ -z "$vt_network" ] && vt_network="vt0"
 	local vt_ifname="minivtun-$vt_network"
+	local vt_gfwlist=`__gfwlist_by_mode $vt_proxy_mode`
 
 	# -----------------------------------------------------------------
 	rm -rf /var/etc/dnsmasq-go.d
@@ -237,7 +246,7 @@ stop()
 	fi
 
 	# -----------------------------------------------------------------
-	ipset destroy gfwlist 2>/dev/null
+	[ "$KEEP_GFWLIST" = Y ] || ipset destroy "$vt_gfwlist" 2>/dev/null
 
 	# -----------------------------------------------------------------
 	# We don't have to delete the default route in 'virtual', since
@@ -252,3 +261,9 @@ stop()
 
 }
 
+restart()
+{
+	KEEP_GFWLIST=Y
+	stop
+	start
+}

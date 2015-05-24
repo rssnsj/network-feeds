@@ -21,6 +21,14 @@ PDNSD_LOCAL_PORT=7453
 # New implementation:
 # Attach rules to main 'dnsmasq' service and restart it.
 
+__gfwlist_by_mode()
+{
+	case "$1" in
+		V) echo unblock-youku;;
+		*) echo china-banned;;
+	esac
+}
+
 start()
 {
 	local vt_enabled=`uci get shadowsocks.@shadowsocks[0].enabled 2>/dev/null`
@@ -58,7 +66,7 @@ start()
 	[ -f /lib/functions/network.sh ] && . /lib/functions/network.sh
 	[ -z "$covered_subnets" ] && network_get_subnet covered_subnets lan
 	[ -z "$local_addresses" ] && network_get_ipaddr local_addresses lan
-	local vt_gfwlist="china-banned"
+	local vt_gfwlist=`__gfwlist_by_mode $vt_proxy_mode`
 	vt_np_ipset="china"  # Must be global variable
 
 	# -----------------------------------------------------------------
@@ -84,15 +92,14 @@ start()
 			iptables -t nat -A shadowsocks_pre -m set --match-set $vt_np_ipset dst -j RETURN
 			;;
 		M)
-			ipset create gfwlist hash:ip maxelem 65536
-			iptables -t nat -A shadowsocks_pre -m set ! --match-set gfwlist dst -j RETURN
+			ipset create $vt_gfwlist hash:ip maxelem 65536 2>/dev/null
+			iptables -t nat -A shadowsocks_pre -m set ! --match-set $vt_gfwlist dst -j RETURN
 			iptables -t nat -A shadowsocks_pre -m set --match-set $vt_np_ipset dst -j RETURN
 			;;
 		V)
 			vt_np_ipset=""
-			vt_gfwlist="unblock-youku"
-			ipset create gfwlist hash:ip maxelem 65536
-			iptables -t nat -A shadowsocks_pre -m set ! --match-set gfwlist dst -j RETURN
+			ipset create $vt_gfwlist hash:ip maxelem 65536 2>/dev/null
+			iptables -t nat -A shadowsocks_pre -m set ! --match-set $vt_gfwlist dst -j RETURN
 			;;
 	esac
 	local subnet
@@ -120,7 +127,7 @@ start()
 	###### dnsmasq-to-ipset configuration ######
 	case "$vt_proxy_mode" in
 		M|V)
-			awk '!/^$/&&!/^#/{printf("ipset=/%s/gfwlist\n",$0)}' \
+			awk '!/^$/&&!/^#/{printf("ipset=/%s/'"$vt_gfwlist"'\n",$0)}' \
 				/etc/gfwlist/$vt_gfwlist > /var/etc/dnsmasq-go.d/02-ipset.conf
 			;;
 	esac
@@ -158,6 +165,10 @@ EOF
 
 stop()
 {
+	local vt_proxy_mode=`uci get minivtun.@minivtun[0].proxy_mode`
+	local vt_gfwlist=`__gfwlist_by_mode $vt_proxy_mode`
+
+	# -----------------------------------------------------------------
 	rm -rf /var/etc/dnsmasq-go.d
 	if [ -f /tmp/dnsmasq.d/dnsmasq-go.conf ]; then
 		rm -f /tmp/dnsmasq.d/dnsmasq-go.conf
@@ -173,13 +184,20 @@ stop()
 	fi
 
 	# -----------------------------------------------------------------
-	ipset destroy gfwlist 2>/dev/null
+	[ "$KEEP_GFWLIST" = Y ] || ipset destroy "$vt_gfwlist" 2>/dev/null
 
 	# -----------------------------------------------------------------
 	if [ -f $SS_REDIR_PIDFILE ]; then
 		kill -9 `cat $SS_REDIR_PIDFILE`
 		rm -f $SS_REDIR_PIDFILE
 	fi
+}
+
+restart()
+{
+	KEEP_GFWLIST=Y
+	stop
+	start
 }
 
 # $1: upstream DNS server
