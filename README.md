@@ -25,6 +25,7 @@ OpenWrt下的网络加速扩展应用
     /etc/init.d/minivtun.sh enable
     /etc/init.d/file-storage enable
       
+    rm -f /etc/opkg/rssnsj.conf
     reboot
 
 ##### 集成本项目的OpenWrt固件（仅支持市面上主流智能路由）
