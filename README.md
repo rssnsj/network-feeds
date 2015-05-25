@@ -19,14 +19,8 @@ OpenWrt下的网络加速扩展应用
     opkg update
     opkg install dnsmasq-full --force-overwrite
     opkg install ipset-lists shadowsocks-libev shadowsocks-tools minivtun file-storage
-    /etc/init.d/uhttpd enable
-    /etc/init.d/ipset.sh enable
-    /etc/init.d/ss-redir.sh enable
-    /etc/init.d/minivtun.sh enable
-    /etc/init.d/file-storage enable
       
     rm -f /etc/opkg/rssnsj.conf
-    reboot
 
 ##### 集成本项目的OpenWrt固件（仅支持市面上主流智能路由）
 * 极路由HC5661/HC5761/HC5861（极1S/极2/极3）: https://github.com/rssnsj/openwrt-hc5x61/releases
