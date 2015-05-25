@@ -39,8 +39,10 @@ endef
 
 define Package/ipset-lists/postinst
 #!/bin/sh
-/etc/init.d/ipset-lists start
-/etc/init.d/ipset-lists enable
+if [ -e /etc/openwrt_release ]; then
+	/etc/init.d/ipset.sh start
+	/etc/init.d/ipset.sh enable
+fi
 endef
 
 $(eval $(call BuildPackage,ipset-lists))

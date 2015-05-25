@@ -35,9 +35,12 @@ endef
 
 define Package/file-storage/postinst
 #!/bin/sh
-/etc/init.d/samba disable
-/etc/init.d/samba stop
-/etc/init.d/file-storage enable
+if [ -e /etc/openwrt_release ]; then
+	/etc/init.d/samba disable
+	/etc/init.d/samba stop
+	/etc/init.d/file-storage start
+	/etc/init.d/file-storage enable
+fi
 endef
 
 $(eval $(call BuildPackage,file-storage))

@@ -39,8 +39,10 @@ endef
 
 define Package/shadowsocks-tools/postinst
 #!/bin/sh
-/etc/init.d/ss-redir.sh start
-/etc/init.d/ss-redir.sh enable
+if [ -e /etc/openwrt_release ]; then
+	/etc/init.d/ss-redir.sh start
+	/etc/init.d/ss-redir.sh enable
+fi
 endef
 
 $(eval $(call BuildPackage,shadowsocks-tools))
