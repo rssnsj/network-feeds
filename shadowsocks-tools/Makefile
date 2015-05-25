@@ -6,7 +6,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=shadowsocks-tools
-PKG_VERSION:=20150524
+PKG_VERSION:=20150525
 PKG_RELEASE:=
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
@@ -35,6 +35,12 @@ Build/Compile = $(Build/Compile/Default)
 
 define Package/shadowsocks-tools/install
 	$(CP) -a files/* $(1)/
+endef
+
+define Package/shadowsocks-tools/postinst
+#!/bin/sh
+/etc/init.d/ss-redir.sh start
+/etc/init.d/ss-redir.sh enable
 endef
 
 $(eval $(call BuildPackage,shadowsocks-tools))

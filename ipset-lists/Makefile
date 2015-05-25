@@ -6,7 +6,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=ipset-lists
-PKG_VERSION:=20150510
+PKG_VERSION:=20150525
 PKG_RELEASE:=
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
@@ -35,6 +35,12 @@ Build/Compile = $(Build/Compile/Default)
 
 define Package/ipset-lists/install
 	$(CP) -a files/* $(1)/
+endef
+
+define Package/ipset-lists/postinst
+#!/bin/sh
+/etc/init.d/ipset-lists start
+/etc/init.d/ipset-lists enable
 endef
 
 $(eval $(call BuildPackage,ipset-lists))

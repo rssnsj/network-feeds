@@ -7,7 +7,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=minivtun
-PKG_VERSION:=20150524
+PKG_VERSION:=20150525
 PKG_RELEASE=$(PKG_SOURCE_VERSION)
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
@@ -40,6 +40,12 @@ define Package/minivtun/install
 	mkdir -p $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/minivtun $(1)/usr/sbin
 	$(CP) -a files/* $(1)/
+endef
+
+define Package/minivtun/postinst
+#!/bin/sh
+/etc/init.d/minivtun.sh start
+/etc/init.d/minivtun.sh enable
 endef
 
 $(eval $(call BuildPackage,minivtun))

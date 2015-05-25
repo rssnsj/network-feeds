@@ -6,7 +6,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=file-storage
-PKG_VERSION:=20150522
+PKG_VERSION:=20150525
 PKG_RELEASE:=
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
@@ -31,6 +31,13 @@ Build/Compile = $(Build/Compile/Default)
 
 define Package/file-storage/install
 	$(CP) -a files/* $(1)/
+endef
+
+define Package/file-storage/postinst
+#!/bin/sh
+/etc/init.d/samba disable
+/etc/init.d/samba stop
+/etc/init.d/file-storage enable
 endef
 
 $(eval $(call BuildPackage,file-storage))
