@@ -45,8 +45,7 @@ endef
 define Package/minivtun/postinst
 #!/bin/sh
 if [ -e /etc/openwrt_release ]; then
-	/etc/init.d/minivtun.sh start
-	/etc/init.d/minivtun.sh enable
+	/etc/init.d/minivtun.sh enable || :
 fi
 endef
 

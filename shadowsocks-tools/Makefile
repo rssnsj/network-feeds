@@ -40,8 +40,7 @@ endef
 define Package/shadowsocks-tools/postinst
 #!/bin/sh
 if [ -e /etc/openwrt_release ]; then
-	/etc/init.d/ss-redir.sh start
-	/etc/init.d/ss-redir.sh enable
+	/etc/init.d/ss-redir.sh enable || :
 fi
 endef
 

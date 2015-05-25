@@ -38,8 +38,8 @@ define Package/file-storage/postinst
 if [ -e /etc/openwrt_release ]; then
 	/etc/init.d/samba disable
 	/etc/init.d/samba stop
-	/etc/init.d/file-storage start
-	/etc/init.d/file-storage enable
+	/etc/init.d/file-storage restart
+	/etc/init.d/file-storage enable || :
 fi
 endef
 

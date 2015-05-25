@@ -40,8 +40,8 @@ endef
 define Package/ipset-lists/postinst
 #!/bin/sh
 if [ -e /etc/openwrt_release ]; then
-	/etc/init.d/ipset.sh start
-	/etc/init.d/ipset.sh enable
+	/etc/init.d/ipset.sh restart
+	/etc/init.d/ipset.sh enable || :
 fi
 endef
 
