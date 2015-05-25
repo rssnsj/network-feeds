@@ -54,7 +54,7 @@ case "$1" in
 		echo "Supported countries:"
 		echo "  CN, TW, HK, SG, JP, KR"
 		echo "Examples:"
-		echo "  $0 CN"
-		echo "  $0 TW > ../files/etc/ipset/taiwan.ipset"
+		echo "  $0 CN            written to ../files/etc/ipset/china"
+		echo "  $0 TW            written to ../files/etc/ipset/taiwan"
 		;;
 esac
