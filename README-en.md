@@ -19,13 +19,8 @@ Network extensions for special applications in OpenWrt package format
     opkg update
     opkg install dnsmasq-full --force-overwrite
     opkg install ipset-lists shadowsocks-libev shadowsocks-tools minivtun file-storage
-    /etc/init.d/uhttpd enable
-    /etc/init.d/ipset.sh enable
-    /etc/init.d/ss-redir.sh enable
-    /etc/init.d/minivtun.sh enable
-    /etc/init.d/file-storage enable
       
-    reboot
+    rm -f /etc/opkg/rssnsj.conf
 
 ##### OpenWrt firmwares for major smart routers with these toolset integrated
 * HiWiFi HC5661/HC5761/HC5861: https://github.com/rssnsj/openwrt-hc5x61/releases
