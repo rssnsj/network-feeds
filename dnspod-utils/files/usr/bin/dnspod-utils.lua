@@ -9,7 +9,7 @@
 -- https://dnsapi.cn/Record.Modify
 -- {"status":{"code":"1","message":"Action completed successful","created_at":"2014-07-08 18:16:08"},"record":{"id":69007534,"name":"a","value":"134.34.34.34","status":"enable"}}
 --
-
+local uci = require("luci.model.uci")
 ok, json = pcall(require, "json")
 if not ok then
 	ok, json = pcall(require, "luci.json")
@@ -20,8 +20,6 @@ if not ok then
 end
 
 local DNSAPI_USERAGENT = "OpenWrt-DDNS/0.1.0 (rssnsj@gmail.com)"
-local DNSPOD_CACHE_DIR = "/tmp/.dnspod/cache"
-local DNSPOD_STATUS_FILE = "/tmp/.dnspod/status"
 
 function file_exists(filepath)
 	local f = io.open(filepath, "r")
@@ -45,173 +43,131 @@ end
 --  $top_domain: top-level domain name
 --  $sub_domain: sub domain name (CAUSIOUS: empty string to set all sub domains)
 --  $ip: IP address ('nil' for auto-select IP)
---  $max_records: set a small number (1 or 2) to avoid potential
+--  $safety_limit: set a small number (1 or 2) to avoid potential
 --   damages to the whole domain; 0 for unlimited.
-function bind_hostname_to_ip(dnspod_account, dnspod_password, top_domain, sub_domain, ip, max_records)
-	local errcode = 0
-	local errmsg = ""
-	local __errmsg
+function ddns_set_hostname(dnspod_account, dnspod_password, top_domain, sub_domain, ip, safety_limit)
+	local rc = 0
+	local msg = ""
+	local k, v, m, curl_cmd, reply_msg
 	local curl_opts = ""
+	local fp
 
 	---- Choose a certificate to use
 	local possible_certfiles = { os.getenv("HOME") .. "/etc/cacert.pem",
 			"/etc/cacert.pem", "/etc/ca/gd-class2-root.crt" }
-	for __k, __cert in pairs(possible_certfiles) do
-		if file_exists(__cert) then
-			curl_opts = "--cacert " .. __cert
+	for k, v in pairs(possible_certfiles) do
+		if file_exists(v) then
+			curl_opts = "--cacert " .. v
 			break
 		end
 	end
 
-	---- Check current IP with local cache
-	local cache_file = DNSPOD_CACHE_DIR .. "/" .. sub_domain .. "." .. top_domain
-	mkdirr(DNSPOD_CACHE_DIR)
-	-- Check cache only when IP is specified
-	if ip then
-		if file_exists(cache_file) then
-			local __f = io.open(cache_file)
-			local __ip_cached = __f:read("*l")
-			if ip == __ip_cached then
-				return 0, "No modification, ignored."
-			end
-		end
-	end
-
-	-- Do not leave any trash here
-	os.remove(cache_file)
-
-	-- Get 'record_id' or id list
-	local curl_cmd = string.format("curl -k %s -X POST https://dnsapi.cn/Record.List -A '%s' -d 'login_email=%s&login_password=%s&format=json&domain=%s&sub_domain=%s' 2>/dev/null",
+	-- 1. Get 'record_id' or id list
+	curl_cmd = string.format("curl -k %s -X POST https://dnsapi.cn/Record.List -A '%s' -d 'login_email=%s&login_password=%s&format=json&domain=%s&sub_domain=%s' 2>/dev/null",
 			curl_opts, DNSAPI_USERAGENT, dnspod_account, dnspod_password, top_domain, sub_domain)
-	local fp = io.popen(curl_cmd, "r")
-	local record_list = json.decode(fp:read("*a"))
+	fp = io.popen(curl_cmd, "r")
+	reply_msg = fp:read("*a")
 	fp:close()
 
-	if tonumber(record_list.status.code) ~= 1 then
-		__errmsg = string.format("Failed to query %s.%s: %s (%s)", sub_domain,
+	local record_list = json.decode(reply_msg)
+	if record_list == nil then
+		return 1, "Invalid response: " .. reply_msg
+	elseif tonumber(record_list.status.code) ~= 1 then
+		m = string.format("Failed to query %s.%s: %s (%s)", sub_domain,
 				top_domain, record_list.status.code, record_list.status.message)
-		return 1, __errmsg
+		return 1, m
 	end
 
-	-- Select "A" or "CNAME" records and process
+	-- 2. Select corresponding  "A" or "CNAME" record and set it
 	local d_count = 0
-	for __k, d_record in pairs(record_list.records) do
-		-- print(d_record.id .. " " .. d_record.type)
-		if d_record.type == "A" or d_record.type == "CNAME" then
+	for k, v in pairs(record_list.records) do
+		-- print(v.id .. " " .. v.type)
+		if v.type == "A" or v.type == "CNAME" then
 			-- ------------------------------------------------
-			local curl_cmd
 			if ip then
 				curl_cmd = string.format("curl -k %s -X POST https://dnsapi.cn/Record.Modify -A '%s' -d 'login_email=%s&login_password=%s&format=json&domain=%s&record_id=%s&sub_domain=%s&value=%s&record_type=A&record_line=默认' 2>/dev/null",
-						curl_opts, DNSAPI_USERAGENT, dnspod_account, dnspod_password, top_domain, d_record.id, d_record.name, ip)
+					curl_opts, DNSAPI_USERAGENT, dnspod_account, dnspod_password, top_domain, v.id, v.name, ip)
 			else
 				curl_cmd = string.format("curl -k %s -X POST https://dnsapi.cn/Record.Ddns -A '%s' -d 'login_email=%s&login_password=%s&format=json&domain=%s&record_id=%s&sub_domain=%s&record_type=A&record_line=默认' 2>/dev/null",
-						curl_opts, DNSAPI_USERAGENT, dnspod_account, dnspod_password, top_domain, d_record.id, d_record.name)
+					curl_opts, DNSAPI_USERAGENT, dnspod_account, dnspod_password, top_domain, v.id, v.name)
 			end
 			-- print(curl_cmd)
+			fp = io.popen(curl_cmd, "r")
+			reply_msg = fp:read("*a")
+			fp:close()
 
-			local fp = io.popen(curl_cmd, "r")
-			local record_modify = json.decode(fp:read("*a"))
-			if tonumber(record_modify.status.code) == 1 then
-				io.open(cache_file, "w"):write(record_modify.record.value .. "\n")
-				__errmsg = string.format("Setting DNS OK: %s.%s -> %s", d_record.name,
-						top_domain, record_modify.record.value)
+			local actual_state = json.decode(reply_msg)
+			if actual_state == nil then
+				rc = rc + 1
+				m = "Invalid response: " .. reply_msg
+			elseif tonumber(actual_state.status.code) == 1 then
+				m = "Setting DNS OK: " .. v.name .. "." .. top_domain .. " -> " .. actual_state.record.value
 			else
-				errcode = errcode + 1
-				__errmsg = string.format("Operation failed: %s (%s)",
-						record_modify.status.code, record_modify.status.message)
+				rc = rc + 1
+				m = "Operation failed: " .. actual_state.status.code .. " (" .. actual_state.status.message .. ")"
 			end
-			if errmsg == "" then
-				errmsg = __errmsg
+			if msg == "" then
+				msg = m
 			else
-				errmsg = errmsg .. "\n" .. __errmsg
+				msg = msg .. "\n" .. m
 			end
 			-- ------------------------------------------------
 
 			-- Check record limitation
 			d_count = d_count + 1
-			if max_records ~= 0 and d_count >= max_records then
+			if safety_limit ~= 0 and d_count >= safety_limit then
 				break
 			end
 		end
 	end
 
-	-- Check if at least one record was treated
+	-- 3. Check if at least one record was treated
 	if d_count == 0 then
 		return 1, "No A or CNAME record matching '" .. sub_domain .. "." .. top_domain .. "'"
 	end
 
-	return errcode, errmsg
+	return rc, msg
 end
 
-function crontab_task_once()
-	-- Translate shell parameters into JSON
-	local __cmd = [[
-####
-F=/etc/default/dnspod.conf
-if [ -f $F ]; then
-	. $F
-else
-	echo "*** File '$F' not found." >&2
-	exit 9
-fi
-cat <<EOF
-{"account":"$DNSPODACCOUNT","password":"$DNSPODPASSWORD","domain":"$DNSPODDOMAIN",
- "subdomain":"$DNSPODSUBDOMAIN","ipfrom":"$DNSPODIPFROM"}
-EOF
-]]
-	-- print(__cmd)
-	local __params = json.decode(io.popen(__cmd):read("*a"))
-	if __params == nil then
-		return 1
-	end
-	-- print(__params.account)
+function run_task_once()
+	local __c = uci.cursor()
+	local account = __c:get_first("dnspod", "dnspod", "account", "(null)")
+	local password = __c:get_first("dnspod", "dnspod", "password", "(null)")
+	local domain = __c:get_first("dnspod", "dnspod", "domain", "(null)")
+	local subdomain = __c:get_first("dnspod", "dnspod", "subdomain", "(null)")
+	local ipfrom = __c:get_first("dnspod", "dnspod", "ipfrom", "auto")
 
-	local rc, msg = 0, ""
-
-	if __params.ipfrom == "wan" then
+	if ipfrom == "wan" then
 		-- Get the most possible public IP
-		local script_choose_wan_ip = [[
-####
-. /lib/functions/network.sh
-network_get_ipaddr public_ip wan
-echo "$public_ip"
-]]
-		local public_ip = io.popen(script_choose_wan_ip):read("*l")
-		-- print(public_ip)
-		rc, msg = bind_hostname_to_ip(__params.account, __params.password,
-				__params.domain, __params.subdomain, public_ip, 1)
+		local script_choose_wan_ip = ". /lib/functions/network.sh; network_get_ipaddr ip wan; echo \"$ip\""
+		local wanip = io.popen(script_choose_wan_ip):read("*l")
+		-- print(wanip)
+		rc, msg = ddns_set_hostname(account, password, domain, subdomain, wanip, 1)
 	else
-		rc, msg = bind_hostname_to_ip(__params.account, __params.password,
-				__params.domain, __params.subdomain, nil, 1)
+		rc, msg = ddns_set_hostname(account, password, domain, subdomain, nil, 1)
 	end
 
-	-- Write error message to file for showing by script:status()
-	if rc == 0 then
-		os.remove(DNSPOD_STATUS_FILE)
-	else
-		io.open(DNSPOD_STATUS_FILE, "w"):write(msg .. "\n")
-	end
 	print(msg)
 	return rc
 end
 
 
 if arg[1] == "set" and table.getn(arg) >= 6 then
-	local rc, msg = bind_hostname_to_ip(arg[2], arg[3], arg[4], arg[5], arg[6], 0)
+	local rc, msg = ddns_set_hostname(arg[2], arg[3], arg[4], arg[5], arg[6], 0)
 	print(msg)
 	os.exit(rc)
 elseif arg[1] == "set" and table.getn(arg) == 5 then
-	local rc, msg = bind_hostname_to_ip(arg[2], arg[3], arg[4], arg[5], nil, 0)
+	local rc, msg = ddns_set_hostname(arg[2], arg[3], arg[4], arg[5], nil, 0)
 	print(msg)
 	os.exit(rc)
-elseif arg[1] == "cron" then
-	local rc = crontab_task_once()
+elseif arg[1] == "once" then
+	local rc = run_task_once()
 	os.exit(rc)
 else
 	print("Usage:")
-	print(" dnspod-utils set <account> <password> <top domain> <sub domain> [bound IP]")
-	print("                             -- bind a domain name to specified IP")
-	print(" dnspod-utils cron           -- run the crontab task once, used by DNSPod App")
+	print(" dnspod-utils set <account> <password> <top domain> <sub domain> [bound_ip]")
+	print("                             bind a domain name to specific IP")
+	print(" dnspod-utils once           run DDNS synchronizing task once")
 	os.exit(2)
 end
 
