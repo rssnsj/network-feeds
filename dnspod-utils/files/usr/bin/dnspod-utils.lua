@@ -48,30 +48,19 @@ end
 function ddns_set_hostname(dnspod_account, dnspod_password, top_domain, sub_domain, ip, safety_limit)
 	local rc = 0
 	local msg = ""
-	local k, v, m, curl_cmd, reply_msg
-	local curl_opts = ""
+	local k, v, m, curl_script, curl_output
 	local fp
 
-	---- Choose a certificate to use
-	local possible_certfiles = { os.getenv("HOME") .. "/etc/cacert.pem",
-			"/etc/cacert.pem", "/etc/ca/gd-class2-root.crt" }
-	for k, v in pairs(possible_certfiles) do
-		if file_exists(v) then
-			curl_opts = "--cacert " .. v
-			break
-		end
-	end
-
 	-- 1. Get 'record_id' or id list
-	curl_cmd = string.format("curl -k %s -X POST https://dnsapi.cn/Record.List -A '%s' -d 'login_email=%s&login_password=%s&format=json&domain=%s&sub_domain=%s' 2>/dev/null",
-			curl_opts, DNSAPI_USERAGENT, dnspod_account, dnspod_password, top_domain, sub_domain)
-	fp = io.popen(curl_cmd, "r")
-	reply_msg = fp:read("*a")
+	curl_script = string.format("curl -k %s -X POST https://dnsapi.cn/Record.List -A '%s' -d 'login_email=%s&login_password=%s&format=json&domain=%s&sub_domain=%s' 2>/dev/null",
+			"", DNSAPI_USERAGENT, dnspod_account, dnspod_password, top_domain, sub_domain)
+	fp = io.popen(curl_script, "r")
+	curl_output = fp:read("*a")
 	fp:close()
 
-	local record_list = json.decode(reply_msg)
+	local record_list = json.decode(curl_output)
 	if record_list == nil then
-		return 1, "Invalid response: " .. reply_msg
+		return 1, "Invalid response: " .. curl_output
 	elseif tonumber(record_list.status.code) ~= 1 then
 		m = string.format("Failed to query %s.%s: %s (%s)", sub_domain,
 				top_domain, record_list.status.code, record_list.status.message)
@@ -85,21 +74,21 @@ function ddns_set_hostname(dnspod_account, dnspod_password, top_domain, sub_doma
 		if v.type == "A" or v.type == "CNAME" then
 			-- ------------------------------------------------
 			if ip then
-				curl_cmd = string.format("curl -k %s -X POST https://dnsapi.cn/Record.Modify -A '%s' -d 'login_email=%s&login_password=%s&format=json&domain=%s&record_id=%s&sub_domain=%s&value=%s&record_type=A&record_line=默认' 2>/dev/null",
-					curl_opts, DNSAPI_USERAGENT, dnspod_account, dnspod_password, top_domain, v.id, v.name, ip)
+				curl_script = string.format("curl -k %s -X POST https://dnsapi.cn/Record.Modify -A '%s' -d 'login_email=%s&login_password=%s&format=json&domain=%s&record_id=%s&sub_domain=%s&value=%s&record_type=A&record_line=默认' 2>/dev/null",
+					"", DNSAPI_USERAGENT, dnspod_account, dnspod_password, top_domain, v.id, v.name, ip)
 			else
-				curl_cmd = string.format("curl -k %s -X POST https://dnsapi.cn/Record.Ddns -A '%s' -d 'login_email=%s&login_password=%s&format=json&domain=%s&record_id=%s&sub_domain=%s&record_type=A&record_line=默认' 2>/dev/null",
-					curl_opts, DNSAPI_USERAGENT, dnspod_account, dnspod_password, top_domain, v.id, v.name)
+				curl_script = string.format("curl -k %s -X POST https://dnsapi.cn/Record.Ddns -A '%s' -d 'login_email=%s&login_password=%s&format=json&domain=%s&record_id=%s&sub_domain=%s&record_type=A&record_line=默认' 2>/dev/null",
+					"", DNSAPI_USERAGENT, dnspod_account, dnspod_password, top_domain, v.id, v.name)
 			end
-			-- print(curl_cmd)
-			fp = io.popen(curl_cmd, "r")
-			reply_msg = fp:read("*a")
+			-- print(curl_script)
+			fp = io.popen(curl_script, "r")
+			curl_output = fp:read("*a")
 			fp:close()
 
-			local actual_state = json.decode(reply_msg)
+			local actual_state = json.decode(curl_output)
 			if actual_state == nil then
 				rc = rc + 1
-				m = "Invalid response: " .. reply_msg
+				m = "Invalid response: " .. curl_output
 			elseif tonumber(actual_state.status.code) == 1 then
 				m = "Setting DNS OK: " .. v.name .. "." .. top_domain .. " -> " .. actual_state.record.value
 			else
@@ -136,15 +125,21 @@ function run_task_once()
 	local domain = __c:get_first("dnspod", "dnspod", "domain", "(null)")
 	local subdomain = __c:get_first("dnspod", "dnspod", "subdomain", "(null)")
 	local ipfrom = __c:get_first("dnspod", "dnspod", "ipfrom", "auto")
+	local enabled = __c:get_first("dnspod", "dnspod", "enabled", "0")
 
-	if ipfrom == "wan" then
-		-- Get the most possible public IP
-		local script_choose_wan_ip = ". /lib/functions/network.sh; network_get_ipaddr ip wan; echo \"$ip\""
+	if enabled == "0" then
+		print("WARNING: DNSPod is disabled in /etc/config/dnspod.")
+		return 1
+	end
+
+	if ipfrom == "auto" then
+		rc, msg = ddns_set_hostname(account, password, domain, subdomain, nil, 1)
+	else
+		-- Get interface IP of the specified network
+		local script_choose_wan_ip = ". /lib/functions/network.sh; network_get_ipaddr ip " .. ipfrom .. "; echo \"$ip\""
 		local wanip = io.popen(script_choose_wan_ip):read("*l")
 		-- print(wanip)
 		rc, msg = ddns_set_hostname(account, password, domain, subdomain, wanip, 1)
-	else
-		rc, msg = ddns_set_hostname(account, password, domain, subdomain, nil, 1)
 	end
 
 	print(msg)

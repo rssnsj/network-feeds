@@ -1,0 +1,15 @@
+#!/bin/sh
+
+if [ "$INTERFACE" = "wan" -a "$ACTION" = ifup ]; then
+	call_script=/tmp/X-dnspod-exec
+
+	cat > $call_script <<EOF
+#!/bin/sh
+sleep 5
+/usr/bin/dnspod-utils.lua once
+rm -f $call_script
+EOF
+	chmod +x $call_script
+	start-stop-daemon -S -b -x $call_script --
+fi
+

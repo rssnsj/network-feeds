@@ -1,8 +1,9 @@
 
-config dnspod 'main"
+config dnspod 'main'
 	option account 'abc@163.com'
 	option password 'WaWaWaWa'
 	option domain 'abc.com'
 	option subdomain 'www'
 	option ipfrom 'auto'
+	option enabled '0'
 
