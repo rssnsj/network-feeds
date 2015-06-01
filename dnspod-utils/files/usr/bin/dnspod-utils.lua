@@ -38,7 +38,7 @@ end
 -- Bind domain name to a specified IP or sync up a domain name
 -- with current public IP (seen by DNSPod server)
 -- Parameters:
---  $dnspod_token: DNSPod API Tokens (ID,Token)
+--  $dnspod_token: DNSPod API Tokens (ID,Token; left 'nil' for username/password authentication)
 --  $dnspod_account: DNSPod username (e-mail address)
 --  $dnspod_password: DNSPod login password
 --  $top_domain: top-level domain name
@@ -52,10 +52,13 @@ function ddns_set_hostname(dnspod_token, dnspod_account, dnspod_password, top_do
 	local k, v, m, curl_script, curl_output
 	local fp
 	local login_parms=""
-	if dnspod_token == nil or dnspod_token == "none" then
-		login_parms=string.format("login_email=%s&login_password=%s",dnspod_account,dnspod_password)
+
+	if dnspod_token ~= nil then
+		login_parms = string.format("login_token=%s", dnspod_token)
+	elseif dnspod_account ~= nil and dnspod_password ~= nil then
+		login_parms = string.format("login_email=%s&login_password=%s", dnspod_account, dnspod_password)
 	else
-		login_parms=string.format("login_token=%s",dnspod_token)
+		return 1, "Neither token or username/password were set."
 	end
 
 	-- 1. Get 'record_id' or id list
@@ -127,9 +130,9 @@ end
 
 function run_task_once()
 	local __c = uci.cursor()
-	local login_token = __c:get_first("dnspod", "dnspod", "login_token", "none")
-	local account = __c:get_first("dnspod", "dnspod", "account", "(null)")
-	local password = __c:get_first("dnspod", "dnspod", "password", "(null)")
+	local login_token = __c:get_first("dnspod", "dnspod", "login_token", nil)
+	local account = __c:get_first("dnspod", "dnspod", "account", nil)
+	local password = __c:get_first("dnspod", "dnspod", "password", nil)
 	local domain = __c:get_first("dnspod", "dnspod", "domain", "(null)")
 	local subdomain = __c:get_first("dnspod", "dnspod", "subdomain", "(null)")
 	local ipfrom = __c:get_first("dnspod", "dnspod", "ipfrom", "auto")
@@ -139,15 +142,18 @@ function run_task_once()
 		print("WARNING: DNSPod is disabled in /etc/config/dnspod.")
 		return 1
 	end
+	if login_token == "" then
+		login_token = nil
+	end
 
-	if ipfrom == "auto" then
-		rc, msg = ddns_set_hostname(login_token,account, password, domain, subdomain, nil, 1)
+	if ipfrom == "auto" or ipfrom == "" then
+		rc, msg = ddns_set_hostname(login_token, account, password, domain, subdomain, nil, 1)
 	else
 		-- Get interface IP of the specified network
 		local script_choose_wan_ip = ". /lib/functions/network.sh; network_get_ipaddr ip " .. ipfrom .. "; echo \"$ip\""
 		local wanip = io.popen(script_choose_wan_ip):read("*l")
 		-- print(wanip)
-		rc, msg = ddns_set_hostname(login_token,account, password, domain, subdomain, wanip, 1)
+		rc, msg = ddns_set_hostname(login_token, account, password, domain, subdomain, wanip, 1)
 	end
 
 	print(msg)
@@ -155,12 +161,20 @@ function run_task_once()
 end
 
 
-if arg[1] == "set" and table.getn(arg) >= 7 then
-	local rc, msg = ddns_set_hostname(arg[4], arg[2], arg[3], arg[5], arg[6], arg[7], 0)
+if arg[1] == "set" and table.getn(arg) == 6 then
+	local rc, msg = ddns_set_hostname(nil, arg[2], arg[3], arg[4], arg[5], arg[6], 0)
 	print(msg)
 	os.exit(rc)
-elseif arg[1] == "set" and table.getn(arg) == 6 then
-	local rc, msg = ddns_set_hostname(arg[4], arg[2], arg[3], arg[5], arg[6], nil, 0)
+elseif arg[1] == "set" and table.getn(arg) == 5 then
+	local rc, msg = ddns_set_hostname(nil, arg[2], arg[3], arg[4], arg[5], nil, 0)
+	print(msg)
+	os.exit(rc)
+elseif arg[1] == "sett" and table.getn(arg) == 5 then
+	local rc, msg = ddns_set_hostname(arg[2], nil, nil, arg[3], arg[4], arg[5], 0)
+	print(msg)
+	os.exit(rc)
+elseif arg[1] == "sett" and table.getn(arg) == 4 then
+	local rc, msg = ddns_set_hostname(arg[2], nil, nil, arg[3], arg[4], nil, 0)
 	print(msg)
 	os.exit(rc)
 elseif arg[1] == "once" then
@@ -168,9 +182,11 @@ elseif arg[1] == "once" then
 	os.exit(rc)
 else
 	print("Usage:")
-	print(" dnspod-utils set <account> <password> <login_token> <top domain> <sub domain> [bound_ip]")
-	print("                             bind a domain name to specific IP")
-	print(" dnspod-utils once           run DDNS synchronizing task once")
+	print(" dnspod-utils set <account> <password> <top_domain> <sub_domain> [bound_ip]")
+	print("                                 set domain name by username/password")
+	print(" dnspod-utils sett <token> <top_domain> <sub_domain> [bound_ip]")
+	print("                                 set domain name by DNSPod token")
+	print(" dnspod-utils once               run DDNS synchronizing task once")
 	os.exit(2)
 end
 
