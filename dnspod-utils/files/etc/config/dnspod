@@ -1,5 +1,6 @@
 
 config dnspod 'main'
+	option login_token none
 	option account 'abc@163.com'
 	option password 'WaWaWaWa'
 	option domain 'abc.com'
