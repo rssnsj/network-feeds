@@ -10,7 +10,7 @@
 -- {"status":{"code":"1","message":"Action completed successful","created_at":"2014-07-08 18:16:08"},"record":{"id":69007534,"name":"a","value":"134.34.34.34","status":"enable"}}
 --
 local uci = require("luci.model.uci")
-ok, json = pcall(require, "json")
+local ok, json = pcall(require, "json")
 if not ok then
 	ok, json = pcall(require, "luci.json")
 end
