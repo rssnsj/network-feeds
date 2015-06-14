@@ -1,0 +1,20 @@
+#!/bin/sh /etc/rc.common
+
+# Copyright (C) 2015 Justin Liu
+# https://github.com/rssnsj/network-feeds
+
+START=94
+
+start()
+{
+	# Try mounting delayed disks
+	if [ -f /tmp/delayed_mounts ]; then
+		local alldevs=`cat /tmp/delayed_mounts | sort -u`
+		rm -f /tmp/delayed_mounts
+		local devpath
+		for devpath in $alldevs; do
+			( DEVPATH=$devpath ACTION=add /sbin/hotplug-call block )
+		done
+	fi
+}
+

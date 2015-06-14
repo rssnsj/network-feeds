@@ -3,7 +3,7 @@
 # Copyright (C) 2015 Justin Liu
 # https://github.com/rssnsj/network-feeds
 
-START=61
+START=95
 
 PRIMARY_DISK_LINK=/tmp/data
 DELAYED_TRIALS_MAX=2
@@ -135,36 +135,8 @@ detect_usb_storages()
 
 start()
 {
-	# Try mounting delayed disks
-	if [ -f /tmp/delayed_mounts ]; then
-		local devpath
-		while read devpath; do
-			( DEVPATH=$devpath ACTION=add /sbin/hotplug-call block )
-		done < /tmp/delayed_mounts
-		rm -f /tmp/delayed_mounts
-		exit 0
-	fi
-
-	# Check if the flash disk has been mounted
-	if ! [ -L $PRIMARY_DISK_LINK -a -d $PRIMARY_DISK_LINK ]; then
-		# Delay the startup if mount point check fails at system boot
-		delay_startup_or_exit file-storage
-		exit 0
-	fi
-
-	# Detect new storages and delete non-existent items
-	detect_usb_storages
-
-	# Try to recreate each share directory and reset permission
-	local i=0
-	while uci get samba.@sambashare[$i] >/dev/null 2>&1; do
-		local path=`uci get samba.@sambashare[$i].path`
-		mkdir -p "$path"
-		chmod 777 "$path"
-		i=`expr $i + 1`
-	done
-
 	/etc/init.d/samba disable
+	detect_usb_storages
 	/etc/init.d/samba restart
 }
 
@@ -177,5 +149,4 @@ reload()
 {
 	detect_usb_storages
 	/etc/init.d/samba restart
-	return 0
 }

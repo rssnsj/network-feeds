@@ -8,7 +8,10 @@ call_mount()
 	# Ignore major disk if it has partitions
 	case "$name" in
 		[sh]d[a-z]*|mmcblk*)
-			ls /dev/$name?* >/dev/null 2>&1 && return 0 || :
+			if ls /dev/$name?* >/dev/null 2>&1; then
+				echo "WARNING: Device '/dev/$name' has partitions, ignored."
+				return 0
+			fi
 			;;
 		*)
 			return 0
@@ -21,8 +24,11 @@ call_mount()
 	local fs_type=`expr "$blk_info" : '.*TYPE="\([^"]*\)'`
 
 	case "$fs_type" in
-		vfat|ntfs)
-			mount_opts="$mount_opts -t $fs_type -o dmask=0000,fmask=0000"
+		ntfs*)
+			mount_opts="$mount_opts -t ntfs-3g -o dmask=0000,fmask=0000"
+			;;
+		vfat)
+			mount_opts="$mount_opts -t vfat -o dmask=0000,fmask=0000"
 			;;
 		"")
 			mount_opts="$mount_opts -o dmask=0000,fmask=0000"
@@ -43,7 +49,7 @@ call_mount()
 	else
 		# Delay to mount by 'file-storage' if it fails due to kmod not ready
 		case "$fs_type" in
-			ext?|vfat|ntfs)
+			ext?|vfat|ntfs*)
 				local __enabled_fs=`awk -vf=$fs_type '$NF==f{print $NF}' /proc/filesystems`
 				if [ -z "$__enabled_fs" ]; then
 					echo "$DEVPATH" >> /tmp/delayed_mounts
