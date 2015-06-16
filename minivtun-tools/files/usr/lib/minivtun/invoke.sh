@@ -4,6 +4,7 @@
 # https://github.com/rssnsj/network-feeds
 #
 
+RESOLVE_WAIT_MAX=120
 VPN_ROUTE_FWMARK=199
 VPN_IPROUTE_TABLE=virtual
 
@@ -94,12 +95,15 @@ do_start_wait()
 				dns_ok=Y
 				break
 			fi
+
+			sleep 5
+
 			local ts_tick=`date +%s`
 			local ts_diff=`expr $ts_tick - $ts_start`
 			if [ "$ts_diff" -gt 10000 ]; then
-				# Eliminate time jumps
+				# Eliminate time jumps on boot
 				ts_start=$ts_tick
-			elif ! [ "$ts_diff" -lt 100 ]; then
+			elif ! [ "$ts_diff" -lt $RESOLVE_WAIT_MAX ]; then
 				# Timed out
 				break
 			fi
