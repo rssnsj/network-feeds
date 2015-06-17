@@ -9,6 +9,8 @@ trigger_reload()
 	local call_script=/tmp/X-mount-exec
 	local call_lock=/tmp/file-storage.lock
 
+	/etc/init.d/file-storage enabled || return 0
+
 	if mkdir $call_lock 2>/dev/null; then
 		cat > $call_script <<EOF
 #!/bin/sh
