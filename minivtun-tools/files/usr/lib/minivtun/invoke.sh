@@ -4,7 +4,7 @@
 # https://github.com/rssnsj/network-feeds
 #
 
-RESOLVE_WAIT_MAX=120
+DNS_WAIT_DEFAULT=120
 VPN_ROUTE_FWMARK=199
 VPN_IPROUTE_TABLE=virtual
 
@@ -29,6 +29,46 @@ __netmask_to_bits()
 	done
 
 	echo "$__masklen"
+}
+
+# $1: hostname to resolve
+# $1: maximum seconds to wait until successful
+wait_dns_ready()
+{
+	local host="$1"
+	local timeo="$2"
+
+	# Wait for domain name to be ready
+	if expr "$host" : '[0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+$' >/dev/null; then
+		return 0
+	else
+		local dns_ok=N
+		local ts_start=`date +%s`
+		while :; do
+			if nslookup "$host" >/dev/null 2>&1; then
+				dns_ok=Y
+				return 0
+			fi
+
+			sleep 5
+
+			local ts_tick=`date +%s`
+			local ts_diff=`expr $ts_tick - $ts_start`
+			if [ "$timeo" = 0 ]; then
+				continue
+			elif [ "$ts_diff" -gt 10000 ]; then
+				# Eliminate time jumps on boot
+				ts_start=$ts_tick
+				continue
+			elif ! [ "$ts_diff" -lt "$timeo" ]; then
+				# Timed out
+				return 1
+			fi
+		done
+
+		# Never reaches here
+		return 1
+	fi
 }
 
 logger_warn()
@@ -61,6 +101,7 @@ do_start_wait()
 	local vt_safe_dns=`uci get minivtun.@minivtun[0].safe_dns 2>/dev/null`
 	local vt_safe_dns_port=`uci get minivtun.@minivtun[0].safe_dns_port 2>/dev/null`
 	local vt_proxy_mode=`uci get minivtun.@minivtun[0].proxy_mode`
+	local vt_dns_wait=`uci get minivtun.@minivtun[0].dns_wait 2>/dev/null`
 	#local vt_protocols=`uci get minivtun.@minivtun[0].protocols 2>/dev/null`
 	# $covered_subnets, $local_addresses are not required
 	local covered_subnets=`uci get minivtun.@minivtun[0].covered_subnets 2>/dev/null`
@@ -76,6 +117,7 @@ do_start_wait()
 	[ -z "$vt_local_netmask" ] && vt_local_netmask="255.255.255.0"
 	[ -z "$vt_proxy_mode" ] && vt_proxy_mode=S
 	[ -z "$vt_safe_dns_port" ] && vt_safe_dns_port=53
+	[ -z "$vt_dns_wait" ] && vt_dns_wait=$DNS_WAIT_DEFAULT
 	# Get LAN settings as default parameters
 	[ -f /lib/functions/network.sh ] && . /lib/functions/network.sh
 	[ -z "$covered_subnets" ] && network_get_subnet covered_subnets lan
@@ -86,33 +128,9 @@ do_start_wait()
 	vt_np_ipset="china"
 
 	# -----------------------------------------------------------------
-	# Wait for domain name to be ready
-	if ! expr "$vt_server_addr" : '[0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+$' >/dev/null; then
-		local dns_ok=N
-		local ts_start=`date +%s`
-		while :; do
-			if nslookup "$vt_server_addr" >/dev/null 2>&1; then
-				dns_ok=Y
-				break
-			fi
-
-			sleep 5
-
-			local ts_tick=`date +%s`
-			local ts_diff=`expr $ts_tick - $ts_start`
-			if [ "$ts_diff" -gt 10000 ]; then
-				# Eliminate time jumps on boot
-				ts_start=$ts_tick
-			elif ! [ "$ts_diff" -lt $RESOLVE_WAIT_MAX ]; then
-				# Timed out
-				break
-			fi
-		done
-
-		if [ $dns_ok != Y ]; then
-			logger_warn "*** Failed to resolve '$vt_server_addr', quitted."
-			return 1
-		fi
+	if ! wait_dns_ready "$vt_server_addr" "$vt_dns_wait"; then
+		logger_warn "*** Failed to resolve '$vt_server_addr', quitted."
+		return 1
 	fi
 
 	/usr/sbin/minivtun -r $vt_server_addr:$vt_server_port \
