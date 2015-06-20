@@ -1,5 +1,5 @@
 # network-feeds
-OpenWrt下的网络加速扩展应用
+OpenWrt下的网络加速扩展应用（欢迎提交有价值优化的 Push Requests）
 
 ### 包含的组件
 * ipset-lists: 包含所有中国IP地址段的ipset列表（数据来自 apnic.net）
