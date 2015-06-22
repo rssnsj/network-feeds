@@ -4,7 +4,7 @@
 # https://github.com/rssnsj/network-feeds
 #
 
-DNS_WAIT_DEFAULT=120
+MAX_DNS_WAIT_DEFAULT=120
 VPN_ROUTE_FWMARK=199
 VPN_IPROUTE_TABLE=virtual
 
@@ -102,7 +102,7 @@ do_start_wait()
 	local vt_safe_dns=`uci get minivtun.@minivtun[0].safe_dns 2>/dev/null`
 	local vt_safe_dns_port=`uci get minivtun.@minivtun[0].safe_dns_port 2>/dev/null`
 	local vt_proxy_mode=`uci get minivtun.@minivtun[0].proxy_mode`
-	local vt_dns_wait=`uci get minivtun.@minivtun[0].dns_wait 2>/dev/null`
+	local vt_max_dns_wait=`uci get minivtun.@minivtun[0].max_dns_wait 2>/dev/null`
 	#local vt_protocols=`uci get minivtun.@minivtun[0].protocols 2>/dev/null`
 	# $covered_subnets, $local_addresses are not required
 	local covered_subnets=`uci get minivtun.@minivtun[0].covered_subnets 2>/dev/null`
@@ -118,7 +118,7 @@ do_start_wait()
 	[ -z "$vt_local_netmask" ] && vt_local_netmask="255.255.255.0"
 	[ -z "$vt_proxy_mode" ] && vt_proxy_mode=S
 	[ -z "$vt_safe_dns_port" ] && vt_safe_dns_port=53
-	[ -z "$vt_dns_wait" ] && vt_dns_wait=$DNS_WAIT_DEFAULT
+	[ -z "$vt_max_dns_wait" ] && vt_max_dns_wait=$MAX_DNS_WAIT_DEFAULT
 	# Get LAN settings as default parameters
 	[ -f /lib/functions/network.sh ] && . /lib/functions/network.sh
 	[ -z "$covered_subnets" ] && network_get_subnet covered_subnets lan
@@ -131,14 +131,13 @@ do_start_wait()
 	[ -n "$vt_mtu" ] && cmdline_opts="-m$vt_mtu"
 
 	# -----------------------------------------------------------------
-	if ! wait_dns_ready "$vt_server_addr" "$vt_dns_wait"; then
+	if ! wait_dns_ready "$vt_server_addr" "$vt_max_dns_wait"; then
 		logger_warn "*** Failed to resolve '$vt_server_addr', quitted."
 		return 1
 	fi
 
-	/usr/sbin/minivtun -r $vt_server_addr:$vt_server_port \
-		-a $vt_local_ipaddr/$vt_local_prefix -n $vt_ifname -e "$vt_password" \
-		$cmdline_opts -d -p /var/run/$vt_ifname.pid || return 1
+	/usr/sbin/minivtun -r $vt_server_addr:$vt_server_port -n $vt_ifname \
+		-e "$vt_password" $cmdline_opts -d -p /var/run/$vt_ifname.pid || return 1
 
 	# IMPORTANT: 'rp_filter=1' will cause returned packets from
 	# virtual interface being dropped, so we have to fix it.
@@ -150,8 +149,10 @@ do_start_wait()
 	if [ "$__ifname" != "$vt_ifname" ]; then
 		uci delete network.$vt_network 2>/dev/null
 		uci set network.$vt_network=interface
-		uci set network.$vt_network.proto=none
 		uci set network.$vt_network.ifname=$vt_ifname
+		uci set network.$vt_network.proto=static
+		uci set network.$vt_network.ipaddr=$vt_local_ipaddr
+		uci set network.$vt_network.netmask=$vt_local_netmask
 		uci commit network
 
 		# Attach this interface to firewall zone "wan"
@@ -169,6 +170,18 @@ do_start_wait()
 			fi
 			i=`expr $i + 1`
 		done
+	fi
+
+	# Update IP address settings
+	local __proto=`uci get network.$vt_network.proto 2>/dev/null`
+	local __ipaddr=`uci get network.$vt_network.ipaddr 2>/dev/null`
+	local __netmask=`uci get network.$vt_network.netmask 2>/dev/null`
+	if ! [ "$__proto" = static -a "$__ipaddr" = "$vt_local_ipaddr" -a \
+			"$__netmask" = "$vt_local_netmask" ]; then
+		uci set network.$vt_network.proto=static
+		uci set network.$vt_network.ipaddr=$vt_local_ipaddr
+		uci set network.$vt_network.netmask=$vt_local_netmask
+		uci commit network
 	fi
 
 	ifup $vt_network
