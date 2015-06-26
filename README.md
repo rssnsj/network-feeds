@@ -13,8 +13,8 @@ OpenWrt下的网络加速扩展应用（欢迎提交有价值优化的 Push Requ
 
     mkdir -p /etc/opkg
     # 以下两条根据你的路由器架构选择执行（不要两条都执行）
-    echo "src/gz rssnsj http://rssn.cn/openwrt-feeds/ar71xx" > /etc/opkg/rssnsj.conf  # 基于ar71xx的路由器
-    echo "src/gz rssnsj http://rssn.cn/openwrt-feeds/ramips" > /etc/opkg/rssnsj.conf  # 基于ramips的路由器
+    echo "src/gz rssnsj http://rssn.cn/roms/feeds/ar71xx" > /etc/opkg/rssnsj.conf  # 基于ar71xx的路由器
+    echo "src/gz rssnsj http://rssn.cn/roms/feeds/ramips" > /etc/opkg/rssnsj.conf  # 基于ramips的路由器
       
     opkg update
     opkg install dnsmasq-full --force-overwrite

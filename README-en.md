@@ -13,8 +13,8 @@ Network extensions for special applications in OpenWrt package format
 
     mkdir -p /etc/opkg
     # Run the following two lines based on your router's architecture (DON'T run both)
-    echo "src/gz rssnsj http://rssn.cn/openwrt-feeds/ar71xx" > /etc/opkg/rssnsj.conf  # ar71xx-based
-    echo "src/gz rssnsj http://rssn.cn/openwrt-feeds/ramips" > /etc/opkg/rssnsj.conf  # ramips-based
+    echo "src/gz rssnsj http://rssn.cn/roms/feeds/ar71xx" > /etc/opkg/rssnsj.conf  # ar71xx-based
+    echo "src/gz rssnsj http://rssn.cn/roms/feeds/ramips" > /etc/opkg/rssnsj.conf  # ramips-based
       
     opkg update
     opkg install dnsmasq-full --force-overwrite
