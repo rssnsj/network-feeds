@@ -55,6 +55,8 @@ method:value("camellia-256-cfb")
 method:value("idea-cfb")
 method:value("rc2-cfb")
 method:value("seed-cfb")
+method:value("salsa20")
+method:value("chacha20")
 
 timeout = s:option(Value, "timeout", translate("Timeout"))
 timeout.datatype = "range(0,10000)"
