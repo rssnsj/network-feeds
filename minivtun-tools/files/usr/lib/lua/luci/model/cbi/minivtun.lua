@@ -114,7 +114,8 @@ proxy_mode:value("V", translate("Watching Youku overseas"))
 -- protocols:value("I", translate("ICMP"))
 -- protocols:value("O", translate("Others"))
 
-safe_dns = s:option(Value, "safe_dns", translate("Safe DNS"))
+safe_dns = s:option(Value, "safe_dns", translate("Safe DNS"),
+	translate("8.8.8.8 or 8.8.4.4 is recommended"))
 safe_dns.datatype = "ip4addr"
 safe_dns.optional = false
 

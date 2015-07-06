@@ -7,5 +7,6 @@ config shadowsocks
 	option method 'table'
 	option proxy_mode 'M'
 	option gfwlist 'china-banned'
+	option safe_dns '8.8.8.8'
 	option safe_dns_tcp '1'
 

@@ -40,6 +40,9 @@ msgstr "协议"
 msgid "Safe DNS"
 msgstr "安全DNS"
 
+msgid "8.8.8.8 or 8.8.4.4 is recommended"
+msgstr "推荐使用 8.8.8.8 或 8.8.4.4"
+
 msgid "Safe DNS Port"
 msgstr "安全DNS端口"
 
