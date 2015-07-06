@@ -1,8 +1,8 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
-msgid "8.8.8.8, 8.8.4.4 will be added by default"
-msgstr "默认会使用 8.8.8.8, 8.8.4.4"
+msgid "8.8.8.8 or 8.8.4.4 is recommended"
+msgstr "推荐使用 8.8.8.8 或 8.8.4.4"
 
 msgid "A fast secure tunnel proxy that help you get through firewalls on your router"
 msgstr "路由器上用于穿越防火墙的快速、安全的代理服务"

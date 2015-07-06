@@ -76,7 +76,7 @@ proxy_mode:value("M", translate("GFW-List based auto-proxy"))
 proxy_mode:value("V", translate("Watching Youku overseas"))
 
 safe_dns = s:option(Value, "safe_dns", translate("Safe DNS"),
-	translate("8.8.8.8, 8.8.4.4 will be added by default"))
+	translate("8.8.8.8 or 8.8.4.4 is recommended"))
 safe_dns.datatype = "ip4addr"
 safe_dns.optional = false
 
