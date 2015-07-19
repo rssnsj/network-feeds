@@ -95,6 +95,7 @@ do_start_wait()
 	local vt_server_addr=`uci get minivtun.@minivtun[0].server`
 	local vt_server_port=`uci get minivtun.@minivtun[0].server_port`
 	local vt_password=`uci get minivtun.@minivtun[0].password 2>/dev/null`
+	local vt_algorithm=`uci get minivtun.@minivtun[0].algorithm 2>/dev/null`
 	local vt_local_ipaddr=`uci get minivtun.@minivtun[0].local_ipaddr 2>/dev/null`
 	local vt_local_netmask=`uci get minivtun.@minivtun[0].local_netmask 2>/dev/null`
 	local vt_local_ip6pair=`uci get minivtun.@minivtun[0].local_ip6pair 2>/dev/null`
@@ -115,6 +116,7 @@ do_start_wait()
 	fi
 
 	[ -z "$vt_network" ] && vt_network="vt0"
+	[ -z "$vt_algorithm" ] && vt_algorithm="aes-128"
 	[ -z "$vt_local_netmask" ] && vt_local_netmask="255.255.255.0"
 	[ -z "$vt_proxy_mode" ] && vt_proxy_mode=S
 	[ -z "$vt_safe_dns_port" ] && vt_safe_dns_port=53
@@ -137,8 +139,9 @@ do_start_wait()
 	fi
 
 	/usr/sbin/minivtun -r $vt_server_addr:$vt_server_port \
-		-a $vt_local_ipaddr/$vt_local_prefix -n $vt_ifname -e "$vt_password" \
-		$cmdline_opts -d -p /var/run/$vt_ifname.pid || return 1
+		-a $vt_local_ipaddr/$vt_local_prefix -n $vt_ifname \
+		-e "$vt_password" -t "$vt_algorithm" $cmdline_opts -d \
+		-p /var/run/$vt_ifname.pid || return 1
 
 	# IMPORTANT: 'rp_filter=1' will cause returned packets from
 	# virtual interface being dropped, so we have to fix it.
@@ -147,7 +150,11 @@ do_start_wait()
 
 	# Create new interface if not exists
 	local __ifname=`uci get network.$vt_network.ifname 2>/dev/null`
-	if [ "$__ifname" != "$vt_ifname" ]; then
+	local __proto=`uci get network.$vt_network.proto 2>/dev/null`
+	local __ipaddr=`uci get network.$vt_network.ipaddr 2>/dev/null`
+	local __netmask=`uci get network.$vt_network.netmask 2>/dev/null`
+	if ! [ "$__ifname" = "$vt_ifname" -a "$__proto" = static -a \
+		"$__ipaddr" = "$vt_local_ipaddr" -a "$__netmask" = "$vt_local_netmask" ]; then
 		uci delete network.$vt_network 2>/dev/null
 		uci set network.$vt_network=interface
 		uci set network.$vt_network.ifname=$vt_ifname

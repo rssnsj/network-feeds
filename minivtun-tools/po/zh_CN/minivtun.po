@@ -31,6 +31,9 @@ msgstr "IPv4掩码"
 msgid "Password"
 msgstr "密码"
 
+msgid "Encryption algorithm"
+msgstr "加密算法"
+
 msgid "Proxy Mode"
 msgstr "代理模式"
 

@@ -87,6 +87,13 @@ server_port.rmempty = false
 password = s:option(Value, "password", translate("Password"))
 password.password = true
 
+algorithm = s:option(Value, "algorithm", translate("Encryption algorithm"))
+algorithm:value("aes-128")
+algorithm:value("aes-256")
+algorithm:value("des")
+algorithm:value("desx")
+algorithm:value("rc4")
+
 local_ipaddr = s:option(Value, "local_ipaddr", translate("IPv4 address"))
 local_ipaddr.datatype = "ip4addr"
 local_ipaddr.optional = false
@@ -96,8 +103,6 @@ local_netmask.datatype = "ip4addr"
 local_netmask:value("255.255.255.0")
 local_netmask:value("255.255.0.0")
 local_netmask:value("255.0.0.0")
-
-
 
 proxy_mode = s:option(ListValue, "proxy_mode", translate("Proxy Mode"),
 	"<a href=\"" .. luci.dispatcher.build_url("admin", "services", "gfwlist") .. "\">" ..
