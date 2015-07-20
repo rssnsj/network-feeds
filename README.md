@@ -4,9 +4,9 @@ OpenWrt下的网络加速扩展应用（欢迎提交有价值优化的 Pull Requ
 ### 包含的组件
 * ipset-lists: 包含所有中国IP地址段的ipset列表（数据来自 apnic.net）
 * proto-bridge: 区分协议的以太网桥接驱动，以及一种可压缩VLAN头的非标准VLAN技术（YaVLAN）
-* shadowsocks-libev: Shadowsocks服务程序（来自：[https://github.com/shadowsocks/shadowsocks-libev](https://github.com/shadowsocks/shadowsocks-libev)）
+* shadowsocks-libev: Shadowsocks服务程序（来自: https://github.com/shadowsocks/shadowsocks-libev ）
 * shadowsocks-tools: OpenWrt下的Shadowsocks配置、启动脚本以及luci界面
-* minivtun-tools: 一种安全、快速、部署便捷的非标准协议VPN，可用于防火墙穿越（服务器配置方法请见：[https://github.com/rssnsj/minivtun](https://github.com/rssnsj/minivtun)）
+* minivtun-tools: 一种安全、快速、部署便捷的非标准协议VPN，可用于防火墙穿越（服务器配置方法请见: https://github.com/rssnsj/minivtun ）
 * file-storage: USB存储、SD卡自动挂载与samba自动配置工具
 
 ### 如何安装
