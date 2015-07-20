@@ -312,7 +312,7 @@ $(document).ready(function () {
 				<select name="method" class="txt"><%
 					local ss_methods = { "ssh", "table", "rc4", "rc4-md5", "aes-128-cfb", "aes-192-cfb",
 						"aes-256-cfb", "bf-cfb", "camellia-128-cfb", "camellia-192-cfb", "camellia-256-cfb",
-						"cast5-cfb", "des-cfb", "idea-cfb", "rc2-cfb", "seed-cfb" }
+						"cast5-cfb", "des-cfb", "idea-cfb", "rc2-cfb", "seed-cfb", "salsa20", "chacha20" }
 					for __k, __v, __n in pairs(ss_methods) do
 						if __v == "ssh" then
 							__n = "SSH（SSH加速模式）"
@@ -348,7 +348,7 @@ $(document).ready(function () {
 				%>
 					<option value="S" <%=ms%>>国外IP模式</option>
 					<option value="G" <%=mg%>>全局模式</option>
-					<option value="M" <%=mm%>>基于gfwlist的最小流量模式</option>
+					<option value="M" <%=mm%>>基于gfwlist的智能模式</option>
 				</select>
 			</p>
 
