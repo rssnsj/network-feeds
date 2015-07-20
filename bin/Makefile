@@ -1,26 +1,36 @@
 #!/bin/sh
 
-copy: .c/ralink .c/ar71xx
-	@mkdir -p hc5x61 hc6361
-	@cp -vf .c/ralink/packages/autossh_*_ralink.ipk \
-		.c/ralink/packages/dnsmasq-salist_*_ralink.ipk \
-		.c/ralink/packages/openssh-redir-client_*_ralink.ipk \
-		.c/ralink/packages/vanillass-libev_*_ralink.ipk \
-		.c/ralink/packages/shadowsocks-tools_*_ralink.ipk \
-		hc5x61/
-	@cp -vf .c/ar71xx/packages/autossh_*_ar71xx.ipk \
-		.c/ar71xx/packages/dnsmasq-salist_*_ar71xx.ipk \
-		.c/ar71xx/packages/openssh-redir-client_*_ar71xx.ipk \
-		.c/ar71xx/packages/vanillass-libev_*_ar71xx.ipk \
-		.c/ar71xx/packages/shadowsocks-tools_*_ar71xx.ipk \
-		hc6361/
+AR71XX_SDK ?= $(HOME)/hc6361/platform
+RALINK_SDK ?= $(HOME)/hc5x61/platform
 
-.c/ralink .c/ar71xx:
-	mkdir -p .c
-	ln -s ~/hc5x61/platform/bin/ralink .c/ralink
-	ln -s ~/hc6361/platform/bin/ar71xx .c/ar71xx
+PACKAGE_LIST := autossh openssh-redir-client dnsmasq-salist vanillass-libev shadowsocks-tools
+PACKAGE_DIRS := autossh openssh-redir dnsmasq-salist vanillass-libev shadowsocks-tools
 
-up: copy
-	@rsync -rlptD -v hc5x61 hc6361 root@rssn.cn:/www/network-feeds/ & \
-	 rsync -rlptD -v hc5x61 hc6361 root@w.rssn.cn:/www/network-feeds/ & \
-	 wait
+help:
+	@echo "Usage:"
+	@echo " make AR71XX | RALINK      compile packages of specified architecture"
+	@echo " make cp                   copy package files to current directory"
+	@echo " make up                   upload packages to servers"
+
+all: AR71XX RALINK
+
+AR71XX:
+	$(foreach d,$(PACKAGE_DIRS),make -C $(AR71XX_SDK) package/$(d)/compile V=s || exit $$?;)
+
+RALINK:
+	$(foreach d,$(PACKAGE_DIRS),make -C $(RALINK_SDK) package/$(d)/compile V=s || exit $$?;)
+
+cp: $(AR71XX_SDK)/bin/ar71xx/packages $(RALINK_SDK)/bin/ralink/packages
+	mkdir -p ar71xx ralink
+	$(foreach p,$(PACKAGE_LIST),cp $(AR71XX_SDK)/bin/ar71xx/packages/$(p)_*_ar71xx.ipk ar71xx/ || exit $$?;)
+	cd ar71xx && $(AR71XX_SDK)/scripts/ipkg-make-index.sh . > Packages && gzip -9c Packages > Packages.gz
+	$(foreach p,$(PACKAGE_LIST),cp $(RALINK_SDK)/bin/ralink/packages/$(p)_*_ralink.ipk ralink/ || exit $$?;)
+	cd ralink && $(RALINK_SDK)/scripts/ipkg-make-index.sh . > Packages && gzip -9c Packages > Packages.gz
+
+clean:
+	rm -rf ar71xx ralink
+
+up: cp
+	@rsync -rlptD --delete -v ar71xx ralink root@rssn.cn:/www/roms/hifeeds/
+	@rsync -rlptD --delete -v ar71xx ralink root@s.rssn.cn:/www/roms/hifeeds/
+
