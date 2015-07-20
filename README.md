@@ -16,7 +16,7 @@ HiWiFi OS系统下的网络加速扩展应用（欢迎提交有价值优化的 P
     echo "src/gz rssnsj http://rssn.cn/roms/hifeeds/ralink" > /etc/opkg/rssnsj.conf  # 极1S(HC5661)、极2、极3
       
     opkg update
-    opkg install openssh-redir autossh-renamed dnsmasq-salist vanillass-libev
+    opkg install openssh-redir-client autossh-renamed dnsmasq-salist vanillass-libev
     opkg install shadowsocks-tools --force-overwrite
       
     rm -f /etc/opkg/rssnsj.conf
