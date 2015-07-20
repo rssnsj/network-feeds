@@ -7,17 +7,19 @@
 
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=autossh
+PKG_NAME:=autossh-renamed
 PKG_VERSION:=1.4b
 PKG_RELEASE:=20140307.1
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tgz
+PKG_SOURCE:=autossh-$(PKG_VERSION).tgz
 PKG_SOURCE_URL:=http://www.harding.motd.ca/autossh/
 PKG_MD5SUM:=8f9aa006f6f69e912d3c2f504622d6f7
 
+PKG_BUILD_DIR:=$(BUILD_DIR)/autossh-$(PKG_VERSION)
+
 include $(INCLUDE_DIR)/package.mk
 
-define Package/autossh
+define Package/autossh-renamed
   SECTION:=net
   CATEGORY:=Network
   TITLE:=Autossh client
@@ -25,7 +27,7 @@ define Package/autossh
   SUBMENU:=SSH
 endef
 
-define Package/autossh/conffiles
+define Package/autossh-renamed/conffiles
 /etc/config/autossh
 endef
 
@@ -36,11 +38,11 @@ define Build/Compile
 	)
 endef
 
-define Package/autossh/install
+define Package/autossh-renamed/install
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/autossh $(1)/usr/sbin/
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_CONF) ./files/autossh.config $(1)/etc/config/autossh
 endef
 
-$(eval $(call BuildPackage,autossh))
+$(eval $(call BuildPackage,autossh-renamed))

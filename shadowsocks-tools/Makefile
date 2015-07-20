@@ -17,7 +17,7 @@ define Package/shadowsocks-tools
   CATEGORY:=Network
   TITLE:=Shadowsocks configuration toolset for OpenWrt
   MAINTAINER:=Justin Liu <rssnsj@gmail.com>
-  DEPENDS:=+dnsmasq-salist +vanillass-libev +autossh +openssh-redir-client
+  DEPENDS:=+dnsmasq-salist +vanillass-libev +autossh-renamed +openssh-redir-client
 endef
 
 define Package/shadowsocks-tools/conffiles

@@ -3,8 +3,8 @@
 AR71XX_SDK ?= $(HOME)/hc6361/platform
 RALINK_SDK ?= $(HOME)/hc5x61/platform
 
-PACKAGE_LIST := autossh openssh-redir-client dnsmasq-salist vanillass-libev shadowsocks-tools
-PACKAGE_DIRS := autossh openssh-redir dnsmasq-salist vanillass-libev shadowsocks-tools
+PACKAGE_LIST := autossh-renamed openssh-redir-client dnsmasq-salist vanillass-libev shadowsocks-tools
+PACKAGE_DIRS := autossh-renamed openssh-redir dnsmasq-salist vanillass-libev shadowsocks-tools
 
 help:
 	@echo "Usage:"
