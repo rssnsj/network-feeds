@@ -150,11 +150,7 @@ do_start_wait()
 
 	# Create new interface if not exists
 	local __ifname=`uci get network.$vt_network.ifname 2>/dev/null`
-	local __proto=`uci get network.$vt_network.proto 2>/dev/null`
-	local __ipaddr=`uci get network.$vt_network.ipaddr 2>/dev/null`
-	local __netmask=`uci get network.$vt_network.netmask 2>/dev/null`
-	if ! [ "$__ifname" = "$vt_ifname" -a "$__proto" = static -a \
-		"$__ipaddr" = "$vt_local_ipaddr" -a "$__netmask" = "$vt_local_netmask" ]; then
+	if [ "$__ifname" != "$vt_ifname" ]; then
 		uci delete network.$vt_network 2>/dev/null
 		uci set network.$vt_network=interface
 		uci set network.$vt_network.ifname=$vt_ifname
