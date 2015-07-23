@@ -18,7 +18,7 @@ OpenWrt下的网络加速扩展应用（欢迎提交有价值优化的 Pull Requ
       
     opkg update
     opkg install dnsmasq-full --force-overwrite
-    opkg install ipset-lists shadowsocks-libev shadowsocks-tools minivtun file-storage
+    opkg install pdnsd ipset-lists shadowsocks-libev shadowsocks-tools minivtun file-storage
       
     rm -f /etc/opkg/rssnsj.conf
 
