@@ -8,7 +8,7 @@ HiWiFi OS系统下的网络加速扩展应用（欢迎提交有价值优化的 P
 * vanillass-libev: Shadowsocks服务程序（来自: https://github.com/shadowsocks/shadowsocks-libev ），改名是为了防止与HiWiFi修改过的版本冲突
 * shadowsocks-tools: 与HiWiFi OS集成的Shadowsocks图形化配置工具
 
-### 如何安装
+### 安装步骤
 
     mkdir -p /etc/opkg
     # 以下两条根据你的路由器架构选择执行（不要两条都执行）
@@ -20,3 +20,7 @@ HiWiFi OS系统下的网络加速扩展应用（欢迎提交有价值优化的 P
     opkg install shadowsocks-tools --force-overwrite
       
     rm -f /etc/opkg/rssnsj.conf
+
+或使用脚本自动安装
+
+    wget http://rssn.cn/roms/hifeeds/hiwifi-install.sh -O- | sh -
