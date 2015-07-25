@@ -21,6 +21,6 @@ HiWiFi OS系统下的网络加速扩展应用（欢迎提交有价值优化的 P
       
     rm -f /etc/opkg/rssnsj.conf
 
-或使用脚本自动安装
+或者，复制下面的命令，粘贴到SSH终端中：
 
     wget http://rssn.cn/roms/hifeeds/hiwifi-install.sh -O- | sh -
