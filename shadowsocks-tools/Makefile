@@ -7,7 +7,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=shadowsocks-tools
 PKG_VERSION:=1
-PKG_RELEASE:=20150720
+PKG_RELEASE:=20150726
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 
@@ -41,6 +41,16 @@ define Package/shadowsocks-tools/postinst
 #!/bin/sh
 echo "Cleaning LuCI index caches ..."
 rm /tmp/luci-indexcache -f
+
+endef
+
+define Package/shadowsocks-tools/postrm
+#!/bin/sh
+echo "Restoring LuCI console files ..."
+cp -vf /rom/usr/lib/lua/luci/view/admin_web/menu/adv_menu.htm /usr/lib/lua/luci/view/admin_web/menu/
+cp -vf /rom/usr/lib/lua/luci/controller/admin_web/index.lua /usr/lib/lua/luci/controller/admin_web/
+rm /tmp/luci-indexcache -f
+
 endef
 
 $(eval $(call BuildPackage,shadowsocks-tools))
