@@ -23,4 +23,4 @@ HiWiFi OS系统下的网络加速扩展应用（欢迎提交有价值优化的 P
 
 或者，复制下面的命令，粘贴到SSH终端中：
 
-    wget http://rssn.cn/roms/hifeeds/hiwifi-install.sh -O- | sh -
+    wget http://rssn.cn/roms/hifeeds/hiwifi-install.sh -q -O- | sh -
