@@ -106,6 +106,7 @@ local_netmask:value("255.255.0.0")
 local_netmask:value("255.0.0.0")
 
 proxy_mode = s:option(ListValue, "proxy_mode", translate("Proxy Mode"),
+	translate("GFW-List mode requires flushing DNS cache") .. "<br /> " ..
 	"<a href=\"" .. luci.dispatcher.build_url("admin", "services", "gfwlist") .. "\">" ..
 	translate("Click here to customize your GFW-List") ..
 	"</a>")

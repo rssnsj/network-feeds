@@ -73,3 +73,6 @@ msgstr "运行中"
 msgid "Click here to customize your GFW-List"
 msgstr "点击此处自定义GFW-List"
 
+msgid "GFW-List mode requires flushing DNS cache"
+msgstr "GFW-List模式需要刷新DNS缓存"
+
