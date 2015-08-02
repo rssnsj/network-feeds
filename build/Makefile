@@ -6,6 +6,8 @@ RALINK_SDK ?= $(HOME)/hc5x61/platform
 PACKAGE_LIST := autossh-renamed openssh-redir-client dnsmasq-salist vanillass-libev shadowsocks-tools
 PACKAGE_DIRS := autossh-renamed openssh-redir dnsmasq-salist vanillass-libev shadowsocks-tools
 
+UPLOAD_HOSTS := rssn.cn rp.rssn.cn
+
 help:
 	@echo "Usage:"
 	@echo " make AR71XX | RALINK      compile packages of specified architecture"
@@ -16,7 +18,6 @@ all: AR71XX RALINK
 
 AR71XX:
 	$(foreach d,$(PACKAGE_DIRS),make -C $(AR71XX_SDK) package/$(d)/compile V=s || exit $$?;)
-
 RALINK:
 	$(foreach d,$(PACKAGE_DIRS),make -C $(RALINK_SDK) package/$(d)/compile V=s || exit $$?;)
 
@@ -31,6 +32,5 @@ clean:
 	rm -rf ar71xx ralink
 
 up: cp
-	@rsync -rlptD --delete -v ar71xx ralink root@rssn.cn:/www/roms/hifeeds/
-	@rsync -rlptD --delete -v ar71xx ralink root@s.rssn.cn:/www/roms/hifeeds/
+	$(foreach h,$(UPLOAD_HOSTS),rsync -rlptD --delete -v ar71xx ralink root@$(h):/www/roms/hifeeds/ || exit $$?;)
 

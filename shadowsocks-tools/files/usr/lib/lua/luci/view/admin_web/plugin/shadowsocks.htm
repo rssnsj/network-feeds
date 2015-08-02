@@ -346,9 +346,9 @@ $(document).ready(function () {
 					local mg = ss_proxy_mode == "G" and "selected=\"selected\"" or ""
 					local mm = ss_proxy_mode == "M" and "selected=\"selected\"" or ""
 				%>
-					<option value="S" <%=ms%>>国外IP模式</option>
-					<option value="G" <%=mg%>>全局模式</option>
-					<option value="M" <%=mm%>>基于gfwlist的智能模式</option>
+					<option value="S" <%=ms%>>所有非中国的IP</option>
+					<option value="G" <%=mg%>>所有公网IP</option>
+					<option value="M" <%=mm%>>基于gfwlist的自动代理</option>
 				</select>
 			</p>
 
