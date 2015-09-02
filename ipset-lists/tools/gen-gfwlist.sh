@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-GFWLIST_URL="http://autoproxy-gfwlist.googlecode.com/svn/trunk/gfwlist.txt"
+GFWLIST_URL="https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt"
 
 if [ ! -f gfwlist.txt ]; then
 	wget "$GFWLIST_URL" -O gfwlist.b64
