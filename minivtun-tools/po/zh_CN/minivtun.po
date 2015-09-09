@@ -76,3 +76,9 @@ msgstr "点击此处自定义GFW-List"
 msgid "GFW-List mode requires flushing DNS cache"
 msgstr "GFW-List模式需要刷新DNS缓存"
 
+msgid "More Options"
+msgstr "更多选项"
+
+msgid "Options for advanced users"
+msgstr "面向高级用户"
+

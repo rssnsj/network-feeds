@@ -8,7 +8,4 @@ config minivtun
 	option algorithm 'aes-128'
 	option local_ipaddr '10.6.0.11'
 	option local_netmask '255.255.255.0'
-	option local_ip6pair '7008:2:2:2::10/64'
-	option safe_dns '8.8.8.8'
-	option proxy_mode 'M'
 

@@ -105,15 +105,19 @@ local_netmask:value("255.255.255.0")
 local_netmask:value("255.255.0.0")
 local_netmask:value("255.0.0.0")
 
+s:option(Flag, "more", translate("More Options"),
+	translate("Options for advanced users"))
+
 proxy_mode = s:option(ListValue, "proxy_mode", translate("Proxy Mode"),
 	translate("GFW-List mode requires flushing DNS cache") .. "<br /> " ..
 	"<a href=\"" .. luci.dispatcher.build_url("admin", "services", "gfwlist") .. "\">" ..
 	translate("Click here to customize your GFW-List") ..
 	"</a>")
-proxy_mode:value("G", translate("All Public IPs"))
-proxy_mode:value("S", translate("All non-China IPs"))
 proxy_mode:value("M", translate("GFW-List based auto-proxy"))
+proxy_mode:value("S", translate("All non-China IPs"))
+proxy_mode:value("G", translate("All Public IPs"))
 proxy_mode:value("V", translate("Watching Youku overseas"))
+proxy_mode:depends("more", "1")
 
 -- protocols = s:option(MultiValue, "protocols", translate("Protocols"))
 -- protocols:value("T", translate("TCP"))
@@ -125,11 +129,13 @@ safe_dns = s:option(Value, "safe_dns", translate("Safe DNS"),
 	translate("8.8.8.8 or 8.8.4.4 is recommended"))
 safe_dns.datatype = "ip4addr"
 safe_dns.optional = false
+safe_dns:depends("more", "1")
 
 safe_dns_port = s:option(Value, "safe_dns_port", translate("Safe DNS Port"))
 safe_dns_port.datatype = "range(1,65535)"
 safe_dns_port.placeholder = "53"
 safe_dns_port.optional = false
+safe_dns_port:depends("more", "1")
 
 -- ---------------------------------------------------
 local apply = luci.http.formvalue("cbi.apply")
