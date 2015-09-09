@@ -58,9 +58,15 @@ start()
 		return 1
 	fi
 
-	[ -z "$vt_proxy_mode" ] && vt_proxy_mode=S
+	[ -z "$vt_proxy_mode" ] && vt_proxy_mode=M
 	[ -z "$vt_method" ] && vt_method=table
 	[ -z "$vt_timeout" ] && vt_timeout=60
+	case "$vt_proxy_mode" in
+		M|S|G)
+			[ -z "$vt_safe_dns" ] && vt_safe_dns="8.8.8.8"
+			[ -z "$vt_safe_dns_tcp" ] && vt_safe_dns_tcp=1
+			;;
+	esac
 	[ -z "$vt_safe_dns_port" ] && vt_safe_dns_port=53
 	# Get LAN settings as default parameters
 	[ -f /lib/functions/network.sh ] && . /lib/functions/network.sh

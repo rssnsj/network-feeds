@@ -58,10 +58,14 @@ method:value("seed-cfb")
 method:value("salsa20")
 method:value("chacha20")
 
+s:option(Flag, "more", translate("More Options"),
+	translate("Options for advanced users"))
+
 timeout = s:option(Value, "timeout", translate("Timeout"))
 timeout.datatype = "range(0,10000)"
 timeout.placeholder = "60"
 timeout.optional = false
+timeout:depends("more", "1")
 
 -- fast_open = s:option(Flag, "fast_open", translate("TCP Fast Open"),
 --	translate("Enable TCP fast open, only available on kernel > 3.7.0"))
@@ -71,25 +75,29 @@ proxy_mode = s:option(ListValue, "proxy_mode", translate("Proxy Mode"),
 	"<a href=\"" .. luci.dispatcher.build_url("admin", "services", "gfwlist") .. "\">" ..
 	translate("Click here to customize your GFW-List") ..
 	"</a>")
-proxy_mode:value("G", translate("All Public IPs"))
-proxy_mode:value("S", translate("All non-China IPs"))
 proxy_mode:value("M", translate("GFW-List based auto-proxy"))
+proxy_mode:value("S", translate("All non-China IPs"))
+proxy_mode:value("G", translate("All Public IPs"))
 proxy_mode:value("V", translate("Watching Youku overseas"))
+proxy_mode:depends("more", "1")
 
 safe_dns = s:option(Value, "safe_dns", translate("Safe DNS"),
 	translate("8.8.8.8 or 8.8.4.4 is recommended"))
 safe_dns.datatype = "ip4addr"
 safe_dns.optional = false
+safe_dns:depends("more", "1")
 
 safe_dns_port = s:option(Value, "safe_dns_port", translate("Safe DNS Port"),
 	translate("Foreign DNS on UDP port 53 might be polluted"))
 safe_dns_port.datatype = "range(1,65535)"
 safe_dns_port.placeholder = "53"
 safe_dns_port.optional = false
+safe_dns_port:depends("more", "1")
 
 safe_dns_tcp = s:option(Flag, "safe_dns_tcp", translate("DNS uses TCP"),
 	translate("TCP DNS queries will be done over Shadowsocks tunnel"))
 safe_dns_tcp.rmempty = false
+safe_dns_tcp:depends("more", "1")
 
 -- ---------------------------------------------------
 local apply = luci.http.formvalue("cbi.apply")

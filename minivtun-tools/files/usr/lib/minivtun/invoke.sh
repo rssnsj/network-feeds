@@ -119,11 +119,9 @@ do_start_wait()
 	[ -z "$vt_algorithm" ] && vt_algorithm="aes-128"
 	[ -z "$vt_local_netmask" ] && vt_local_netmask="255.255.255.0"
 	[ -z "$vt_proxy_mode" ] && vt_proxy_mode=M
-	if [ -z "$vt_safe_dns" ]; then
-		case "$vt_proxy_mode" in
-			S|M|G) vt_safe_dns="8.8.8.8";;
-		esac
-	fi
+	case "$vt_proxy_mode" in
+		M|S|G) [ -z "$vt_safe_dns" ] && vt_safe_dns="8.8.8.8";;
+	esac
 	[ -z "$vt_safe_dns_port" ] && vt_safe_dns_port=53
 	[ -z "$vt_max_dns_wait" ] && vt_max_dns_wait=$MAX_DNS_WAIT_DEFAULT
 	# Get LAN settings as default parameters
