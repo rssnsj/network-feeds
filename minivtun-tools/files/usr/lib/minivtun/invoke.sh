@@ -102,7 +102,7 @@ do_start_wait()
 	local vt_mtu=`uci get minivtun.@minivtun[0].mtu 2>/dev/null`
 	local vt_safe_dns=`uci get minivtun.@minivtun[0].safe_dns 2>/dev/null`
 	local vt_safe_dns_port=`uci get minivtun.@minivtun[0].safe_dns_port 2>/dev/null`
-	local vt_proxy_mode=`uci get minivtun.@minivtun[0].proxy_mode`
+	local vt_proxy_mode=`uci get minivtun.@minivtun[0].proxy_mode 2>/dev/null`
 	local vt_max_dns_wait=`uci get minivtun.@minivtun[0].max_dns_wait 2>/dev/null`
 	#local vt_protocols=`uci get minivtun.@minivtun[0].protocols 2>/dev/null`
 	# $covered_subnets, $local_addresses are not required
@@ -295,7 +295,7 @@ EOF
 do_stop()
 {
 	local vt_network=`uci get minivtun.@minivtun[0].network 2>/dev/null`
-	local vt_proxy_mode=`uci get minivtun.@minivtun[0].proxy_mode`
+	local vt_proxy_mode=`uci get minivtun.@minivtun[0].proxy_mode 2>/dev/null`
 	[ -z "$vt_network" ] && vt_network="vt0"
 	local vt_ifname="minivtun-$vt_network"
 	local vt_gfwlist=`__gfwlist_by_mode $vt_proxy_mode`
