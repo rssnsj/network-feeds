@@ -7,6 +7,6 @@ config shadowsocks 'default'
 	option method 'table'
 	option timeout '60'
 	option username ''
-	option proxy_mode 'M'
+	option proxy_mode 'S'
 	option safe_dns_tcp '1'
 

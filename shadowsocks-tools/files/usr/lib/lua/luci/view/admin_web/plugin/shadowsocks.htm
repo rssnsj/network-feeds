@@ -273,6 +273,17 @@ $(document).ready(function () {
 		}, "json");
 	});
 });
+
+function show_hide_advanced_opts(obj_cbx) {
+	if (obj_cbx.checked) {
+		document.getElementById("adv_opts_1").style.display = "";
+		document.getElementById("adv_opts_2").style.display = "";
+	} else {
+		document.getElementById("adv_opts_1").style.display = "none";
+		document.getElementById("adv_opts_2").style.display = "none";
+	}
+}
+
 </script>
 </head>
 <body>
@@ -325,9 +336,10 @@ $(document).ready(function () {
 							print("<option value=\"" .. __v .. "\">" .. __n .. "</option>")
 						end
 					end
-				%></select>
+				%></select>&nbsp;&nbsp;&nbsp;
+				<input type="checkbox" id="adv_opts" onclick="show_hide_advanced_opts(this);">&nbsp;<label for="adv_opts" style="font-size:12px;color:#808080;">显示高级选项</label>
 			</p>
-			<p>
+			<p id="adv_opts_1" style="display:none;">
 				<label>&nbsp; 安全DNS</label>
 				<input type="text" name="safe_dns" class="txt" style="width:130px;" value="<%=ss_safe_dns%>" />
 				<label>端口</label>
@@ -339,7 +351,7 @@ $(document).ready(function () {
 					%> />
 				<label for="sdt">&nbsp;使用TCP</label>
 			</p>
-			<p>
+			<p id="adv_opts_2" style="display:none;">
 				<label>&nbsp; 代理模式</label>
 				<select name="proxy_mode" class="txt" style="width:230px"><%
 					local ms = ss_proxy_mode == "S" and "selected=\"selected\"" or ""
@@ -347,8 +359,8 @@ $(document).ready(function () {
 					local mm = ss_proxy_mode == "M" and "selected=\"selected\"" or ""
 				%>
 					<option value="S" <%=ms%>>所有非中国的IP</option>
-					<option value="G" <%=mg%>>所有公网IP</option>
 					<option value="M" <%=mm%>>基于gfwlist的自动代理（需刷新DNS缓存）</option>
+					<option value="G" <%=mg%>>所有公网IP（全局模式，慎用）</option>
 				</select>
 			</p>
 
