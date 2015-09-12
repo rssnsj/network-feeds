@@ -18,19 +18,22 @@ all: AR71XX RALINK
 
 AR71XX:
 	$(foreach d,$(PACKAGE_DIRS),make -C $(AR71XX_SDK) package/$(d)/compile V=s || exit $$?;)
-RALINK:
-	$(foreach d,$(PACKAGE_DIRS),make -C $(RALINK_SDK) package/$(d)/compile V=s || exit $$?;)
-
-cp: $(AR71XX_SDK)/bin/ar71xx/packages $(RALINK_SDK)/bin/ralink/packages
-	mkdir -p ar71xx ralink
+	mkdir -p ar71xx
 	$(foreach p,$(PACKAGE_LIST),cp $(AR71XX_SDK)/bin/ar71xx/packages/$(p)_*_ar71xx.ipk ar71xx/ || exit $$?;)
 	cd ar71xx && $(AR71XX_SDK)/scripts/ipkg-make-index.sh . > Packages && gzip -9c Packages > Packages.gz
+
+RALINK:
+	$(foreach d,$(PACKAGE_DIRS),make -C $(RALINK_SDK) package/$(d)/compile V=s || exit $$?;)
+	mkdir -p ralink
 	$(foreach p,$(PACKAGE_LIST),cp $(RALINK_SDK)/bin/ralink/packages/$(p)_*_ralink.ipk ralink/ || exit $$?;)
 	cd ralink && $(RALINK_SDK)/scripts/ipkg-make-index.sh . > Packages && gzip -9c Packages > Packages.gz
 
+up_ar71xx: ar71xx
+	$(foreach h,$(UPLOAD_HOSTS),rsync -rlptD --delete -v ar71xx root@$(h):/www/roms/hifeeds/ || exit $$?;)
+up_ralink: ralink
+	$(foreach h,$(UPLOAD_HOSTS),rsync -rlptD --delete -v ralink root@$(h):/www/roms/hifeeds/ || exit $$?;)
+up: up_ar71xx up_ralink
+
 clean:
 	rm -rf ar71xx ralink
-
-up: cp
-	$(foreach h,$(UPLOAD_HOSTS),rsync -rlptD --delete -v ar71xx ralink root@$(h):/www/roms/hifeeds/ || exit $$?;)
 
