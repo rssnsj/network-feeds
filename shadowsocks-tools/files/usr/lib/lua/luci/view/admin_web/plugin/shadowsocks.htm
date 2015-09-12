@@ -205,6 +205,26 @@ table.zone td.tor { text-align:right;width:120px;line-height:14px; }
 #con_stauts { width:300px; }
 </style>
 <script type="text/javascript">
+
+function show_hide_ssh_options() {
+	if (document.getElementById("ss_method").value == "ssh") {
+		document.getElementById("ssh_user").style.display = "";
+	} else {
+		document.getElementById("ssh_user").style.display = "none";
+	}
+}
+
+
+function show_hide_advanced_opts() {
+	if (document.getElementById("adv_opts").checked) {
+		document.getElementById("adv_opts_1").style.display = "";
+		document.getElementById("adv_opts_2").style.display = "";
+	} else {
+		document.getElementById("adv_opts_1").style.display = "none";
+		document.getElementById("adv_opts_2").style.display = "none";
+	}
+}
+
 $(document).ready(function () {
 
 	function set_status_text(status, msg) {
@@ -236,7 +256,8 @@ $(document).ready(function () {
 			document.getElementById("failure_msg").innerHTML = "";
 		}
 	}
-	function __get_ss_status() {
+
+	function update_status_label() {
 		set_status_text("flushing");
 		var req_data = [ { name:"PAGE_ACTION", value:"get_status" } ];
 		$.getJSON("<%=luci.dispatcher.build_url("admin_web", "plugin", "shadowsocks")%>", req_data, function (rsp_data) {
@@ -244,8 +265,13 @@ $(document).ready(function () {
 		});
 	}
 
-	__get_ss_status();
-	$("#flush_button").on("click", __get_ss_status);
+	show_hide_ssh_options();
+	show_hide_advanced_opts();
+	update_status_label();
+
+	/* ------------------------------------------------------------ */
+
+	$("#flush_button").on("click", update_status_label);
 	$("#start_button").on("click", function () {
 		set_status_text("starting");
 		var req_data = [ { name:"PAGE_ACTION", value:"start_ss" } ];
@@ -274,16 +300,6 @@ $(document).ready(function () {
 	});
 });
 
-function show_hide_advanced_opts(obj_cbx) {
-	if (obj_cbx.checked) {
-		document.getElementById("adv_opts_1").style.display = "";
-		document.getElementById("adv_opts_2").style.display = "";
-	} else {
-		document.getElementById("adv_opts_1").style.display = "none";
-		document.getElementById("adv_opts_2").style.display = "none";
-	}
-}
-
 </script>
 </head>
 <body>
@@ -308,11 +324,6 @@ function show_hide_advanced_opts(obj_cbx) {
 				<input type="text" name="server_port" class="txt" value="<%=ss_server_port%>" />
 			</p>
 			<p>
-				<label>&nbsp; SSH用户名</label>
-				<input type="text" name="username" class="txt" value="<%=ss_username%>" />
-				（仅对SSH模式有效）
-			</p>
-			<p>
 				<label><font color="red">*</font> 密码</label>
 				<input type="password" id="ss_key_box" name="password" class="txt" value="<%=ss_password%>" />
 				<input type="checkbox" id="key_box_sw" onclick="var e = document.getElementById('ss_key_box'); e.type = this.checked ? 'text' : 'password';">&nbsp;
@@ -320,7 +331,7 @@ function show_hide_advanced_opts(obj_cbx) {
 			</p>
 			<p>
 				<label><font color="red">*</font> 加密类型</label>
-				<select name="method" class="txt"><%
+				<select id="ss_method" name="method" class="txt" onchange="show_hide_ssh_options()"><%
 					local ss_methods = { "ssh", "table", "rc4", "rc4-md5", "aes-128-cfb", "aes-192-cfb",
 						"aes-256-cfb", "bf-cfb", "camellia-128-cfb", "camellia-192-cfb", "camellia-256-cfb",
 						"cast5-cfb", "des-cfb", "idea-cfb", "rc2-cfb", "seed-cfb", "salsa20", "chacha20" }
@@ -337,7 +348,11 @@ function show_hide_advanced_opts(obj_cbx) {
 						end
 					end
 				%></select>&nbsp;&nbsp;&nbsp;
-				<input type="checkbox" id="adv_opts" onclick="show_hide_advanced_opts(this);">&nbsp;<label for="adv_opts" style="font-size:12px;color:#808080;">显示高级选项</label>
+				<input type="checkbox" id="adv_opts" onclick="show_hide_advanced_opts();">&nbsp;<label for="adv_opts" style="font-size:12px;color:#808080;">显示高级选项</label>
+			</p>
+			<p id ="ssh_user" style="display:none;">
+				<label><font color="red">*</font> SSH用户名</label>
+				<input type="text" name="username" class="txt" value="<%=ss_username%>" />
 			</p>
 			<p id="adv_opts_1" style="display:none;">
 				<label>&nbsp; 安全DNS</label>
