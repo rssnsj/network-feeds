@@ -11,9 +11,10 @@ HiWiFi OS系统下的网络加速扩展应用（欢迎提交有价值优化的 P
 ### 安装步骤
 
     mkdir -p /etc/opkg
-    # 以下两条根据你的路由器架构选择执行（不要两条都执行）
+    # 以下三条根据你的路由器架构选择执行（不要都执行）
     echo "src/gz rssnsj http://rssn.cn/roms/hifeeds/ar71xx" > /etc/opkg/rssnsj.conf  # 极1
     echo "src/gz rssnsj http://rssn.cn/roms/hifeeds/ralink" > /etc/opkg/rssnsj.conf  # 极1S(HC5661)、极2、极3
+    echo -e "src/gz rssnsj http://rssn.cn/roms/hifeeds/ralink\narch all 100\narch ralink 200\narch mediatek 300"  # 新极1S(HC5661A)
       
     opkg update
     opkg install openssh-redir-client autossh-renamed dnsmasq-salist vanillass-libev pdnsd
