@@ -33,6 +33,7 @@ up_ar71xx: ar71xx
 up_ralink: ralink
 	$(foreach h,$(UPLOAD_HOSTS),rsync -rlptD --delete -v ralink root@$(h):/www/roms/hifeeds/ || exit $$?;)
 up: up_ar71xx up_ralink
+	$(foreach h,$(UPLOAD_HOSTS),rsync -rlptDv hiwifi-install.sh root@$(h):/www/roms/hifeeds/ || exit $$?;)
 
 clean:
 	rm -rf ar71xx ralink
