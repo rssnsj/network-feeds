@@ -1,5 +1,5 @@
 # network-feeds
-HiWiFi OS系统下的网络加速扩展应用（欢迎提交有价值优化的 Pull Requests）
+HiWiFi OS系统下的【离线版Shadowsocks】等网络加速扩展应用（欢迎提交有价值优化的 Pull Requests）
 
 ### 包含的组件
 * openssh-redir: “-D”模式下支持透明代理的ssh客户端
