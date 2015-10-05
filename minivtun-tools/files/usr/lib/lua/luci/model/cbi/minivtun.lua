@@ -125,6 +125,10 @@ proxy_mode:depends("more", "1")
 -- protocols:value("I", translate("ICMP"))
 -- protocols:value("O", translate("Others"))
 
+mtu = s:option(Value, "mtu", translate("MTU"))
+mtu.datatype = "range(1000,65520)"
+mtu:depends("more", "1")
+
 safe_dns = s:option(Value, "safe_dns", translate("Safe DNS"),
 	translate("8.8.8.8 or 8.8.4.4 is recommended"))
 safe_dns.datatype = "ip4addr"
