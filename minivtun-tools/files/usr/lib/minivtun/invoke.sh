@@ -141,7 +141,7 @@ do_start_wait()
 		return 1
 	fi
 
-	/usr/sbin/minivtun -r $vt_server_addr:$vt_server_port \
+	/usr/sbin/minivtun -r [$vt_server_addr]:$vt_server_port \
 		-a $vt_local_ipaddr/$vt_local_prefix -n $vt_ifname \
 		-e "$vt_password" -t "$vt_algorithm" $cmdline_opts -d \
 		-p /var/run/$vt_ifname.pid || return 1
