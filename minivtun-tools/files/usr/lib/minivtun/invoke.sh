@@ -45,7 +45,7 @@ wait_dns_ready()
 		local dns_ok=N
 		local ts_start=`date +%s`
 		while :; do
-			if nslookup "$host" >/dev/null 2>&1; then
+			if minivtun -R "$host:1000" >/dev/null 2>&1; then
 				dns_ok=Y
 				return 0
 			fi
