@@ -30,7 +30,6 @@ $2==c&&$3=="ipv4"{printf("%s/%d\n",$4,tobits($5))}' |
 }
 
 # $1: country code in source file
-# $2: ipset table name
 gen_rtable_to_stdout()
 {
 	local ctcode="$1"
@@ -42,6 +41,28 @@ function tobits(c) {for(n=0;c>=2;c/=2){n++;};return 32-n;}
 $2==c&&$3=="ipv4"{printf("%s/%d\n",$4,tobits($5))}'
 
 }
+
+# No arguments
+gen_nonchina_rtable()
+{
+	check_data_file
+
+	(
+		cat $DATA_FILE | awk -F'|' -vc=CN '
+function tobits(c) {for(n=0;c>=2;c/=2){n++;};return 32-n;}
+$2==c&&$3=="ipv4"{printf("%s/%d\n",$4,tobits($5))}'
+		echo 0.0.0.0/8 10.0.0.0/8 100.64.0.0/10 127.0.0.0/8 172.16.0.0/12 192.168.0.0/16 224.0.0.0/5
+	) |
+		xargs netmask -r | awk '{print $1}' |
+		awk -F- '
+function iptoint(ip) {split(ip,arr,"."); n=0; for(i=1;i<=4;i++) n=n*256+arr[i]; return n;}
+function inttoip(n) {a=int(n/16777216); b=int(n%16777216/65536); c=int(n%65536/256); d=n%256; return a "." b "." c "." d;}
+BEGIN {st=0}
+{x=st; y=iptoint($1); st=iptoint($2)+1; if(y>x) {print inttoip(x) ":" inttoip(y-1);} }' |
+		xargs netmask | awk '{print $1}'
+
+}
+
 
 ##
 case "$2" in
@@ -56,6 +77,7 @@ case "$1" in
 	SG) $cmd $1 singapore;;
 	JP) $cmd $1 japan;;
 	KR) $cmd $1 korea;;
+	invert*) gen_nonchina_rtable;;
 	*)
 		echo "Usage:"
 		echo "  $0 <country_code> [-r]"
@@ -64,5 +86,6 @@ case "$1" in
 		echo "Examples:"
 		echo "  $0 CN > ../files/etc/ipset/china"
 		echo "  $0 TW > ../files/etc/ipset/taiwan"
+		echo "  $0 invert"
 		;;
 esac
