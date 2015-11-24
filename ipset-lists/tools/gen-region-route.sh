@@ -10,7 +10,11 @@ LOCAL_SOURCE_TMPFILE=`basename "$SOURCE_DOWNLOAD_URL"`
 check_data_file()
 {
 	if ! [ -f $LOCAL_SOURCE_TMPFILE ]; then
-		wget "$SOURCE_DOWNLOAD_URL" -O $LOCAL_SOURCE_TMPFILE || exit 1
+		if which axel >/dev/null 2>&1; then
+			axel "$SOURCE_DOWNLOAD_URL" -o $LOCAL_SOURCE_TMPFILE -n16 || exit 1
+		else
+			wget "$SOURCE_DOWNLOAD_URL" -O $LOCAL_SOURCE_TMPFILE || exit 1
+		fi
 	fi
 }
 
@@ -19,11 +23,10 @@ generate_cidr_pairs()
 {
 	local ctcode="$1"
 
-	check_data_file
-
 	cat $LOCAL_SOURCE_TMPFILE | awk -F'|' -vc="$ctcode" '
 function tobits(c) { for(n=0; c>=2; c/=2) n++; return 32-n; }
-$2==c&&$3=="ipv4" { printf("%s/%d\n", $4, tobits($5)) }'
+$2==c&&$3=="ipv4" { printf("%s/%d\n", $4, tobits($5)) }' |
+	xargs netmask | awk '{print $1}'
 
 }
 
@@ -41,8 +44,6 @@ generate_ipset_rules()
 # No argument
 generate_inverted_china_routes()
 {
-	check_data_file
-
 	(
 		generate_cidr_pairs CN
 		echo 0.0.0.0/8 10.0.0.0/8 100.64.0.0/10 127.0.0.0/8 172.16.0.0/12 192.168.0.0/16 224.0.0.0/5
@@ -63,6 +64,26 @@ case "$2" in
 	*)  cmd=generate_ipset_rules;;
 esac
 
+if [ -z "$1" ]; then
+	echo "Usage:"
+	echo "  $0 <country_code> [-r]"
+	echo "Supported countries:"
+	echo "  CN, TW, HK, SG, JP, KR"
+	echo "Examples:"
+	echo "  $0 CN"
+	echo "  $0 -u               update the 'china' ipset data"
+	echo "  $0 -I               generate inverted China route table"
+
+	exit 1
+fi
+
+case "$2" in
+	-r) cmd=generate_cidr_pairs;;
+	*)  cmd=generate_ipset_rules;;
+esac
+
+check_data_file
+
 case "$1" in
 	CN) $cmd $1 china;;
 	TW) $cmd $1 taiwan;;
@@ -72,14 +93,5 @@ case "$1" in
 	KR) $cmd $1 korea;;
 	-u) generate_ipset_rules CN china > china.tmp && mv -v china.tmp ../files/etc/ipset/china;;
 	-I) generate_inverted_china_routes;;
-	*)
-		echo "Usage:"
-		echo "  $0 <country_code> [-r]"
-		echo "Supported countries:"
-		echo "  CN, TW, HK, SG, JP, KR"
-		echo "Examples:"
-		echo "  $0 CN"
-		echo "  $0 -u               update the 'china' ipset data"
-		echo "  $0 -I               generate inverted China route table"
-		;;
+	*) echo "*** Invalid arguments." >&2; exit 1;;
 esac
