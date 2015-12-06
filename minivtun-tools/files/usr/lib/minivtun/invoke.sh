@@ -330,10 +330,51 @@ do_stop()
 
 }
 
+do_pause()
+{
+	local vt_network=`uci get minivtun.@minivtun[0].network 2>/dev/null`
+	local vt_proxy_mode=`uci get minivtun.@minivtun[0].proxy_mode 2>/dev/null`
+	[ -z "$vt_network" ] && vt_network="vt0"
+	local vt_ifname="minivtun-$vt_network"
+	local vt_gfwlist=`__gfwlist_by_mode $vt_proxy_mode`
+
+	# -----------------------------------------------------------------
+	rm -rf /var/etc/dnsmasq-go.d
+	if [ -f /tmp/dnsmasq.d/dnsmasq-go.conf ]; then
+		rm -f /tmp/dnsmasq.d/dnsmasq-go.conf
+		/etc/init.d/dnsmasq restart
+	fi
+
+	# -----------------------------------------------------------------
+	if iptables -t mangle -F minivtun_$vt_network 2>/dev/null; then
+		while iptables -t mangle -D OUTPUT -p udp --dport 53 -j minivtun_$vt_network 2>/dev/null; do :; done
+		while iptables -t mangle -D PREROUTING -j minivtun_$vt_network 2>/dev/null; do :; done
+		iptables -t mangle -X minivtun_$vt_network 2>/dev/null
+	fi
+
+	# -----------------------------------------------------------------
+	[ "$KEEP_GFWLIST" = Y ] || ipset destroy "$vt_gfwlist" 2>/dev/null
+
+	# -----------------------------------------------------------------
+	# We don't have to delete the default route in 'virtual', since
+	# it will be brought down along with the interface.
+	while ip rule del fwmark $VPN_ROUTE_FWMARK table $VPN_IPROUTE_TABLE 2>/dev/null; do :; done
+
+	return 0
+}
+
 #
 case "$1" in
 	-s) do_start_wait;;
 	-k) do_stop;;
-	*) echo "Usage: $0 -s|-k";;
+	-p) do_pause;;
+	-r) do_stop; sleep 1; do_start_wait;;
+	*)
+		 echo "Usage:"
+		 echo " $0 -s       start the service (will wait for DNS ready)"
+		 echo " $0 -k       fully stop the service"
+		 echo " $0 -p       pause the service (keep the tunnel on for recovery detection)"
+		 echo " $0 -r       restart the service (call this to bring up a 'paused' service)"
+		 ;;
 esac
 
