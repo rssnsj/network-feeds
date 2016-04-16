@@ -60,25 +60,25 @@ BEGIN { st=0 }
 
 ##
 case "$2" in
-	-r) cmd=generate_cidr_pairs;;
+	-c) cmd=generate_cidr_pairs;;
 	*)  cmd=generate_ipset_rules;;
 esac
 
 if [ -z "$1" ]; then
 	echo "Usage:"
-	echo "  $0 <country_code> [-r]"
+	echo "  $0 <country_code> [-c]"
 	echo "Supported countries:"
 	echo "  CN, TW, HK, SG, JP, KR"
 	echo "Examples:"
 	echo "  $0 CN"
 	echo "  $0 -u               update the 'china' ipset data"
-	echo "  $0 -I               generate inverted China route table"
+	echo "  $0 -r               generate inverted China route table"
 
 	exit 1
 fi
 
 case "$2" in
-	-r) cmd=generate_cidr_pairs;;
+	-c) cmd=generate_cidr_pairs;;
 	*)  cmd=generate_ipset_rules;;
 esac
 
@@ -92,6 +92,6 @@ case "$1" in
 	JP) $cmd $1 japan;;
 	KR) $cmd $1 korea;;
 	-u) generate_ipset_rules CN china > china.tmp && mv -v china.tmp ../files/etc/ipset/china;;
-	-I) generate_inverted_china_routes;;
+	-r) generate_inverted_china_routes;;
 	*) echo "*** Invalid arguments." >&2; exit 1;;
 esac
