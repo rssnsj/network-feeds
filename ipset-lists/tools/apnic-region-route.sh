@@ -10,11 +10,7 @@ LOCAL_SOURCE_TMPFILE=`basename "$SOURCE_DOWNLOAD_URL"`
 check_data_file()
 {
 	if ! [ -f $LOCAL_SOURCE_TMPFILE ]; then
-		if which axel >/dev/null 2>&1; then
-			axel "$SOURCE_DOWNLOAD_URL" -o $LOCAL_SOURCE_TMPFILE -n16 || exit 1
-		else
-			wget "$SOURCE_DOWNLOAD_URL" -O $LOCAL_SOURCE_TMPFILE || exit 1
-		fi
+		wget "$SOURCE_DOWNLOAD_URL" -O $LOCAL_SOURCE_TMPFILE || exit 1
 	fi
 }
 
