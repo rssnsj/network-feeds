@@ -6,13 +6,13 @@
 
 china_routes_ipip()
 {
-	[ -f ipip.txt ] || wget https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt -O ipip.txt >&2 || exit 1
+	[ -f ipip.txt ] || wget -4 https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt -O ipip.txt >&2 || exit 1
 	cat ipip.txt | xargs netmask | awk '{print $1}'
 }
 
 china_routes_apnic()
 {
-	[ -f apnic.txt ] || wget http://ftp.apnic.net/stats/apnic/delegated-apnic-latest -O apnic.txt >&2 || exit 1
+	[ -f apnic.txt ] || wget -4 http://ftp.apnic.net/stats/apnic/delegated-apnic-latest -O apnic.txt >&2 || exit 1
 
 	cat apnic.txt | awk -F'|' -vc=CN '
 function tobits(c) { for(n=0; c>=2; c/=2) n++; return 32-n; }
