@@ -9,8 +9,9 @@ generate_china_banned()
 	fi
 
 	cat gfwlist.txt base-gfwlist.txt | sort -u |
+		sed '/^!/d; /^@@/d' |
 		sed 's#!.\+##; s#|##g; s#@##g; s#http:\/\/##; s#https:\/\/##;' |
-		sed '/\*/d; /apple\.com/d; /sina\.cn/d; /sina\.com\.cn/d; /baidu\.com/d; /qq\.com/d' |
+		sed '/\*/d; /apple\.com/d; /sina\.cn/d; /sina\.com\.cn/d; /baidu\.com/d; /qq\.com/d; /\<jd\.com/d' |
 		sed '/^[0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+$/d' |
 		grep '^[0-9a-zA-Z\.-]\+$' | grep '\.' | sed 's#^\.\+##' | rev | sort -u |
 		awk '
