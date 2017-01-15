@@ -105,8 +105,9 @@ do_start_wait()
 	local vt_proxy_mode=`uci get minivtun.@minivtun[0].proxy_mode 2>/dev/null`
 	local vt_max_dns_wait=`uci get minivtun.@minivtun[0].max_dns_wait 2>/dev/null`
 	#local vt_protocols=`uci get minivtun.@minivtun[0].protocols 2>/dev/null`
-	# $covered_subnets, $local_addresses are not required
+	# $covered_subnets, $excepted_subnets, $local_addresses are not required
 	local covered_subnets=`uci get minivtun.@minivtun[0].covered_subnets 2>/dev/null`
+	local excepted_subnets=`uci get minivtun.@minivtun[0].excepted_subnets 2>/dev/null`
 	local local_addresses=`uci get minivtun.@minivtun[0].local_addresses 2>/dev/null`
 
 	# -----------------------------------------------------------------
@@ -234,7 +235,12 @@ do_start_wait()
 			iptables -t mangle -A minivtun_$vt_network -m set ! --match-set $vt_gfwlist dst -j RETURN
 			;;
 	esac
+	# Clients that do not use VPN
 	local subnet
+	for subnet in $excepted_subnets; do
+		iptables -t mangle -A minivtun_$vt_network -s $subnet -j RETURN
+	done
+	# Clients that need VPN
 	for subnet in $covered_subnets; do
 		iptables -t mangle -A minivtun_$vt_network -s $subnet -j MARK --set-mark $VPN_ROUTE_FWMARK
 	done
