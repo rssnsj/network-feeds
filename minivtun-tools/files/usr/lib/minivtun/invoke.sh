@@ -108,6 +108,7 @@ do_start_wait()
 	# $covered_subnets, $excepted_subnets, $local_addresses are not required
 	local covered_subnets=`uci get minivtun.@minivtun[0].covered_subnets 2>/dev/null`
 	local excepted_subnets=`uci get minivtun.@minivtun[0].excepted_subnets 2>/dev/null`
+	local excepted_ttl=`uci get minivtun.@minivtun[0].excepted_ttl 2>/dev/null`
 	local local_addresses=`uci get minivtun.@minivtun[0].local_addresses 2>/dev/null`
 
 	# -----------------------------------------------------------------
@@ -239,6 +240,10 @@ do_start_wait()
 	local subnet
 	for subnet in $excepted_subnets; do
 		iptables -t mangle -A minivtun_$vt_network -s $subnet -j RETURN
+	done
+	local ttl
+	for ttl in $excepted_ttl; do
+		iptables -t mangle -A minivtun_$vt_network -m ttl --ttl-eq $ttl -j RETURN
 	done
 	# Clients that need VPN
 	for subnet in $covered_subnets; do
