@@ -118,13 +118,13 @@ detect_usb_storages()
 		chmod 777 $mount_dir
 
 		uci set samba.$ident=sambashare
-		uci set samba.$ident.ident=$ident
-		uci set samba.$ident.name="$sharename"
-		uci set samba.$ident.read_only=no
-		uci set samba.$ident.create_mask=0777
-		uci set samba.$ident.dir_mask=0777
-		uci set samba.$ident.path=$mount_dir
-		uci set samba.$ident.guest_ok=yes
+		[ -z "$(uci get samba.$ident.ident 2>/dev/null)" ] && uci set samba.$ident.ident=$ident
+		[ -z "$(uci get samba.$ident.name 2>/dev/null)" ] && uci set samba.$ident.name="$sharename"
+		[ -z "$(uci get samba.$ident.read_only 2>/dev/null)" ] && uci set samba.$ident.read_only=no
+		[ -z "$(uci get samba.$ident.create_mask 2>/dev/null)" ] && uci set samba.$ident.create_mask=0777
+		[ -z "$(uci get samba.$ident.dir_mask 2>/dev/null)" ] && uci set samba.$ident.dir_mask=0777
+		[ -z "$(uci get samba.$ident.path 2>/dev/null)" ] && uci set samba.$ident.path=$mount_dir
+		[ -z "$(uci get samba.$ident.guest_ok 2>/dev/null)" ] && uci set samba.$ident.guest_ok=yes
 	done
 
 	rm -rf $FSN
@@ -136,6 +136,8 @@ detect_usb_storages()
 start()
 {
 	/etc/init.d/samba disable
+	uci set ucitrack.@samba[-1].exec="/etc/init.d/samba reload"
+	uci commit ucitrack
 	detect_usb_storages
 	/etc/init.d/samba restart
 }

@@ -38,6 +38,8 @@ define Package/file-storage/postinst
 if [ -e /etc/openwrt_release ]; then
 	/etc/init.d/samba disable
 	/etc/init.d/samba stop
+	uci set ucitrack.@samba[-1].exec="/etc/init.d/samba reload"
+	uci commit ucitrack
 	/etc/init.d/file-storage restart
 	/etc/init.d/file-storage enable || :
 	/etc/init.d/boot-mount enable || :
