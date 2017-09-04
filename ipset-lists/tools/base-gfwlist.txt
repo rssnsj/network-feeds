@@ -1006,6 +1006,7 @@ googleadservices.com
 google-analytics.com
 googleapis.com
 googlecode.com
+google.ca
 google.co.jp
 google.com
 google.com.hk
