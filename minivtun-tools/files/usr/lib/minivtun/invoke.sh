@@ -251,6 +251,7 @@ do_start_wait()
 	done
 	[ -n "$vt_safe_dns" ] && \
 		iptables -t mangle -A minivtun_$vt_network -d $vt_safe_dns -p udp --dport $vt_safe_dns_port -j MARK --set-mark $VPN_ROUTE_FWMARK
+	iptables -t mangle -A minivtun_$vt_network -m mark --mark $VPN_ROUTE_FWMARK -j ACCEPT  # stop further matches
 	iptables -t mangle -I PREROUTING -j minivtun_$vt_network
 	iptables -t mangle -I OUTPUT -p udp --dport 53 -j minivtun_$vt_network  # DNS queries over tunnel
 
