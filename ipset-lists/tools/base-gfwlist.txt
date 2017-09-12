@@ -83,7 +83,6 @@ alabout.com
 alasbarricadas.org
 alexlur.org
 aliengu.com
-aliyun.com
 alkasir.com
 allaboutalpha.com
 allgirlsallowed.org
@@ -154,6 +153,7 @@ asiaharvest.org
 asianews.it
 asianwomensfilm.de
 askstudent.com
+askubuntu.com
 askynz.net
 assembla.com
 astonmartinnews.com
@@ -1329,6 +1329,7 @@ keepandshare.com
 kendincos.net
 kenengba.com
 keontech.net
+kernel.org
 khcc.gov.tw
 khms.gov.tw
 khmusic.com.tw
@@ -1748,6 +1749,7 @@ openleaks.org
 openvpn.net
 openvpn.org
 openwebster.com
+openwrt.org
 opml.radiotime.com
 opnir.com
 orientaldaily.com.my
@@ -2029,6 +2031,7 @@ seezone.net
 sejie.com
 sendoid.com
 sendspace.com
+serverfault.com
 sesawe.net
 sesawe.org
 sethwklein.net
@@ -2164,6 +2167,8 @@ srcf.ucam.org
 ssh91.com
 sshtunnel.googlecode.com
 sstatic.net
+stackexchange.com
+stackoverflow.com
 stag.gov.tw
 standupfortibet.org
 starp2p.com
