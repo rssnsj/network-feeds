@@ -327,7 +327,7 @@ do_stop()
 	fi
 
 	# -----------------------------------------------------------------
-	[ "$KEEP_GFWLIST" = Y ] || ipset destroy "$vt_gfwlist" 2>/dev/null
+	[ "$KEEP_GFWLIST" = Y -a "$vt_proxy_mode" = M ] || ipset destroy "$vt_gfwlist" 2>/dev/null
 
 	# -----------------------------------------------------------------
 	# We don't have to delete the default route in 'virtual', since
