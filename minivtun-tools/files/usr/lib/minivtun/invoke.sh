@@ -143,10 +143,17 @@ do_start_wait()
 		return 1
 	fi
 
-	/usr/sbin/minivtun -r [$vt_server_addr]:$vt_server_port \
-		-a $vt_local_ipaddr/$vt_local_prefix -n $vt_ifname \
-		-e "$vt_password" -t "$vt_algorithm" $cmdline_opts -d \
-		-p /var/run/$vt_ifname.pid || return 1
+	if [ -n "$vt_password" ]; then
+		/usr/sbin/minivtun -r [$vt_server_addr]:$vt_server_port \
+			-a $vt_local_ipaddr/$vt_local_prefix -n $vt_ifname \
+			-e "$vt_password" -t "$vt_algorithm" $cmdline_opts -d \
+			-p /var/run/$vt_ifname.pid || return 1
+	else
+		/usr/sbin/minivtun -r [$vt_server_addr]:$vt_server_port \
+			-a $vt_local_ipaddr/$vt_local_prefix -n $vt_ifname \
+			$cmdline_opts -d \
+			-p /var/run/$vt_ifname.pid || return 1
+	fi
 
 	# IMPORTANT: 'rp_filter=1' will cause returned packets from
 	# virtual interface being dropped, so we have to fix it.
