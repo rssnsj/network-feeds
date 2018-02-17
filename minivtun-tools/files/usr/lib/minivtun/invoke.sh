@@ -4,9 +4,11 @@
 # https://github.com/rssnsj/network-feeds
 #
 
+VT_IFNAME="minivtun-go0"
+
 MAX_DNS_WAIT_DEFAULT=120
 VPN_ROUTE_FWMARK=199
-VPN_IPROUTE_TABLE=virtual
+VPN_IPROUTE_TID=175
 
 __netmask_to_bits()
 {
@@ -91,7 +93,6 @@ __gfwlist_by_mode()
 
 do_start_wait()
 {
-	local vt_network=`uci get minivtun.@minivtun[0].network 2>/dev/null`
 	local vt_server_addr=`uci get minivtun.@minivtun[0].server`
 	local vt_server_port=`uci get minivtun.@minivtun[0].server_port`
 	local vt_password=`uci get minivtun.@minivtun[0].password 2>/dev/null`
@@ -117,7 +118,6 @@ do_start_wait()
 		return 1
 	fi
 
-	[ -z "$vt_network" ] && vt_network="vt0"
 	[ -z "$vt_algorithm" ] && vt_algorithm="aes-128"
 	[ -z "$vt_local_netmask" ] && vt_local_netmask="255.255.255.0"
 	[ -z "$vt_proxy_mode" ] && vt_proxy_mode=M
@@ -130,7 +130,6 @@ do_start_wait()
 	[ -f /lib/functions/network.sh ] && . /lib/functions/network.sh
 	[ -z "$covered_subnets" ] && network_get_subnet covered_subnets lan
 	[ -z "$local_addresses" ] && network_get_ipaddr local_addresses lan
-	local vt_ifname="minivtun-$vt_network"
 	local vt_local_prefix=`__netmask_to_bits "$vt_local_netmask"`
 	local vt_gfwlist=`__gfwlist_by_mode $vt_proxy_mode`
 	local vt_np_ipset="china"
@@ -145,122 +144,78 @@ do_start_wait()
 
 	if [ -n "$vt_password" ]; then
 		/usr/sbin/minivtun -r [$vt_server_addr]:$vt_server_port \
-			-a $vt_local_ipaddr/$vt_local_prefix -n $vt_ifname \
+			-a $vt_local_ipaddr/$vt_local_prefix -n $VT_IFNAME \
 			-e "$vt_password" -t "$vt_algorithm" $cmdline_opts -d \
-			-p /var/run/$vt_ifname.pid || return 1
+			-p /var/run/$VT_IFNAME.pid || return 1
 	else
 		/usr/sbin/minivtun -r [$vt_server_addr]:$vt_server_port \
-			-a $vt_local_ipaddr/$vt_local_prefix -n $vt_ifname \
+			-a $vt_local_ipaddr/$vt_local_prefix -n $VT_IFNAME \
 			$cmdline_opts -d \
-			-p /var/run/$vt_ifname.pid || return 1
+			-p /var/run/$VT_IFNAME.pid || return 1
 	fi
 
 	# IMPORTANT: 'rp_filter=1' will cause returned packets from
 	# virtual interface being dropped, so we have to fix it.
 	echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter
-	echo 0 > /proc/sys/net/ipv4/conf/$vt_ifname/rp_filter
+	echo 0 > /proc/sys/net/ipv4/conf/$VT_IFNAME/rp_filter
 
-	# Create new interface if not exists
-	local __ifname=`uci get network.$vt_network.ifname 2>/dev/null`
-	if [ "$__ifname" != "$vt_ifname" ]; then
-		uci delete network.$vt_network 2>/dev/null
-		uci set network.$vt_network=interface
-		uci set network.$vt_network.ifname=$vt_ifname
-		uci set network.$vt_network.proto=static
-		uci set network.$vt_network.ipaddr=$vt_local_ipaddr
-		uci set network.$vt_network.netmask=$vt_local_netmask
-		uci commit network
-
-		# Attach this interface to firewall zone "wan"
-		local i=0
-		while true; do
-			local __zone=`uci get firewall.@zone[$i].name`
-			[ -z "$__zone" ] && break
-			# Match zone "wan" to modify
-			if [ "$__zone" = wan ]; then
-				local __zone_nets=`uci get firewall.@zone[$i].network`
-				uci delete firewall.@zone[$i].network
-				uci set firewall.@zone[$i].network="$__zone_nets $vt_network"
-				uci commit firewall
-				break
-			fi
-			i=`expr $i + 1`
-		done
-	fi
-
-	# Update IP address settings
-	local __proto=`uci get network.$vt_network.proto 2>/dev/null`
-	local __ipaddr=`uci get network.$vt_network.ipaddr 2>/dev/null`
-	local __netmask=`uci get network.$vt_network.netmask 2>/dev/null`
-	if ! [ "$__proto" = static -a "$__ipaddr" = "$vt_local_ipaddr" -a \
-			"$__netmask" = "$vt_local_netmask" ]; then
-		uci set network.$vt_network.proto=static
-		uci set network.$vt_network.ipaddr=$vt_local_ipaddr
-		uci set network.$vt_network.netmask=$vt_local_netmask
-		uci commit network
-	fi
-
-	ifup $vt_network
+	iptables -t nat -I POSTROUTING -o minivtun-+ -j MASQUERADE
+	iptables -I FORWARD -o minivtun-+ -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 
 	# -----------------------------------------------------------------
-	###### IPv4 firewall rules and policy routing ######
-	if ! grep '^175' /etc/iproute2/rt_tables >/dev/null; then
-		( echo ""; echo "175   $VPN_IPROUTE_TABLE" ) >> /etc/iproute2/rt_tables
-	fi
-
-	if ! ip route add default dev $vt_ifname table $VPN_IPROUTE_TABLE; then
-		logger_warn "Unexpected error while setting default route for table 'virtual'."
+	if ! ip route add default dev $VT_IFNAME table $VPN_IPROUTE_TID; then
+		logger_warn "Unexpected error while setting default route for table '$VPN_IPROUTE_TID'."
 		return 1
 	fi
-	ip rule add fwmark $VPN_ROUTE_FWMARK table $VPN_IPROUTE_TABLE
+	ip rule add fwmark $VPN_ROUTE_FWMARK table $VPN_IPROUTE_TID
 
-	iptables -t mangle -N minivtun_$vt_network
-	iptables -t mangle -F minivtun_$vt_network
-	iptables -t mangle -A minivtun_$vt_network -m set --match-set local dst -j RETURN || {
-		iptables -t mangle -A minivtun_$vt_network -d 10.0.0.0/8 -j RETURN
-		iptables -t mangle -A minivtun_$vt_network -d 127.0.0.0/8 -j RETURN
-		iptables -t mangle -A minivtun_$vt_network -d 172.16.0.0/12 -j RETURN
-		iptables -t mangle -A minivtun_$vt_network -d 192.168.0.0/16 -j RETURN
-		iptables -t mangle -A minivtun_$vt_network -d 127.0.0.0/8 -j RETURN
-		iptables -t mangle -A minivtun_$vt_network -d 224.0.0.0/3 -j RETURN
+	iptables -t mangle -N minivtun_go
+	iptables -t mangle -F minivtun_go
+	iptables -t mangle -A minivtun_go -m set --match-set local dst -j RETURN || {
+		iptables -t mangle -A minivtun_go -d 10.0.0.0/8 -j RETURN
+		iptables -t mangle -A minivtun_go -d 127.0.0.0/8 -j RETURN
+		iptables -t mangle -A minivtun_go -d 172.16.0.0/12 -j RETURN
+		iptables -t mangle -A minivtun_go -d 192.168.0.0/16 -j RETURN
+		iptables -t mangle -A minivtun_go -d 127.0.0.0/8 -j RETURN
+		iptables -t mangle -A minivtun_go -d 224.0.0.0/3 -j RETURN
 	}
-	iptables -t mangle -A minivtun_$vt_network -d $vt_server_addr -j RETURN
+	iptables -t mangle -A minivtun_go -d $vt_server_addr -j RETURN
 	case "$vt_proxy_mode" in
 		G) : ;;
 		S)
-			iptables -t mangle -A minivtun_$vt_network -m set --match-set $vt_np_ipset dst -j RETURN
+			iptables -t mangle -A minivtun_go -m set --match-set $vt_np_ipset dst -j RETURN
 			;;
 		M)
 			ipset create $vt_gfwlist hash:ip maxelem 65536 2>/dev/null
 			[ -n "$vt_safe_dns" ] && ipset add $vt_gfwlist $vt_safe_dns 2>/dev/null
-			iptables -t mangle -A minivtun_$vt_network -m set ! --match-set $vt_gfwlist dst -j RETURN
-			iptables -t mangle -A minivtun_$vt_network -m set --match-set $vt_np_ipset dst -j RETURN
+			iptables -t mangle -A minivtun_go -m set ! --match-set $vt_gfwlist dst -j RETURN
+			iptables -t mangle -A minivtun_go -m set --match-set $vt_np_ipset dst -j RETURN
 			;;
 		V)
 			vt_np_ipset=""
 			ipset create $vt_gfwlist hash:ip maxelem 65536 2>/dev/null
 			[ -n "$vt_safe_dns" ] && ipset add $vt_gfwlist $vt_safe_dns 2>/dev/null
-			iptables -t mangle -A minivtun_$vt_network -m set ! --match-set $vt_gfwlist dst -j RETURN
+			iptables -t mangle -A minivtun_go -m set ! --match-set $vt_gfwlist dst -j RETURN
 			;;
 	esac
 	# Clients that do not use VPN
 	local subnet
 	for subnet in $excepted_subnets; do
-		iptables -t mangle -A minivtun_$vt_network -s $subnet -j RETURN
+		iptables -t mangle -A minivtun_go -s $subnet -j RETURN
 	done
 	local ttl
 	for ttl in $excepted_ttl; do
-		iptables -t mangle -A minivtun_$vt_network -m ttl --ttl-eq $ttl -j RETURN
+		iptables -t mangle -A minivtun_go -m ttl --ttl-eq $ttl -j RETURN
 	done
 	# Clients that need VPN
 	for subnet in $covered_subnets; do
-		iptables -t mangle -A minivtun_$vt_network -s $subnet -j MARK --set-mark $VPN_ROUTE_FWMARK
+		iptables -t mangle -A minivtun_go -s $subnet -j MARK --set-mark $VPN_ROUTE_FWMARK
 	done
 	[ -n "$vt_safe_dns" ] && \
-		iptables -t mangle -A minivtun_$vt_network -d $vt_safe_dns -p udp --dport $vt_safe_dns_port -j MARK --set-mark $VPN_ROUTE_FWMARK
-	iptables -t mangle -A minivtun_$vt_network -m mark --mark $VPN_ROUTE_FWMARK -j ACCEPT  # stop further matches
-	iptables -t mangle -I PREROUTING -j minivtun_$vt_network
-	iptables -t mangle -I OUTPUT -p udp --dport 53 -j minivtun_$vt_network  # DNS queries over tunnel
+		iptables -t mangle -A minivtun_go -d $vt_safe_dns -p udp --dport $vt_safe_dns_port -j MARK --set-mark $VPN_ROUTE_FWMARK
+	iptables -t mangle -A minivtun_go -m mark --mark $VPN_ROUTE_FWMARK -j ACCEPT  # stop further matches
+	iptables -t mangle -I PREROUTING -j minivtun_go
+	iptables -t mangle -I OUTPUT -p udp --dport 53 -j minivtun_go  # DNS queries over tunnel
 
 	# -----------------------------------------------------------------
 	mkdir -p /var/etc/dnsmasq-go.d
@@ -313,10 +268,7 @@ EOF
 
 do_stop()
 {
-	local vt_network=`uci get minivtun.@minivtun[0].network 2>/dev/null`
 	local vt_proxy_mode=`uci get minivtun.@minivtun[0].proxy_mode 2>/dev/null`
-	[ -z "$vt_network" ] && vt_network="vt0"
-	local vt_ifname="minivtun-$vt_network"
 	local vt_gfwlist=`__gfwlist_by_mode $vt_proxy_mode`
 
 	# -----------------------------------------------------------------
@@ -327,24 +279,25 @@ do_stop()
 	fi
 
 	# -----------------------------------------------------------------
-	if iptables -t mangle -F minivtun_$vt_network 2>/dev/null; then
-		while iptables -t mangle -D OUTPUT -p udp --dport 53 -j minivtun_$vt_network 2>/dev/null; do :; done
-		while iptables -t mangle -D PREROUTING -j minivtun_$vt_network 2>/dev/null; do :; done
-		iptables -t mangle -X minivtun_$vt_network 2>/dev/null
+	if iptables -t mangle -F minivtun_go 2>/dev/null; then
+		while iptables -t mangle -D OUTPUT -p udp --dport 53 -j minivtun_go 2>/dev/null; do :; done
+		while iptables -t mangle -D PREROUTING -j minivtun_go 2>/dev/null; do :; done
+		iptables -t mangle -X minivtun_go 2>/dev/null
 	fi
 
 	# -----------------------------------------------------------------
 	[ "$KEEP_GFWLIST" = Y -a "$vt_proxy_mode" = M ] || ipset destroy "$vt_gfwlist" 2>/dev/null
 
 	# -----------------------------------------------------------------
-	# We don't have to delete the default route in 'virtual', since
-	# it will be brought down along with the interface.
-	while ip rule del fwmark $VPN_ROUTE_FWMARK table $VPN_IPROUTE_TABLE 2>/dev/null; do :; done
+	# We don't have to delete the default route, since it will be
+	# brought down along with the interface.
+	while ip rule del fwmark $VPN_ROUTE_FWMARK table $VPN_IPROUTE_TID 2>/dev/null; do :; done
 
-	ifdown $vt_network
-	if [ -f /var/run/$vt_ifname.pid ]; then
-		kill -9 `cat /var/run/$vt_ifname.pid`
-		rm -f /var/run/$vt_ifname.pid
+	while iptables -D FORWARD -o minivtun-+ -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null; do :; done
+	while iptables -t nat -D POSTROUTING -o minivtun-+ -j MASQUERADE 2>/dev/null; do :; done
+	if [ -f /var/run/$VT_IFNAME.pid ]; then
+		kill -9 `cat /var/run/$VT_IFNAME.pid`
+		rm -f /var/run/$VT_IFNAME.pid
 	fi
 }
 
