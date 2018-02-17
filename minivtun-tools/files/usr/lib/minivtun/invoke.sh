@@ -159,8 +159,12 @@ do_start_wait()
 	echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter
 	echo 0 > /proc/sys/net/ipv4/conf/$VT_IFNAME/rp_filter
 
+	# Add basic firewall rules
+	iptables -N minivtun_forward || iptables -F minivtun_forward
+	iptables -I FORWARD -j minivtun_forward
+	iptables -A minivtun_forward -o minivtun-+ -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+	iptables -A minivtun_forward -j ACCEPT
 	iptables -t nat -I POSTROUTING -o minivtun-+ -j MASQUERADE
-	iptables -I FORWARD -o minivtun-+ -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 
 	# -----------------------------------------------------------------
 	if ! ip route add default dev $VT_IFNAME table $VPN_IPROUTE_TID; then
@@ -214,6 +218,7 @@ do_start_wait()
 	[ -n "$vt_safe_dns" ] && \
 		iptables -t mangle -A minivtun_go -d $vt_safe_dns -p udp --dport $vt_safe_dns_port -j MARK --set-mark $VPN_ROUTE_FWMARK
 	iptables -t mangle -A minivtun_go -m mark --mark $VPN_ROUTE_FWMARK -j ACCEPT  # stop further matches
+
 	iptables -t mangle -I PREROUTING -j minivtun_go
 	iptables -t mangle -I OUTPUT -p udp --dport 53 -j minivtun_go  # DNS queries over tunnel
 
@@ -293,8 +298,12 @@ do_stop()
 	# brought down along with the interface.
 	while ip rule del fwmark $VPN_ROUTE_FWMARK table $VPN_IPROUTE_TID 2>/dev/null; do :; done
 
-	while iptables -D FORWARD -o minivtun-+ -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null; do :; done
+	# Delete basic firewall rules
 	while iptables -t nat -D POSTROUTING -o minivtun-+ -j MASQUERADE 2>/dev/null; do :; done
+	while iptables -D FORWARD -j minivtun_forward 2>/dev/null; do :; done
+	iptables -F minivtun_forward 2>/dev/null
+	iptables -X minivtun_forward 2>/dev/null
+
 	if [ -f /var/run/$VT_IFNAME.pid ]; then
 		kill -9 `cat /var/run/$VT_IFNAME.pid`
 		rm -f /var/run/$VT_IFNAME.pid
