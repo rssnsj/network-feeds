@@ -4,8 +4,6 @@
 # https://github.com/rssnsj/network-feeds
 #
 
-VT_IFNAME="minivtun-go0"
-
 MAX_DNS_WAIT_DEFAULT=120
 VPN_ROUTE_FWMARK=199
 VPN_IPROUTE_TID=175
@@ -142,22 +140,16 @@ do_start_wait()
 		return 1
 	fi
 
-	if [ -n "$vt_password" ]; then
-		/usr/sbin/minivtun -r [$vt_server_addr]:$vt_server_port \
-			-a $vt_local_ipaddr/$vt_local_prefix -n $VT_IFNAME \
-			-e "$vt_password" -t "$vt_algorithm" $cmdline_opts -d \
-			-p /var/run/$VT_IFNAME.pid || return 1
-	else
-		/usr/sbin/minivtun -r [$vt_server_addr]:$vt_server_port \
-			-a $vt_local_ipaddr/$vt_local_prefix -n $VT_IFNAME \
-			$cmdline_opts -d \
-			-p /var/run/$VT_IFNAME.pid || return 1
-	fi
+	# NOTICE: Empty '$vt_password' is for no encryption
+	/usr/sbin/minivtun -r [$vt_server_addr]:$vt_server_port \
+		-a $vt_local_ipaddr/$vt_local_prefix -n minivtun-go \
+		-e "$vt_password" -t "$vt_algorithm" $cmdline_opts -d \
+			-p /var/run/minivtun-go.pid || return 1
 
 	# IMPORTANT: 'rp_filter=1' will cause returned packets from
 	# virtual interface being dropped, so we have to fix it.
 	echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter
-	echo 0 > /proc/sys/net/ipv4/conf/$VT_IFNAME/rp_filter
+	echo 0 > /proc/sys/net/ipv4/conf/minivtun-go/rp_filter
 
 	# Add basic firewall rules
 	iptables -N minivtun_forward || iptables -F minivtun_forward
@@ -167,7 +159,7 @@ do_start_wait()
 	iptables -t nat -I POSTROUTING -o minivtun-+ -j MASQUERADE
 
 	# -----------------------------------------------------------------
-	if ! ip route add default dev $VT_IFNAME table $VPN_IPROUTE_TID; then
+	if ! ip route add default dev minivtun-go metric 900 table $VPN_IPROUTE_TID; then
 		logger_warn "Unexpected error while setting default route for table '$VPN_IPROUTE_TID'."
 		return 1
 	fi
@@ -268,7 +260,6 @@ EOF
 			/etc/init.d/dnsmasq restart
 		fi
 	fi
-
 }
 
 do_stop()
@@ -304,9 +295,9 @@ do_stop()
 	iptables -F minivtun_forward 2>/dev/null
 	iptables -X minivtun_forward 2>/dev/null
 
-	if [ -f /var/run/$VT_IFNAME.pid ]; then
-		kill -9 `cat /var/run/$VT_IFNAME.pid`
-		rm -f /var/run/$VT_IFNAME.pid
+	if [ -f /var/run/minivtun-go.pid ]; then
+		kill -9 `cat /var/run/minivtun-go.pid`
+		rm -f /var/run/minivtun-go.pid
 	fi
 }
 
