@@ -8,6 +8,9 @@ MAX_DNS_WAIT_DEFAULT=120
 VPN_ROUTE_FWMARK=199
 VPN_IPROUTE_TID=175
 
+DNSMASQ_PORT=7053
+DNSMASQ_PIDFILE=/var/run/dnsmask-go.pid
+
 __netmask_to_bits()
 {
 	local netmask="$1"
@@ -84,6 +87,26 @@ __gfwlist_by_mode()
 		V) echo unblock-youku;;
 		*) echo china-banned;;
 	esac
+}
+
+__restart_dnsmasq()
+{
+	# Our dedicated dnsmasq service - dnsmask
+	[ -x /usr/lib/minivtun/dnsmask ] || ln -s /usr/sbin/dnsmasq /usr/lib/minivtun/dnsmask
+	[ -x /usr/lib/minivtun/dnsmask ] || return 1
+
+	while killall dnsmask 2>/dev/null; do sleep 0.2; done
+	rm -f /tmp/dnsmask-go.conf
+
+	if [ -d /var/etc/dnsmasq-go.d ]; then
+		cat > /tmp/dnsmask-go.conf <<EOF
+conf-dir=/var/etc/dnsmasq-go.d
+EOF
+		/usr/lib/minivtun/dnsmask -C /tmp/dnsmask-go.conf -p $DNSMASQ_PORT -u root -x $DNSMASQ_PIDFILE
+		return $?
+	else
+		return 1
+	fi
 }
 
 # New implementation:
@@ -194,6 +217,18 @@ do_start_wait()
 			iptables -t mangle -A minivtun_go -m set ! --match-set $vt_gfwlist dst -j RETURN
 			;;
 	esac
+
+	# Bypass VPN traffic
+	iptables -t mangle -A minivtun_go -p gre -j RETURN
+	iptables -t mangle -A minivtun_go -p esp -j RETURN
+	iptables -t mangle -A minivtun_go -p tcp --dport 1723 -j RETURN
+	iptables -t mangle -A minivtun_go -p udp --dport 1701 -j RETURN
+	iptables -t mangle -A minivtun_go -p udp --dport 1702:1703 -j RETURN
+	iptables -t mangle -A minivtun_go -p udp --dport 500 -j RETURN
+	iptables -t mangle -A minivtun_go -p udp --dport 4500 -j RETURN
+	#
+	iptables -t mangle -A minivtun_go -p udp --dport 8400:8499 -j RETURN
+
 	# Clients that do not use VPN
 	local subnet
 	for subnet in $excepted_subnets; do
@@ -233,32 +268,25 @@ do_start_wait()
 	esac
 
 	# -----------------------------------------------------------------
-	###### Restart main 'dnsmasq' service if needed ######
-	if ls /var/etc/dnsmasq-go.d/* >/dev/null 2>&1; then
-		mkdir -p /tmp/dnsmasq.d
-		cat > /tmp/dnsmasq.d/dnsmasq-go.conf <<EOF
-conf-dir=/var/etc/dnsmasq-go.d
-EOF
-		/etc/init.d/dnsmasq restart
+	###### Redirect all client DNS requests to our dedicated DNS 'dnsmask'
+	if __restart_dnsmasq; then
+		iptables -t nat -N dnsmasq_go_pre
+		iptables -t nat -F dnsmasq_go_pre
+		iptables -t nat -A dnsmasq_go_pre -p udp ! --dport 53 -j RETURN
 
-		# Check if DNS service was really started
-		local dnsmasq_ok=N
-		local i
-		for i in 0 1 2 3 4 5 6 7; do
-			sleep 1
-			local dnsmasq_pid=`cat /var/run/dnsmasq.pid 2>/dev/null || cat /var/run/dnsmasq/dnsmasq.pid 2>/dev/null`
-			if [ -n "$dnsmasq_pid" ]; then
-				if kill -0 "$dnsmasq_pid" 2>/dev/null; then
-					dnsmasq_ok=Y
-					break
-				fi
-			fi
+		# Clients that do not use VPN
+		for subnet in $excepted_subnets; do
+			iptables -t nat -A dnsmasq_go_pre -s $subnet -j RETURN
 		done
-		if [ "$dnsmasq_ok" != Y ]; then
-			logger_warn "WARNING: Attached dnsmasq rules will cause the service startup failure. Removed those configurations."
-			rm -f /tmp/dnsmasq.d/dnsmasq-go.conf
-			/etc/init.d/dnsmasq restart
-		fi
+		for ttl in $excepted_ttl; do
+			iptables -t nat -A dnsmasq_go_pre -m ttl --ttl-eq $ttl -j RETURN
+		done
+		# Clients that need VPN
+		for subnet in $covered_subnets; do
+			iptables -t nat -A dnsmasq_go_pre -s $subnet -p udp -j REDIRECT --to $DNSMASQ_PORT
+		done
+
+		iptables -t nat -I PREROUTING -p udp -j dnsmasq_go_pre
 	fi
 }
 
@@ -268,11 +296,12 @@ do_stop()
 	local vt_gfwlist=`__gfwlist_by_mode $vt_proxy_mode`
 
 	# -----------------------------------------------------------------
-	rm -rf /var/etc/dnsmasq-go.d
-	if [ -f /tmp/dnsmasq.d/dnsmasq-go.conf ]; then
-		rm -f /tmp/dnsmasq.d/dnsmasq-go.conf
-		/etc/init.d/dnsmasq restart
+	if iptables -t nat -F dnsmasq_go_pre 2>/dev/null; then
+		while iptables -t nat -D PREROUTING -p udp -j dnsmasq_go_pre 2>/dev/null; do :; done
+		iptables -t nat -X dnsmasq_go_pre
 	fi
+	rm -rf /var/etc/dnsmasq-go.d
+	__restart_dnsmasq
 
 	# -----------------------------------------------------------------
 	if iptables -t mangle -F minivtun_go 2>/dev/null; then

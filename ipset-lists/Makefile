@@ -17,7 +17,7 @@ define Package/ipset-lists
   CATEGORY:=Network
   TITLE:=Service for IPSET address tables
   MAINTAINER:=Justin Liu <rssnsj@gmail.com>
-  DEPENDS:=+ipset +luci
+  DEPENDS:=+ipset +uci
 endef
 
 define Package/ipset-lists/conffiles
