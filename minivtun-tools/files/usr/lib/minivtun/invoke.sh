@@ -5,8 +5,8 @@
 #
 
 MAX_DNS_WAIT_DEFAULT=120
-VPN_ROUTE_FWMARK=199
-VPN_IPROUTE_TID=175
+VPN_ROUTE_FWMARK=175
+VPN_ROUTE_TABLE=175
 
 __netmask_to_bits()
 {
@@ -159,11 +159,11 @@ do_start_wait()
 	iptables -t nat -I POSTROUTING -o minivtun-+ -j MASQUERADE
 
 	# -----------------------------------------------------------------
-	if ! ip route add default dev minivtun-go metric 900 table $VPN_IPROUTE_TID; then
-		logger_warn "Unexpected error while setting default route for table '$VPN_IPROUTE_TID'."
+	if ! ip route add default dev minivtun-go metric 900 table $VPN_ROUTE_TABLE; then
+		logger_warn "Unexpected error while setting default route for table '$VPN_ROUTE_TABLE'."
 		return 1
 	fi
-	ip rule add fwmark $VPN_ROUTE_FWMARK table $VPN_IPROUTE_TID
+	ip rule add fwmark $VPN_ROUTE_FWMARK table $VPN_ROUTE_TABLE
 
 	iptables -t mangle -N minivtun_go
 	iptables -t mangle -F minivtun_go
@@ -287,7 +287,7 @@ do_stop()
 	# -----------------------------------------------------------------
 	# We don't have to delete the default route, since it will be
 	# brought down along with the interface.
-	while ip rule del fwmark $VPN_ROUTE_FWMARK table $VPN_IPROUTE_TID 2>/dev/null; do :; done
+	while ip rule del fwmark $VPN_ROUTE_FWMARK table $VPN_ROUTE_TABLE 2>/dev/null; do :; done
 
 	# Delete basic firewall rules
 	while iptables -t nat -D POSTROUTING -o minivtun-+ -j MASQUERADE 2>/dev/null; do :; done
