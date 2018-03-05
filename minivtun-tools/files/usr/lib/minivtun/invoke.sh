@@ -246,7 +246,13 @@ EOF
 		local i
 		for i in 0 1 2 3 4 5 6 7; do
 			sleep 1
-			local dnsmasq_pid=`cat /var/run/dnsmasq.pid 2>/dev/null || cat /var/run/dnsmasq/dnsmasq.pid 2>/dev/null`
+			if [ -f /var/run/dnsmasq.pid ]; then
+				local dnsmasq_pid=`cat /var/run/dnsmasq.pid`
+			elif [ -f /var/run/dnsmasq/dnsmasq.pid ]; then
+				local dnsmasq_pid=`cat /var/run/dnsmasq/dnsmasq.pid`
+			else
+				local dnsmasq_pid=`cat /var/run/dnsmasq/dnsmasq.*.pid 2>/dev/null | head -n1`
+			fi
 			if [ -n "$dnsmasq_pid" ]; then
 				if kill -0 "$dnsmasq_pid" 2>/dev/null; then
 					dnsmasq_ok=Y
