@@ -155,7 +155,7 @@ do_start_wait()
 	iptables -N minivtun_forward || iptables -F minivtun_forward
 	iptables -I FORWARD -j minivtun_forward
 	iptables -A minivtun_forward -o minivtun-+ -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
-	iptables -A minivtun_forward -j ACCEPT
+	iptables -A minivtun_forward -o minivtun-+ -j ACCEPT
 	iptables -t nat -I POSTROUTING -o minivtun-+ -j MASQUERADE
 
 	# -----------------------------------------------------------------
