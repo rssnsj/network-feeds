@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-generate_china_banned()
+china_banned()
 {
 	if [ ! -f gfwlist.txt ]; then
 		wget https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt -O gfwlist.b64 >&2
@@ -26,5 +26,5 @@ BEGIN { prev = "________"; }  {
 
 }
 
-generate_china_banned
+china_banned
 

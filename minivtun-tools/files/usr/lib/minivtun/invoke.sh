@@ -253,8 +253,9 @@ do_start_wait()
 	mkdir -p /var/etc/dnsmasq-go.d
 	###### Anti-pollution configuration ######
 	if [ -n "$vt_safe_dns" ]; then
-		awk -vs="$vt_safe_dns#$vt_safe_dns_port" '!/^$/&&!/^#/{printf("server=/%s/%s\n",$0,s)}' \
-			/etc/gfwlist/$vt_gfwlist > /var/etc/dnsmasq-go.d/01-pollution.conf
+		( cat /etc/gfwlist/$vt_gfwlist; cat /etc/gfwlist/$vt_gfwlist.* 2>/dev/null; ) | \
+			awk -vs="$vt_safe_dns#$vt_safe_dns_port" '!/^$/&&!/^#/{printf("server=/%s/%s\n",$0,s)}' \
+			> /var/etc/dnsmasq-go.d/01-pollution.conf
 	else
 		logger_warn "WARNING: Not using secure DNS, DNS resolution might be polluted if you are in China."
 	fi
@@ -262,8 +263,9 @@ do_start_wait()
 	###### dnsmasq-to-ipset configuration ######
 	case "$vt_proxy_mode" in
 		M|V)
-			awk '!/^$/&&!/^#/{printf("ipset=/%s/'"$vt_gfwlist"'\n",$0)}' \
-				/etc/gfwlist/$vt_gfwlist > /var/etc/dnsmasq-go.d/02-ipset.conf
+			( cat /etc/gfwlist/$vt_gfwlist; cat /etc/gfwlist/$vt_gfwlist.* 2>/dev/null; ) | \
+				awk '!/^$/&&!/^#/{printf("ipset=/%s/'"$vt_gfwlist"'\n",$0)}' \
+				> /var/etc/dnsmasq-go.d/02-ipset.conf
 			;;
 	esac
 
