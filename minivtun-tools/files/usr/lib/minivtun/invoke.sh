@@ -150,7 +150,6 @@ do_start_wait()
 	# Get LAN settings as default parameters
 	[ -f /lib/functions/network.sh ] && . /lib/functions/network.sh
 	[ -z "$covered_subnets" ] && network_get_subnet covered_subnets lan
-	[ -z "$local_addresses" ] && network_get_ipaddr local_addresses lan
 	local vt_local_prefix=`__netmask_to_bits "$vt_local_netmask"`
 	local vt_gfwlist=`__gfwlist_by_mode $vt_proxy_mode`
 	local vt_np_ipset="china"

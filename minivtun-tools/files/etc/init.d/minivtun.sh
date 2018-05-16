@@ -1,4 +1,4 @@
-#!/bin/sh /etc/rc.common
+#!/bin/sh
 #
 # Copyright (C) 2014 Justin Liu <rssnsj@gmail.com>
 # https://github.com/rssnsj/network-feeds
@@ -44,3 +44,6 @@ restart()
 	start
 }
 
+case "$1" in
+	start|stop|restart) "$@";;
+esac
