@@ -157,16 +157,14 @@ do_start_wait()
 	[ -n "$vt_mtu" ] && cmdline_opts="-m$vt_mtu"
 
 	# -----------------------------------------------------------------
-	if ! wait_dns_ready "$vt_server_addr" "$vt_max_dns_wait"; then
-		logger_warn "*** Failed to resolve '$vt_server_addr', quitted."
-		return 1
-	fi
-
 	# NOTICE: Empty '$vt_password' is for no encryption
 	/usr/sbin/minivtun -r [$vt_server_addr]:$vt_server_port \
 		-a $vt_local_ipaddr/$vt_local_prefix -n minivtun-go \
 		-e "$vt_password" -t "$vt_algorithm" $cmdline_opts -d \
-			-p /var/run/minivtun-go.pid || return 1
+		-w -D -v 0.0.0.0/0 -T $VPN_ROUTE_TABLE -M 900 \
+		-p /var/run/minivtun-go.pid || return 1
+
+	ip rule add fwmark $VPN_ROUTE_FWMARK table $VPN_ROUTE_TABLE
 
 	# IMPORTANT: 'rp_filter=1' will cause returned packets from
 	# virtual interface being dropped, so we have to fix it.
@@ -181,12 +179,6 @@ do_start_wait()
 	iptables -t nat -I POSTROUTING -o minivtun-+ -j MASQUERADE
 
 	# -----------------------------------------------------------------
-	if ! ip route add default dev minivtun-go metric 900 table $VPN_ROUTE_TABLE; then
-		logger_warn "Unexpected error while setting default route for table '$VPN_ROUTE_TABLE'."
-		return 1
-	fi
-	ip rule add fwmark $VPN_ROUTE_FWMARK table $VPN_ROUTE_TABLE
-
 	iptables -t mangle -N minivtun_go
 	iptables -t mangle -F minivtun_go
 	iptables -t mangle -A minivtun_go -m set --match-set local dst -j RETURN || {
