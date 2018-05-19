@@ -4,4 +4,6 @@
 /china.merged
 /gfwlist.txt
 /ipip.txt
-/ipv4-merger
+*.o
+/ipv4-merger/ipv4-merger
+/netmask/netmask

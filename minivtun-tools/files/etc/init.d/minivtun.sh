@@ -21,6 +21,10 @@ start()
 		return 1
 	fi
 
+	if ! ipset list local >/dev/null 2>&1; then
+		/etc/init.d/ipset.sh start
+	fi
+
 	killall -9 invoke.sh 2>/dev/null && sleep 1
 	# The startup script might wait for DNS resolution to be
 	# ready, so execute in background.
