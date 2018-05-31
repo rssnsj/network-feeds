@@ -40,7 +40,7 @@ start()
 	local vt_safe_dns=`uci get shadowsocks.@shadowsocks[0].safe_dns 2>/dev/null`
 	local vt_safe_dns_port=`uci get shadowsocks.@shadowsocks[0].safe_dns_port 2>/dev/null`
 	local vt_safe_dns_tcp=`uci get shadowsocks.@shadowsocks[0].safe_dns_tcp 2>/dev/null`
-	local vt_proxy_mode=`uci get shadowsocks.@shadowsocks[0].proxy_mode`
+	local vt_proxy_mode=`uci get shadowsocks.@shadowsocks[0].proxy_mode 2>/dev/null`
 	# $covered_subnets, $local_addresses are not required
 	local covered_subnets=`uci get shadowsocks.@shadowsocks[0].covered_subnets 2>/dev/null`
 	local local_addresses=`uci get shadowsocks.@shadowsocks[0].local_addresses 2>/dev/null`
@@ -171,7 +171,7 @@ EOF
 
 stop()
 {
-	local vt_proxy_mode=`uci get minivtun.@minivtun[0].proxy_mode`
+	local vt_proxy_mode=`uci get shadowsocks.@shadowsocks[0].proxy_mode 2>/dev/null`
 	local vt_gfwlist=`__gfwlist_by_mode $vt_proxy_mode`
 
 	# -----------------------------------------------------------------
