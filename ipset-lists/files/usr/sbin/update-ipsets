@@ -1,0 +1,31 @@
+#!/bin/sh -e
+
+mkdir -p /tmp/update-ipsets
+cd /tmp/update-ipsets
+
+curl -ks https://raw.githubusercontent.com/rssnsj/network-feeds/master/ipset-lists/files/etc/ipset/china -o china
+curl -ks https://raw.githubusercontent.com/rssnsj/network-feeds/master/ipset-lists/files/etc/gfwlist/china-banned -o china-banned
+curl -ks https://raw.githubusercontent.com/rssnsj/network-feeds/master/ipset-lists/tools/MD5SUMS -o MD5SUMS
+
+if md5sum -c MD5SUMS; then
+	# Check if data really changes before restarting the services
+	mkdir -p s
+	cp /etc/ipset/china /etc/gfwlist/china-banned s/
+	if ! ( cd s && md5sum -c ../MD5SUMS >/dev/null 2>&1 ); then
+		echo "Updating the data files ..."
+		cp -f china /etc/ipset/china
+		cp -f china-banned /etc/gfwlist/china-banned
+		echo "Restarting the services ..."
+		[ -x /etc/init.d/minivtun.sh ] && /etc/init.d/minivtun.sh stop || :
+		[ -x /etc/init.d/ss-redir.sh ] && /etc/init.d/ss-redir.sh stop || :
+		/etc/init.d/ipset.sh restart
+		/etc/init.d/minivtun.sh enabled 2>/dev/null && /etc/init.d/minivtun.sh start || :
+		/etc/init.d/ss-redir.sh enabled 2>/dev/null && /etc/init.d/ss-redir.sh start || :
+		echo "Done."
+	else
+		echo "No change on the data."
+	fi
+	rm -rf /tmp/update-ipsets
+else
+	echo "*** MD5 mismatch for downloaded files."
+fi
