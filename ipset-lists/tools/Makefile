@@ -3,7 +3,7 @@ update:
 	./gfwlist.sh > ../files/etc/gfwlist/china-banned
 
 commit: update
-	@if [ "`git diff --name-status -- ../files | wc -l`" -gt 0 ]; then \
+	@if [ "`git diff --name-status -- ../files/etc | wc -l`" -gt 0 ]; then \
 		git commit .. -m "Update data - $(shell date +%Y/%m/%d)"; \
 	else \
 		echo "No change to commit."; \
