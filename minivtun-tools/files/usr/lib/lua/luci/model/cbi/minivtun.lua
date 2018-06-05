@@ -50,7 +50,7 @@ else
 	state_msg = "<b><font color=\"red\">" .. translate("Not running") .. "</font></b>"
 end
 
-local __c = uci.cursor()
+local __c = require "luci.model.uci".cursor()
 local __c_port = __c:get_first("minivtun", "minivtun", "server_port", "0")
 local __c_pwd = __c:get_first("minivtun", "minivtun", "password", "")
 local __c_net =  __c:get_first("minivtun", "minivtun", "network", "go")
