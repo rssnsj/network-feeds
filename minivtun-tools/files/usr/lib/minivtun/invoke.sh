@@ -260,6 +260,48 @@ EOF
 			/etc/init.d/dnsmasq restart
 		fi
 	fi
+
+	# - add to the network config to show stat in luci
+	local vt_network="vpn"
+	local vt_ifname="minivtun-go"
+	local __ifname="$(uci get network.$vt_network.ifname 2>/dev/null)"
+	if [ "$__ifname" != "$vt_ifname" ]; then
+		uci delete network.$vt_network 2>/dev/null
+		uci set network.$vt_network=interface
+		uci set network.$vt_network.ifname=$vt_ifname
+		uci set network.$vt_network.proto=static
+		uci set network.$vt_network.ipaddr=$vt_local_ipaddr
+		uci set network.$vt_network.netmask=$vt_local_netmask
+		uci commit network
+
+		# Attach this interface to firewall zone "wan"
+		local i=0
+		while true; do
+			local __zone=`uci get firewall.@zone[$i].name`
+			[ -z "$__zone" ] && break
+			# Match zone "wan" to modify
+			if [ "$__zone" = wan ]; then
+				local __zone_nets=`uci get firewall.@zone[$i].network`
+				uci delete firewall.@zone[$i].network
+				uci set firewall.@zone[$i].network="$__zone_nets $vt_network"
+				uci commit firewall
+				break
+			fi
+			i=`expr $i + 1`
+		done
+	fi
+
+	# Update IP address settings
+	local __proto=`uci get network.$vt_network.proto 2>/dev/null`
+	local __ipaddr=`uci get network.$vt_network.ipaddr 2>/dev/null`
+	local __netmask=`uci get network.$vt_network.netmask 2>/dev/null`
+	if ! [ "$__proto" = static -a "$__ipaddr" = "$vt_local_ipaddr" -a "$__netmask" = "$vt_local_netmask" ]; then
+		uci set network.$vt_network.proto=static
+		uci set network.$vt_network.ipaddr=$vt_local_ipaddr
+		uci set network.$vt_network.netmask=$vt_local_netmask
+		uci commit network
+	fi
+	ifup $vt_network
 }
 
 do_stop()
@@ -294,6 +336,9 @@ do_stop()
 	while iptables -D FORWARD -j minivtun_forward 2>/dev/null; do :; done
 	iptables -F minivtun_forward 2>/dev/null
 	iptables -X minivtun_forward 2>/dev/null
+
+	local vt_network="vpn"
+	ifdown $vt_network
 
 	if [ -f /var/run/minivtun-go.pid ]; then
 		kill -9 `cat /var/run/minivtun-go.pid`
