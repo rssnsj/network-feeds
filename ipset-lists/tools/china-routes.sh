@@ -22,7 +22,7 @@ china_routes_merged() {
 	china_routes_ipip > china.ipip
 	# Merge them together
 	cat china.apnic china.ipip | ./ipv4-merger/ipv4-merger | sed 's/\-/:/g' |
-	xargs ./netmask/netmask | awk '{print $1}' | awk -F/ '$2<=24' > china.merged
+	xargs ./netmask/netmask | awk '{print $1}' > china.merged
 	cat china.merged
 }
 
