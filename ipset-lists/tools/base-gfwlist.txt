@@ -237,7 +237,6 @@ google.com.uk
 googlesyndication.com
 googletagmanager.com
 googletagservices.com
-gov
 gpass1.com
 gravatar.com
 graylog2.org
