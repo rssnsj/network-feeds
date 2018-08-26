@@ -9,6 +9,6 @@ module("luci.controller.gfwlist", package.seeall)
 
 function index()
 	local page
-	page = entry({"admin", "services", "gfwlist"}, cbi("gfwlist"), _("Domain Lists"))
+	page = entry({"admin", "services", "gfwlist"}, form("gfwlist"), _("Domain Lists"))
 	page.dependent = true
 end
