@@ -2079,6 +2079,9 @@ add china 103.123.160.0/22
 add china 103.123.176.0/22
 add china 103.123.200.0/21
 add china 103.123.208.0/21
+add china 103.124.24.0/22
+add china 103.124.48.0/22
+add china 103.124.64.0/22
 add china 103.129.52.0/22
 add china 103.129.148.0/22
 add china 103.130.132.0/22
