@@ -142,8 +142,11 @@ safe_dns_port.optional = false
 safe_dns_port:depends("more", "1")
 
 -- ---------------------------------------------------
-local apply = luci.http.formvalue("cbi.apply")
-if apply then
+m.apply_on_parse = true
+function m.on_apply(self)
+    if (not self.changed) then
+        return
+	end
 	os.execute("/etc/init.d/minivtun.sh restart >/dev/null 2>&1 &")
 end
 
