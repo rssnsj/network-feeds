@@ -7,7 +7,11 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=minivtun
+<<<<<<< HEAD
 PKG_VERSION:=20181212
+=======
+PKG_VERSION:=20181215
+>>>>>>> upstream/master
 PKG_RELEASE=$(PKG_SOURCE_VERSION)
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
@@ -15,7 +19,11 @@ PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/rssnsj/minivtun.git
+<<<<<<< HEAD
 PKG_SOURCE_VERSION:=8add412
+=======
+PKG_SOURCE_VERSION:=4e6f4c1d422929d23e03a082559b6b742383beb6
+>>>>>>> upstream/master
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-$(PKG_SOURCE_VERSION).tar.bz2
 
 include $(INCLUDE_DIR)/package.mk
