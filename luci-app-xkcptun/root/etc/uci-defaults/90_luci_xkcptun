@@ -1,0 +1,11 @@
+#!/bin/sh
+
+uci -q batch <<-EOF >/dev/null
+	delete ucitrack.@xkcptun[-1]
+	add ucitrack xkcptun
+	set ucitrack.@xkcptun[-1].init=kcptun_client
+	commit ucitrack
+EOF
+
+rm -f /tmp/luci-indexcache
+exit 0
