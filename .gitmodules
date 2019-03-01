@@ -1,0 +1,6 @@
+[submodule "openwrt-kcptun"]
+	path = openwrt-kcptun
+	url = https://github.com/kuoruan/openwrt-kcptun
+[submodule "luci-app-kcptun"]
+	path = luci-app-kcptun
+	url = https://github.com/kuoruan/luci-app-kcptun
