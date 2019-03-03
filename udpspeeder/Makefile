@@ -7,7 +7,7 @@
 
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=udp-speeder
+PKG_NAME:=udpspeeder
 PKG_VERSION:=20190301
 PKG_RELEASE:=1
 
@@ -27,16 +27,16 @@ PKG_BUILD_PARALLEL:=1
 
 include $(INCLUDE_DIR)/package.mk
 
-define Package/udp-speeder
+define Package/udpspeeder
 	SECTION:=net
 	CATEGORY:=Network
 	TITLE:=Tunnel which speedup UDP Traffic by introducing FEC
-	URL:=https://github.com/wangyu-/udp-speeder
+	URL:=https://github.com/wangyu-/UDPSpeeder
 	DEPENDS:=+libpthread +libstdcpp
 endef
 
-define Package/udp-speeder/description
-	udp-speeder is a udp speed up tunnel.
+define Package/udpspeeder/description
+	udpspeeder is a udp speed up tunnel.
 endef
 
 MAKE_FLAGS += cross
@@ -48,9 +48,9 @@ define Build/Configure
 		$(PKG_BUILD_DIR)/makefile
 endef
 
-define Package/udp-speeder/install
+define Package/udpspeeder/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/speederv2_cross $(1)/usr/bin/udpspeeder
 endef
 
-$(eval $(call BuildPackage,udp-speeder,+libpthread,+libstdc++))
+$(eval $(call BuildPackage,udpspeeder,+libpthread,+libstdc++))
