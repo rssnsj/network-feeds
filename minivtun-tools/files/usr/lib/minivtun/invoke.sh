@@ -164,7 +164,6 @@ do_start_wait()
 		iptables -t mangle -A minivtun_go -d 127.0.0.0/8 -j RETURN
 		iptables -t mangle -A minivtun_go -d 172.16.0.0/12 -j RETURN
 		iptables -t mangle -A minivtun_go -d 192.168.0.0/16 -j RETURN
-		iptables -t mangle -A minivtun_go -d 127.0.0.0/8 -j RETURN
 		iptables -t mangle -A minivtun_go -d 224.0.0.0/3 -j RETURN
 	}
 	iptables -t mangle -A minivtun_go -d $vt_server_addr -j RETURN
