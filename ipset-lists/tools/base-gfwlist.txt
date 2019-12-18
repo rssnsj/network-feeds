@@ -116,8 +116,6 @@ chevronwp7.com
 china-green-party.spaces.live.com
 chinainperspective.net
 chinainperspective.org
-chinaso.com
-chinatimes.com
 chinaxchina.com
 chinesenewsnet.com
 chinesetalks.net
@@ -166,7 +164,6 @@ dongde.com
 dotheyfolloweachother.com
 doubleaf.com
 doubleclick.net
-download.syniumsoftware.com
 doxygen.org
 drewolanoff.com
 dtiserv2.com
@@ -206,7 +203,6 @@ fredwilson.vc
 free.fr
 freegateget.googlepages.com
 friendfeed-media.com
-ftchinese.com
 fuckgfw.com
 futureme.org
 gdbt.net
@@ -246,7 +242,6 @@ gufeng521.spaces.live.com
 guomin.us
 hacken.cc
 hasaowall.com
-haygo.com
 heiyo.info
 hellonewyork.us
 hellouk.org
@@ -283,7 +278,6 @@ ipobar.com
 iptorrents.com
 ironicsoftware.com
 jayparkinsonmd.com
-jike.com
 jimoparty.com
 joeedelman.com
 jyzj.waqn.com
@@ -342,7 +336,6 @@ mininova.org
 mixedmedialabs.com
 modfetish.com
 m.oulove.org
-mojim.com
 movabletype.com
 mrdoob.com
 m-team.cc
@@ -378,7 +371,6 @@ oikos.com.tw
 one.xthost.info
 onlylady.cn
 ooyala.com
-openvpn.org
 openwrt.org
 opnir.com
 overlapr.com
@@ -443,23 +435,18 @@ shaunthesheep.com
 shellmix.com
 shifeike.blog125.fc2blog.net
 shkspr.mobi
-simplecd.me
 sina.com.tw
 singularitys.spaces.live.com
-site.locql.com
 sitetag.us
 siyi123123123.spaces.live.com
 slavasoft.com
 snooper.co.uk
-so.com
 so-ga.net
-sogou.com
 solozorro.tk
 so-news.com
-soso.com
 sourceforge.net
-space-scape.com
 spaceflightnow.com
+space-scape.com
 speckleapp.com
 speedpluss.org
 spinejs.com
@@ -473,7 +460,6 @@ statcounter.com
 state168.com
 static.apple.nextmedia.com
 static.digg.com
-static.soup.io
 status.twhirl.org
 stickeraction.com
 stonegames.net
@@ -586,7 +572,6 @@ wiki.keso.cn
 wikilivres.info
 wikimedia.org.mo
 wikinet.org
-wikipedia.org
 wikkii.com
 williamlong.spaces.live.com
 wireshark.org
@@ -625,13 +610,11 @@ xmusic.fm
 xuzhuoer.com
 xvedios.com
 x.xcity.jp
-yahoo.cn
 yanghengjun.spaces.live.com
 yasukuni.or.jp
 yezimary.spaces.live.com
 yfrog.com
 yi.org
-youdao.com
 youthbao.com
 youthnetradio.org
 yuming.flnet.org
@@ -641,7 +624,6 @@ zengjinyan.spaces.live.com
 zhllg.spaces.live.com
 zh.netlog.com
 zhonggtuotese.net
-zhongsou.com
 zh-tw.justin.tv
 ziddu.com
 ziplib.com
