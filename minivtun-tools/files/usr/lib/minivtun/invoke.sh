@@ -245,10 +245,10 @@ EOF
 			elif [ -f /var/run/dnsmasq/dnsmasq.pid ]; then
 				local dnsmasq_pid=`cat /var/run/dnsmasq/dnsmasq.pid`
 			else
-				local dnsmasq_pid=`cat /var/run/dnsmasq/dnsmasq.*.pid 2>/dev/null | head -n1`
+				local dnsmasq_pid=`cat /var/run/dnsmasq/dnsmasq.*.pid 2>/dev/null`
 			fi
 			if [ -n "$dnsmasq_pid" ]; then
-				if kill -0 "$dnsmasq_pid" 2>/dev/null; then
+				if kill -0 $dnsmasq_pid 2>/dev/null; then
 					dnsmasq_ok=Y
 					break
 				fi
