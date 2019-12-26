@@ -77,7 +77,7 @@ start()
 	# For each tunnel
 	local i
 	for i in 0 1 2 3 4 5; do
-		uci -q get minivtun.@minivtun[$i] || break
+		uci -q get minivtun.@minivtun[$i] >/dev/null || break
 
 		local server_addr=`uci -q get minivtun.@minivtun[$i].server`
 		local server_port=`uci -q get minivtun.@minivtun[$i].server_port`
