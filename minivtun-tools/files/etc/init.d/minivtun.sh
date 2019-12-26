@@ -93,12 +93,13 @@ start()
 		[ -n "$algorithm" ] || algorithm="aes-128"
 		[ -n "$mtu" ] || mtu=1300
 		local ifname=minivtun-go$i
+		local metric_base=`expr 200 + $i`
 
 		# NOTICE: Empty '$password' is for no encryption
 		/usr/sbin/minivtun -r [$server_addr]:$server_port -n $ifname \
 			-a $local_ipaddr/`netmask_to_pfxlen $local_netmask` \
 			-e "$password" -t "$algorithm" -m $mtu \
-			-w -D -v 0.0.0.0/0 -T $VPN_ROUTE_TABLE -M 900 \
+			-w -D -v 0.0.0.0/0 -T $VPN_ROUTE_TABLE -M $metric_base \
 			-p /var/run/$ifname.pid -d || return 1
 
 		echo 0 > /proc/sys/net/ipv4/conf/$ifname/rp_filter
