@@ -37,14 +37,14 @@ netmask_to_pfxlen()
 
 start()
 {
-	local enabled=`uci -q get minivtun.@minivtun[0].enabled`
-	local proxy_mode=`uci -q get minivtun.@minivtun[0].proxy_mode`
-	local safe_dns=`uci -q get minivtun.@minivtun[0].safe_dns`
-	local safe_dns_port=`uci -q get minivtun.@minivtun[0].safe_dns_port`
+	local enabled=`uci -q get minivtun.@global[0].enabled`
+	local proxy_mode=`uci -q get minivtun.@global[0].proxy_mode`
+	local safe_dns=`uci -q get minivtun.@global[0].safe_dns`
+	local safe_dns_port=`uci -q get minivtun.@global[0].safe_dns_port`
 	# Optional parameters
-	local covered_subnets=`uci -q get minivtun.@minivtun[0].covered_subnets`
-	local excepted_subnets=`uci -q get minivtun.@minivtun[0].excepted_subnets`
-	local excepted_ttl=`uci -q get minivtun.@minivtun[0].excepted_ttl`
+	local covered_subnets=`uci -q get minivtun.@global[0].covered_subnets`
+	local excepted_subnets=`uci -q get minivtun.@global[0].excepted_subnets`
+	local excepted_ttl=`uci -q get minivtun.@global[0].excepted_ttl`
 
 	if [ "$enabled" = 0 ]; then
 		echo "WARNING: 'minivtun' service is disabled."
@@ -68,34 +68,41 @@ start()
 	if ! ipset list local >/dev/null 2>&1; then
 		/etc/init.d/ipset.sh start
 	fi
-	# -----------------------------------------------------------
-
-	local server_addr=`uci -q get minivtun.@minivtun[0].server`
-	local server_port=`uci -q get minivtun.@minivtun[0].server_port`
-	local password=`uci -q get minivtun.@minivtun[0].password`
-	local algorithm=`uci -q get minivtun.@minivtun[0].algorithm`
-	local local_ipaddr=`uci -q get minivtun.@minivtun[0].local_ipaddr`
-	local local_netmask=`uci -q get minivtun.@minivtun[0].local_netmask`
-	local mtu=`uci -q get minivtun.@minivtun[0].mtu`
-
-	if [ -z "$server_addr" -o -z "$server_port" ]; then
-		logger_warn "WARNING: No server address configured, not starting."
-		return 1
-	fi
-	[ -n "$algorithm" ] || algorithm="aes-128"
-	[ -n "$mtu" ] || mtu=1300
-
-	# NOTICE: Empty '$password' is for no encryption
-	/usr/sbin/minivtun -r [$server_addr]:$server_port -n minivtun-go \
-		-a $local_ipaddr/`netmask_to_pfxlen $local_netmask` \
-		-e "$password" -t "$algorithm" -m $mtu \
-		-w -D -v 0.0.0.0/0 -T $VPN_ROUTE_TABLE -M 900 \
-		-p /var/run/minivtun-go.pid -d || return 1
 
 	# IMPORTANT: 'rp_filter=1' will cause returned packets from
 	# virtual interface being dropped, so we have to fix it.
 	echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter
-	echo 0 > /proc/sys/net/ipv4/conf/minivtun-go/rp_filter
+
+	# -----------------------------------------------------------
+	# For each tunnel
+	local i
+	for i in 0 1 2 3 4 5; do
+		uci -q get minivtun.@minivtun[$i] || break
+
+		local server_addr=`uci -q get minivtun.@minivtun[$i].server`
+		local server_port=`uci -q get minivtun.@minivtun[$i].server_port`
+		local password=`uci -q get minivtun.@minivtun[$i].password`
+		local algorithm=`uci -q get minivtun.@minivtun[$i].algorithm`
+		local local_ipaddr=`uci -q get minivtun.@minivtun[$i].local_ipaddr`
+		local local_netmask=`uci -q get minivtun.@minivtun[$i].local_netmask`
+		local mtu=`uci -q get minivtun.@minivtun[$i].mtu`
+		if [ -z "$server_addr" -o -z "$server_port" ]; then
+			logger_warn "WARNING: No server address, ignoring the tunnel."
+			continue
+		fi
+		[ -n "$algorithm" ] || algorithm="aes-128"
+		[ -n "$mtu" ] || mtu=1300
+		local ifname=minivtun-go$i
+
+		# NOTICE: Empty '$password' is for no encryption
+		/usr/sbin/minivtun -r [$server_addr]:$server_port -n $ifname \
+			-a $local_ipaddr/`netmask_to_pfxlen $local_netmask` \
+			-e "$password" -t "$algorithm" -m $mtu \
+			-w -D -v 0.0.0.0/0 -T $VPN_ROUTE_TABLE -M 900 \
+			-p /var/run/$ifname.pid -d || return 1
+
+		echo 0 > /proc/sys/net/ipv4/conf/$ifname/rp_filter
+	done
 
 	# -----------------------------------------------------------
 	ip rule add fwmark $VPN_ROUTE_FWMARK table $VPN_ROUTE_TABLE
@@ -247,10 +254,12 @@ stop()
 	iptables -F minivtun_forward 2>/dev/null
 	iptables -X minivtun_forward 2>/dev/null
 
-	if [ -f /var/run/minivtun-go.pid ]; then
-		kill -9 `cat /var/run/minivtun-go.pid`
-		rm -f /var/run/minivtun-go.pid
-	fi
+	local pidfile
+	for pidfile in /var/run/minivtun-go*.pid; do
+		[ -f "$pidfile" ] || continue
+		kill -9 `cat $pidfile`
+		rm -f $pidfile
+	done
 }
 
 restart()

@@ -1,11 +1,20 @@
+config global
+	option enabled '1'
+	option proxy_mode 'M'
 
 config minivtun
-	option enabled '0'
-	option network 'go0'
 	option server '17.17.17.17'
 	option server_port '1717'
 	option password 'WaWaWaWa'
 	option algorithm 'aes-128'
-	option local_ipaddr '10.6.0.11'
+	option local_ipaddr '10.6.6.11'
+	option local_netmask '255.255.255.0'
+
+config minivtun
+	option server '18.18.18.18'
+	option server_port '1818'
+	option password 'HaHaHaHa'
+	option algorithm 'rc4'
+	option local_ipaddr '10.8.8.11'
 	option local_netmask '255.255.255.0'
 
