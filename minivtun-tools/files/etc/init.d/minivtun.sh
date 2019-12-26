@@ -98,9 +98,9 @@ start()
 		# NOTICE: Empty '$password' is for no encryption
 		/usr/sbin/minivtun -r [$server_addr]:$server_port -n $ifname \
 			-a $local_ipaddr/`netmask_to_pfxlen $local_netmask` \
-			-e "$password" -t "$algorithm" -m $mtu \
-			-w -D -v 0.0.0.0/0 -T $VPN_ROUTE_TABLE -M $metric_base \
-			-p /var/run/$ifname.pid -d || return 1
+			-e "$password" -t "$algorithm" -m $mtu -w \
+			-D -v 0.0.0.0/0 -T $VPN_ROUTE_TABLE -M $metric_base \
+			-p /var/run/$ifname.pid -H /var/run/$ifname.health -d || continue
 
 		echo 0 > /proc/sys/net/ipv4/conf/$ifname/rp_filter
 	done
@@ -261,6 +261,7 @@ stop()
 		kill -9 `cat $pidfile`
 		rm -f $pidfile
 	done
+	rm -f /var/run/minivtun-go*.health
 }
 
 restart()
