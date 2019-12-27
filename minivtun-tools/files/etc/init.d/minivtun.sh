@@ -38,6 +38,10 @@ netmask_to_pfxlen()
 start()
 {
 	local enabled=`uci -q get minivtun.@global[0].enabled`
+	if [ "$enabled" = 0 ]; then
+		echo "WARNING: 'minivtun' service is disabled."
+		return 1
+	fi
 	local proxy_mode=`uci -q get minivtun.@global[0].proxy_mode`
 	local safe_dns=`uci -q get minivtun.@global[0].safe_dns`
 	local safe_dns_port=`uci -q get minivtun.@global[0].safe_dns_port`
@@ -45,11 +49,6 @@ start()
 	local covered_subnets=`uci -q get minivtun.@global[0].covered_subnets`
 	local excepted_subnets=`uci -q get minivtun.@global[0].excepted_subnets`
 	local excepted_ttl=`uci -q get minivtun.@global[0].excepted_ttl`
-
-	if [ "$enabled" = 0 ]; then
-		echo "WARNING: 'minivtun' service is disabled."
-		return 1
-	fi
 	[ -n "$safe_dns_port" ] || safe_dns_port=53
 	[ -n "$proxy_mode" ] || proxy_mode=M
 	# Use local LAN subnet as default
@@ -76,20 +75,25 @@ start()
 	# -----------------------------------------------------------
 	# For each tunnel
 	local i
-	for i in 0 1 2 3 4 5; do
+	for i in 0 1 2 3 4 5 6 7 8 9; do
 		uci -q get minivtun.@minivtun[$i] >/dev/null || break
 
+		local enabled=`uci -q get minivtun.@minivtun[$i].enabled`
+		if [ "$enabled" = 0 ]; then
+			echo "WARNING: This tunnel is disabled."
+			continue
+		fi
 		local server_addr=`uci -q get minivtun.@minivtun[$i].server`
 		local server_port=`uci -q get minivtun.@minivtun[$i].server_port`
+		if [ -z "$server_addr" -o -z "$server_port" ]; then
+			echo "WARNING: No server address, ignoring this tunnel."
+			continue
+		fi
 		local password=`uci -q get minivtun.@minivtun[$i].password`
 		local algorithm=`uci -q get minivtun.@minivtun[$i].algorithm`
 		local local_ipaddr=`uci -q get minivtun.@minivtun[$i].local_ipaddr`
 		local local_netmask=`uci -q get minivtun.@minivtun[$i].local_netmask`
 		local mtu=`uci -q get minivtun.@minivtun[$i].mtu`
-		if [ -z "$server_addr" -o -z "$server_port" ]; then
-			logger_warn "WARNING: No server address, ignoring the tunnel."
-			continue
-		fi
 		[ -n "$algorithm" ] || algorithm="aes-128"
 		[ -n "$mtu" ] || mtu=1300
 		local ifname=minivtun-go$i

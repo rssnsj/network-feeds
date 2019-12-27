@@ -22,6 +22,12 @@ msgstr "基于GFW-List的自动代理"
 msgid "Watching Youku overseas"
 msgstr "海外看优酷（回国加速）"
 
+msgid "Proxy Settings"
+msgstr "代理设置"
+
+msgid "Tunnellers"
+msgstr "隧道设置"
+
 msgid "IPv4 address"
 msgstr "IPv4地址"
 
@@ -37,9 +43,6 @@ msgstr "加密算法"
 msgid "Proxy Mode"
 msgstr "代理模式"
 
-msgid "Protocols"
-msgstr "协议"
-
 msgid "Safe DNS"
 msgstr "安全DNS"
 
@@ -54,9 +57,6 @@ msgstr "服务器地址"
 
 msgid "Server Port"
 msgstr "服务器端口"
-
-msgid "Settings"
-msgstr "设置"
 
 msgid "Non-standard Virtual Tunneller"
 msgstr "非标准协议的虚拟隧道"
