@@ -88,19 +88,28 @@ o:value("G", translate("All Public IPs"))
 o:value("V", translate("Watching Youku overseas"))
 o:depends("more", "1")
 
-o = s:option(Value, "mtu", translate("MTU"))
-o.datatype = "range(1000,65520)"
-o:depends("more", "1")
-
 o = s:option(Value, "safe_dns", translate("Safe DNS"),
 	translate("8.8.8.8 or 8.8.4.4 is recommended"))
 o.datatype = "ip4addr"
+o.placeholder = "8.8.8.8"
 o.optional = false
 o:depends("more", "1")
 
 o = s:option(Value, "safe_dns_port", translate("Safe DNS Port"))
 o.datatype = "range(1,65535)"
 o.placeholder = "53"
+o.optional = false
+o:depends("more", "1")
+
+o = s:option(Value, "max_droprate", translate("Maximum allowed packet drop") .. " (%)")
+o.datatype = "range(1,100)"
+o.placeholder = "100 (" .. translate("unlimited") .. ")"
+o.optional = false
+o:depends("more", "1")
+
+o = s:option(Value, "max_rtt", translate("Maximum allowed latency") .. " (ms)")
+o.datatype = "range(1,10000)"
+o.placeholder = "0 (" .. translate("unlimited") .. ")"
 o.optional = false
 o:depends("more", "1")
 
@@ -126,7 +135,7 @@ o.rmempty = false
 o.size = 4
 
 o = s:option(Value, "password", translate("Password"))
-o.password = true
+-- o.password = true
 o.size = 10
 
 o = s:option(Value, "algorithm", translate("Encryption algorithm"))
@@ -146,6 +155,11 @@ o.datatype = "ip4addr"
 o:value("255.255.255.0")
 o:value("255.255.0.0")
 o:value("255.0.0.0")
+
+o = s:option(Value, "mtu", translate("MTU"))
+o.datatype = "range(1000,65520)"
+o.placeholder = "1300"
+o.size = 4
 
 -- ---------------------------------------------------
 local apply = luci.http.formvalue("cbi.apply")

@@ -49,6 +49,8 @@ start()
 	local covered_subnets=`uci -q get minivtun.@global[0].covered_subnets`
 	local excepted_subnets=`uci -q get minivtun.@global[0].excepted_subnets`
 	local excepted_ttl=`uci -q get minivtun.@global[0].excepted_ttl`
+	local max_droprate=`uci -q get minivtun.@global[0].max_droprate`
+	local max_rtt=`uci -q get minivtun.@global[0].max_rtt`
 	[ -n "$safe_dns_port" ] || safe_dns_port=53
 	[ -n "$proxy_mode" ] || proxy_mode=M
 	# Use local LAN subnet as default
@@ -94,17 +96,27 @@ start()
 		local local_ipaddr=`uci -q get minivtun.@minivtun[$i].local_ipaddr`
 		local local_netmask=`uci -q get minivtun.@minivtun[$i].local_netmask`
 		local mtu=`uci -q get minivtun.@minivtun[$i].mtu`
+
+		local cmd_opts=""
+		if [ -n "$mtu" ]; then
+			cmd_opts="$cmd_opts -m$mtu"
+		fi
 		[ -n "$algorithm" ] || algorithm="aes-128"
-		[ -n "$mtu" ] || mtu=1300
+		if [ -n "$max_droprate" -o -n "$max_rtt" ]; then
+			cmd_opts="$cmd_opts -K3 -S22 -B4"
+			[ -n "$max_droprate" ] && cmd_opts="$cmd_opts -P$max_droprate"
+			[ -n "$max_rtt" ] && cmd_opts="$cmd_opts -X$max_rtt"
+		fi
 		local ifname=minivtun-go$i
 		local metric_base=`expr 200 + $i`
 
 		# NOTICE: Empty '$password' is for no encryption
 		/usr/sbin/minivtun -r [$server_addr]:$server_port -n $ifname \
 			-a $local_ipaddr/`netmask_to_pfxlen $local_netmask` \
-			-e "$password" -t "$algorithm" -m $mtu -w \
+			-e "$password" -t "$algorithm" -w \
 			-D -v 0.0.0.0/0 -T $VPN_ROUTE_TABLE -M $metric_base \
-			-p /var/run/$ifname.pid -H /var/run/$ifname.health -d || continue
+			-p /var/run/$ifname.pid -H /var/run/$ifname.health \
+			$cmd_opts -d || continue
 
 		echo 0 > /proc/sys/net/ipv4/conf/$ifname/rp_filter
 	done

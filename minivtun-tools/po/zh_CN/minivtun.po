@@ -52,6 +52,12 @@ msgstr "推荐使用 8.8.8.8 或 8.8.4.4"
 msgid "Safe DNS Port"
 msgstr "安全DNS端口"
 
+msgid "Maximum allowed packet drop"
+msgstr "最大允许丢包率"
+
+msgid "Maximum allowed latency"
+msgstr "最大允许延迟"
+
 msgid "Server Address"
 msgstr "服务器地址"
 
