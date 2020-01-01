@@ -1,0 +1,62 @@
+#!/bin/sh
+#
+# Copyright (C) 2020 Justin Liu <rssnsj@gmail.com>
+# https://github.com/rssnsj/network-feeds
+#
+# Pseudo '/etc/init.d/dnsmasq' script for 'minivtun.sh' to call
+#
+
+DNSMASQ_PORT=7053
+
+start()
+{
+	# Our dedicated dnsmasq service - dnsmask
+	[ -x /usr/sbin/dnsmask ] || ln -s dnsmasq /usr/sbin/dnsmask
+
+	if [ -f /tmp/dnsmasq.d/dnsmasq-go.conf ]; then
+		local covered_subnets=`uci -q get minivtun.@global[0].covered_subnets`
+		local excepted_subnets=`uci -q get minivtun.@global[0].excepted_subnets`
+		local excepted_ttl=`uci -q get minivtun.@global[0].excepted_ttl`
+
+		mkdir -p /var/run/dnsmasq
+		/usr/sbin/dnsmask -C /tmp/dnsmasq.d/dnsmasq-go.conf -p $DNSMASQ_PORT \
+			-u root -x /var/run/dnsmasq/dnsmasq.pid || return 1
+
+		# Capture DNS queries with iptables
+		iptables -t nat -N dnsmasq_go_pre
+		iptables -t nat -F dnsmasq_go_pre
+		iptables -t nat -A dnsmasq_go_pre -p udp ! --dport 53 -j RETURN
+		iptables -t nat -I PREROUTING -p udp -j dnsmasq_go_pre
+		# Ignored hosts
+		for subnet in $excepted_subnets; do
+			iptables -t nat -A dnsmasq_go_pre -s $subnet -j RETURN
+		done
+		for ttl in $excepted_ttl; do
+			iptables -t nat -A dnsmasq_go_pre -m ttl --ttl-eq $ttl -j RETURN
+		done
+		# Clients that need VPN
+		for subnet in $covered_subnets; do
+			iptables -t nat -A dnsmasq_go_pre -s $subnet -p udp -j REDIRECT --to $DNSMASQ_PORT
+		done
+	fi
+}
+
+stop()
+{
+	if iptables -t nat -F dnsmasq_go_pre 2>/dev/null; then
+		while iptables -t nat -D PREROUTING -p udp -j dnsmasq_go_pre 2>/dev/null; do :; done
+		iptables -t nat -X dnsmasq_go_pre
+	fi
+	while killall dnsmask 2>/dev/null; do sleep 0.2; done
+	rm -f /var/run/dnsmasq/dnsmasq.pid
+}
+
+restart()
+{
+	stop
+	start
+}
+
+case "$1" in
+	start|stop|restart) "$@";;
+esac
