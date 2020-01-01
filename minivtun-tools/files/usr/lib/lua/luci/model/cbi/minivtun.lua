@@ -42,104 +42,117 @@ function ipv4_first_ip(ip)
 	end
 end
 
-local state_msg = ""
+local state_html = ""
 local service_on = (luci.sys.call("pidof minivtun >/dev/null && iptables-save | grep minivtun_ >/dev/null") == 0)
 if service_on then	
-	state_msg = "<b><font color=\"green\">" .. translate("Running") .. "</font></b>"
+	state_html = "<b><font color=\"green\">" .. translate("Running") .. "</font></b>"
 else
-	state_msg = "<b><font color=\"red\">" .. translate("Not running") .. "</font></b>"
+	state_html = "<b><font color=\"red\">" .. translate("Not running") .. "</font></b>"
 end
 
-local __c = luci.model.uci.cursor()
-local __c_port = __c:get_first("minivtun", "minivtun", "server_port", "0")
-local __c_pwd = __c:get_first("minivtun", "minivtun", "password", "")
-local __c_net =  __c:get_first("minivtun", "minivtun", "network", "go")
-local __c_lip = __c:get_first("minivtun", "minivtun", "local_ipaddr", "0.0.0.0")
-local __c_mask = __c:get_first("minivtun", "minivtun", "local_netmask", "255.255.255.0")
-local __c_algo = __c:get_first("minivtun", "minivtun", "algorithm", "aes-128")
+local c = luci.model.uci.cursor()
+local c_port = c:get_first("minivtun", "minivtun", "server_port", "0")
+local c_pwd  = c:get_first("minivtun", "minivtun", "password", "")
+local c_lip  = c:get_first("minivtun", "minivtun", "local_ipaddr", "0.0.0.0")
+local c_mask = c:get_first("minivtun", "minivtun", "local_netmask", "255.255.255.0")
+local c_algo = c:get_first("minivtun", "minivtun", "algorithm", "aes-128")
 
 m = Map("minivtun", translate("Non-standard Virtual Tunneller"),
-	translate("Non-standard VPN that helps you to get through firewalls") .. " - " .. state_msg .. "<br />" ..
+	translate("Non-standard VPN that helps you to get through firewalls") .. " - " .. state_html .. "<br />" ..
 	translate("Add the following commands to <b>/etc/rc.local</b> of your server according to your settings") .. ":<br />" ..
 	"<pre>" ..
-	"/usr/sbin/minivtun -l 0.0.0.0:" .. "<b>" .. __c_port .. "</b>" .. " -a " .. "<b>" .. ipv4_first_ip(__c_lip) .. "/" .. ipv4_mask_prefix(__c_mask) .. "</b>" .. " -n minivtun-" .. "<b>" ..__c_net .. "</b>" .. " -e " .. "<b>'" .. __c_pwd .. "'</b>" .. " -t " .. "<b>" .. __c_algo .. "</b>" .. " -d\n" ..
+	"/usr/sbin/minivtun -l 0.0.0.0:<b>" .. c_port .. "</b> -a <b>" ..
+		ipv4_first_ip(c_lip) .. "/" .. ipv4_mask_prefix(c_mask) .. "</b>" .. " -n mv0 -e <b>'" ..
+		c_pwd .. "'</b> -t <b>" .. c_algo .. "</b> -d\n" ..
 	"iptables -t nat -A POSTROUTING ! -o lo -j MASQUERADE   # " .. translate("Ensure NAT is enabled") .. "\n" .. 
 	"echo 1 > /proc/sys/net/ipv4/ip_forward\n" ..
 	"</pre>")
 
-
-s = m:section(TypedSection, "minivtun", translate("Settings"))
+-- ---------------------------------------------------
+s = m:section(TypedSection, "global", translate("Proxy Settings"))
 s.anonymous = true
 
--- ---------------------------------------------------
-switch = s:option(Flag, "enabled", translate("Enable"))
-switch.rmempty = false
+o = s:option(Flag, "enabled", translate("Enable"))
+o.rmempty = false
 
-server = s:option(Value, "server", translate("Server Address"))
-server.optional = false
-server.datatype = "host"
-server.rmempty = false
+s:option(Flag, "more", translate("More Options"), translate("Options for advanced users"))
 
-server_port = s:option(Value, "server_port", translate("Server Port"))
-server_port.datatype = "range(1,65535)"
-server_port.optional = false
-server_port.rmempty = false
-
-password = s:option(Value, "password", translate("Password"))
-password.password = true
-
-algorithm = s:option(Value, "algorithm", translate("Encryption algorithm"))
-algorithm:value("aes-128")
-algorithm:value("aes-256")
-algorithm:value("des")
-algorithm:value("desx")
-algorithm:value("rc4")
-
-local_ipaddr = s:option(Value, "local_ipaddr", translate("IPv4 address"))
-local_ipaddr.datatype = "ip4addr"
-local_ipaddr.optional = false
-
-local_netmask = s:option(Value, "local_netmask", translate("IPv4 netmask"))
-local_netmask.datatype = "ip4addr"
-local_netmask:value("255.255.255.0")
-local_netmask:value("255.255.0.0")
-local_netmask:value("255.0.0.0")
-
-s:option(Flag, "more", translate("More Options"),
-	translate("Options for advanced users"))
-
-proxy_mode = s:option(ListValue, "proxy_mode", translate("Proxy Mode"),
+o = s:option(ListValue, "proxy_mode", translate("Proxy Mode"),
 	translate("GFW-List mode requires flushing DNS cache") .. "<br /> " ..
 	"<a href=\"" .. luci.dispatcher.build_url("admin", "services", "gfwlist") .. "\">" ..
 	translate("Click here to customize your GFW-List") ..
 	"</a>")
-proxy_mode:value("M", translate("GFW-List based auto-proxy"))
-proxy_mode:value("S", translate("All non-China IPs"))
-proxy_mode:value("G", translate("All Public IPs"))
-proxy_mode:value("V", translate("Watching Youku overseas"))
-proxy_mode:depends("more", "1")
+o:value("M", translate("GFW-List based auto-proxy"))
+o:value("S", translate("All non-China IPs"))
+o:value("G", translate("All Public IPs"))
+o:value("V", translate("Watching Youku overseas"))
+o:depends("more", "1")
 
--- protocols = s:option(MultiValue, "protocols", translate("Protocols"))
--- protocols:value("T", translate("TCP"))
--- protocols:value("U", translate("UDP"))
--- protocols:value("I", translate("ICMP"))
--- protocols:value("O", translate("Others"))
-
-mtu = s:option(Value, "mtu", translate("MTU"))
-mtu.datatype = "range(1000,65520)"
-mtu:depends("more", "1")
-
-safe_dns = s:option(Value, "safe_dns", translate("Safe DNS"),
+o = s:option(Value, "safe_dns", translate("Safe DNS"),
 	translate("8.8.8.8 or 8.8.4.4 is recommended"))
-safe_dns.datatype = "ip4addr"
-safe_dns.optional = false
-safe_dns:depends("more", "1")
+o.datatype = "ip4addr"
+o.placeholder = "8.8.8.8"
+o:depends("more", "1")
 
-safe_dns_port = s:option(Value, "safe_dns_port", translate("Safe DNS Port"))
-safe_dns_port.datatype = "range(1,65535)"
-safe_dns_port.placeholder = "53"
-safe_dns_port.optional = false
-safe_dns_port:depends("more", "1")
+o = s:option(Value, "safe_dns_port", translate("Safe DNS Port"))
+o.datatype = "range(1,65535)"
+o.placeholder = "53"
+o:depends("more", "1")
+
+o = s:option(Value, "max_droprate", translate("Maximum allowed packet drop") .. " (%)")
+o.datatype = "range(1,100)"
+o.placeholder = "100 (" .. translate("unlimited") .. ")"
+o:depends("more", "1")
+
+o = s:option(Value, "max_rtt", translate("Maximum allowed latency") .. " (ms)")
+o.datatype = "range(1,10000)"
+o.placeholder = "0 (" .. translate("unlimited") .. ")"
+o:depends("more", "1")
+
+-- ---------------------------------------------------
+s = m:section(TypedSection, "minivtun", translate("Tunnellers"))
+s.anonymous = true
+s.addremove = true
+s.template = "cbi/tblsection"
+
+o = s:option(Flag, "enabled", translate("Enable"))
+o.rmempty = false
+
+o = s:option(Value, "server", translate("Server Address"))
+o.datatype = "host"
+o.rmempty = false
+o.size = 12
+
+o = s:option(Value, "server_port", translate("Server Port"))
+o.datatype = "range(1,65535)"
+o.rmempty = false
+o.size = 4
+
+o = s:option(Value, "password", translate("Password"))
+-- o.password = true
+o.size = 10
+
+o = s:option(Value, "algorithm", translate("Encryption algorithm"))
+o:value("aes-128")
+o:value("aes-256")
+o:value("des")
+o:value("desx")
+o:value("rc4")
+
+o = s:option(Value, "local_ipaddr", translate("IPv4 address"))
+o.datatype = "ip4addr"
+o.size = 10
+
+o = s:option(Value, "local_netmask", translate("IPv4 netmask"))
+o.datatype = "ip4addr"
+o:value("255.255.255.0")
+o:value("255.255.0.0")
+o:value("255.0.0.0")
+
+o = s:option(Value, "mtu", translate("MTU"))
+o.datatype = "range(1000,65520)"
+o.placeholder = "1300"
+o.size = 4
 
 -- ---------------------------------------------------
 local apply = luci.http.formvalue("cbi.apply")
