@@ -92,25 +92,21 @@ o = s:option(Value, "safe_dns", translate("Safe DNS"),
 	translate("8.8.8.8 or 8.8.4.4 is recommended"))
 o.datatype = "ip4addr"
 o.placeholder = "8.8.8.8"
-o.optional = false
 o:depends("more", "1")
 
 o = s:option(Value, "safe_dns_port", translate("Safe DNS Port"))
 o.datatype = "range(1,65535)"
 o.placeholder = "53"
-o.optional = false
 o:depends("more", "1")
 
 o = s:option(Value, "max_droprate", translate("Maximum allowed packet drop") .. " (%)")
 o.datatype = "range(1,100)"
 o.placeholder = "100 (" .. translate("unlimited") .. ")"
-o.optional = false
 o:depends("more", "1")
 
 o = s:option(Value, "max_rtt", translate("Maximum allowed latency") .. " (ms)")
 o.datatype = "range(1,10000)"
 o.placeholder = "0 (" .. translate("unlimited") .. ")"
-o.optional = false
 o:depends("more", "1")
 
 -- ---------------------------------------------------
@@ -123,14 +119,12 @@ o = s:option(Flag, "enabled", translate("Enable"))
 o.rmempty = false
 
 o = s:option(Value, "server", translate("Server Address"))
-o.optional = false
 o.datatype = "host"
 o.rmempty = false
 o.size = 12
 
 o = s:option(Value, "server_port", translate("Server Port"))
 o.datatype = "range(1,65535)"
-o.optional = false
 o.rmempty = false
 o.size = 4
 
@@ -147,7 +141,6 @@ o:value("rc4")
 
 o = s:option(Value, "local_ipaddr", translate("IPv4 address"))
 o.datatype = "ip4addr"
-o.optional = false
 o.size = 10
 
 o = s:option(Value, "local_netmask", translate("IPv4 netmask"))
