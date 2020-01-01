@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2019 Justin Liu
+# Copyright (c) 2020 Justin Liu
 # Author: Justin Liu <rssnsj@gmail.com>
 # https://github.com/rssnsj/network-feeds
 #
@@ -7,7 +7,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=minivtun
-PKG_VERSION:=20191231
+PKG_VERSION:=20200101
 PKG_RELEASE=$(PKG_SOURCE_VERSION)
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
@@ -15,7 +15,7 @@ PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/rssnsj/minivtun.git
-PKG_SOURCE_VERSION:=d545eec1d2964ed7a6345e96f1d21c7a67adb83d
+PKG_SOURCE_VERSION:=19f665111f801c532a1c2541bcaa66278f804670
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-$(PKG_SOURCE_VERSION).tar.bz2
 
 include $(INCLUDE_DIR)/package.mk
