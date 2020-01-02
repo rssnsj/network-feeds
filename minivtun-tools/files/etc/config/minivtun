@@ -1,8 +1,12 @@
 config global
-	option enabled '1'
+	option enabled '0'
+	option more '1'
 	option proxy_mode 'M'
+	option max_droprate '10'
+	option max_rtt '250'
 
 config minivtun
+	option enabled '1'
 	option server '17.17.17.17'
 	option server_port '1717'
 	option password 'WaWaWaWa'
@@ -11,6 +15,7 @@ config minivtun
 	option local_netmask '255.255.255.0'
 
 config minivtun
+	option enabled '1'
 	option server '18.18.18.18'
 	option server_port '1818'
 	option password 'HaHaHaHa'
