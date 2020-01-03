@@ -124,9 +124,10 @@ o.rmempty = false
 o.size = 12
 
 o = s:option(Value, "server_port", translate("Server Port"))
-o.datatype = "range(1,65535)"
+o.datatype = "portrange"
+-- o.datatype = "range(1,65535)"
 o.rmempty = false
-o.size = 4
+o.size = 10
 
 o = s:option(Value, "password", translate("Password"))
 -- o.password = true
