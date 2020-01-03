@@ -52,6 +52,7 @@ end
 
 local c = luci.model.uci.cursor()
 local c_port = c:get_first("minivtun", "minivtun", "server_port", "0")
+c_port = c_port:gsub("%-.*$","")
 local c_pwd  = c:get_first("minivtun", "minivtun", "password", "")
 local c_lip  = c:get_first("minivtun", "minivtun", "local_ipaddr", "0.0.0.0")
 local c_mask = c:get_first("minivtun", "minivtun", "local_netmask", "255.255.255.0")
