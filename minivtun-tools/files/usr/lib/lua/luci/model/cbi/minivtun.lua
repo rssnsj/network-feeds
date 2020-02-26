@@ -115,6 +115,7 @@ s = m:section(TypedSection, "minivtun", translate("Tunnellers"))
 s.anonymous = true
 s.addremove = true
 s.template = "cbi/tblsection"
+s.sortable = true
 
 o = s:option(Flag, "enabled", translate("Enable"))
 o.rmempty = false
