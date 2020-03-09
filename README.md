@@ -1,5 +1,5 @@
 # network-feeds
-iKuaiOS version
+Generic Linux-based version
 
 ### Installation for Ubuntu
 
