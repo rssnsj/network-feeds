@@ -1,9 +1,0 @@
-
-config shadowsocks
-	option enabled '0'
-	option server '17.17.17.17'
-	option server_port '1717'
-	option password 'WaWaWaWa'
-	option method 'table'
-	option gfwlist 'china-banned'
-
