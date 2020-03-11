@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright (C) 2014 Justin Liu <rssnsj@gmail.com>
+# Copyright (C) 2020 Justin Liu <rssnsj@gmail.com>
 # https://github.com/rssnsj/network-feeds
 #
 
@@ -125,62 +125,62 @@ start()
 	ip rule add fwmark $VPN_ROUTE_FWMARK table $VPN_ROUTE_TABLE
 
 	# Add basic firewall rules
-	iptables -N minivtun_forward || iptables -F minivtun_forward
-	iptables -I FORWARD -j minivtun_forward
-	iptables -A minivtun_forward -o minivtun-+ -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
-	iptables -A minivtun_forward -o minivtun-+ -j ACCEPT
-	iptables -t nat -I POSTROUTING -o minivtun-+ -j MASQUERADE
+	iptables -w -N minivtun_forward || iptables -w -F minivtun_forward
+	iptables -w -I FORWARD -j minivtun_forward
+	iptables -w -A minivtun_forward -o minivtun-+ -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+	iptables -w -A minivtun_forward -o minivtun-+ -j ACCEPT
+	iptables -w -t nat -I POSTROUTING -o minivtun-+ -j MASQUERADE
 
 	# -----------------------------------------------------------
-	iptables -t mangle -N minivtun_go
-	iptables -t mangle -F minivtun_go
-	iptables -t mangle -A minivtun_go -m set --match-set local dst -j RETURN || {
-			iptables -t mangle -A minivtun_go -d 10.0.0.0/8 -j RETURN
-			iptables -t mangle -A minivtun_go -d 127.0.0.0/8 -j RETURN
-			iptables -t mangle -A minivtun_go -d 172.16.0.0/12 -j RETURN
-			iptables -t mangle -A minivtun_go -d 192.168.0.0/16 -j RETURN
-			iptables -t mangle -A minivtun_go -d 127.0.0.0/8 -j RETURN
-			iptables -t mangle -A minivtun_go -d 224.0.0.0/3 -j RETURN
+	iptables -w -t mangle -N minivtun_go
+	iptables -w -t mangle -F minivtun_go
+	iptables -w -t mangle -A minivtun_go -m set --match-set local dst -j RETURN || {
+			iptables -w -t mangle -A minivtun_go -d 10.0.0.0/8 -j RETURN
+			iptables -w -t mangle -A minivtun_go -d 127.0.0.0/8 -j RETURN
+			iptables -w -t mangle -A minivtun_go -d 172.16.0.0/12 -j RETURN
+			iptables -w -t mangle -A minivtun_go -d 192.168.0.0/16 -j RETURN
+			iptables -w -t mangle -A minivtun_go -d 127.0.0.0/8 -j RETURN
+			iptables -w -t mangle -A minivtun_go -d 224.0.0.0/3 -j RETURN
 		}
 	case "$proxy_mode" in
 		G)
 			;;
 		S)
-			iptables -t mangle -A minivtun_go -m set --match-set china dst -j RETURN
+			iptables -w -t mangle -A minivtun_go -m set --match-set china dst -j RETURN
 			;;
 		M)
 			ipset create $gfwlist hash:ip maxelem 65536 2>/dev/null
 			[ -n "$safe_dns" ] && ipset add $gfwlist $safe_dns 2>/dev/null
-			iptables -t mangle -A minivtun_go -m set ! --match-set $gfwlist dst -j RETURN
-			iptables -t mangle -A minivtun_go -m set --match-set china dst -j RETURN
+			iptables -w -t mangle -A minivtun_go -m set ! --match-set $gfwlist dst -j RETURN
+			iptables -w -t mangle -A minivtun_go -m set --match-set china dst -j RETURN
 			;;
 		V)
 			ipset create $gfwlist hash:ip maxelem 65536 2>/dev/null
 			[ -n "$safe_dns" ] && ipset add $gfwlist $safe_dns 2>/dev/null
-			iptables -t mangle -A minivtun_go -m set ! --match-set $gfwlist dst -j RETURN
+			iptables -w -t mangle -A minivtun_go -m set ! --match-set $gfwlist dst -j RETURN
 			;;
 	esac
 	# Clients that do not use VPN
 	local subnet
 	for subnet in $excepted_subnets; do
-		iptables -t mangle -A minivtun_go -s $subnet -j RETURN
+		iptables -w -t mangle -A minivtun_go -s $subnet -j RETURN
 	done
 	local ttl
 	for ttl in $excepted_ttl; do
-		iptables -t mangle -A minivtun_go -m ttl --ttl-eq $ttl -j RETURN
+		iptables -w -t mangle -A minivtun_go -m ttl --ttl-eq $ttl -j RETURN
 	done
 	# Clients that need VPN
 	for subnet in $covered_subnets; do
-		iptables -t mangle -A minivtun_go -s $subnet -j MARK --set-mark $VPN_ROUTE_FWMARK
+		iptables -w -t mangle -A minivtun_go -s $subnet -j MARK --set-mark $VPN_ROUTE_FWMARK
 	done
 	if [ -n "$safe_dns" ]; then
-		iptables -t mangle -A minivtun_go -d $safe_dns -p udp --dport $safe_dns_port \
+		iptables -w -t mangle -A minivtun_go -d $safe_dns -p udp --dport $safe_dns_port \
 			-j MARK --set-mark $VPN_ROUTE_FWMARK
 	fi
-	iptables -t mangle -A minivtun_go -m mark --mark $VPN_ROUTE_FWMARK -j ACCEPT  # stop further matches
+	iptables -w -t mangle -A minivtun_go -m mark --mark $VPN_ROUTE_FWMARK -j ACCEPT  # stop further matches
 
-	iptables -t mangle -I PREROUTING -j minivtun_go
-	iptables -t mangle -I OUTPUT -p udp --dport 53 -j minivtun_go  # DNS queries over tunnel
+	iptables -w -t mangle -I PREROUTING -j minivtun_go
+	iptables -w -t mangle -I OUTPUT -p udp --dport 53 -j minivtun_go  # DNS queries over tunnel
 
 	# -----------------------------------------------------------
 	mkdir -p /var/etc/dnsmasq-go.d
@@ -248,10 +248,10 @@ stop()
 	fi
 
 	# -----------------------------------------------------------
-	if iptables -t mangle -F minivtun_go 2>/dev/null; then
-		while iptables -t mangle -D OUTPUT -p udp --dport 53 -j minivtun_go 2>/dev/null; do :; done
-		while iptables -t mangle -D PREROUTING -j minivtun_go 2>/dev/null; do :; done
-		iptables -t mangle -X minivtun_go 2>/dev/null
+	if iptables -w -t mangle -F minivtun_go 2>/dev/null; then
+		while iptables -w -t mangle -D OUTPUT -p udp --dport 53 -j minivtun_go 2>/dev/null; do :; done
+		while iptables -w -t mangle -D PREROUTING -j minivtun_go 2>/dev/null; do :; done
+		iptables -w -t mangle -X minivtun_go 2>/dev/null
 	fi
 
 	# -----------------------------------------------------------
@@ -266,10 +266,10 @@ stop()
 	while ip rule del fwmark $VPN_ROUTE_FWMARK table $VPN_ROUTE_TABLE 2>/dev/null; do :; done
 
 	# Delete basic firewall rules
-	while iptables -t nat -D POSTROUTING -o minivtun-+ -j MASQUERADE 2>/dev/null; do :; done
-	while iptables -D FORWARD -j minivtun_forward 2>/dev/null; do :; done
-	iptables -F minivtun_forward 2>/dev/null
-	iptables -X minivtun_forward 2>/dev/null
+	while iptables -w -t nat -D POSTROUTING -o minivtun-+ -j MASQUERADE 2>/dev/null; do :; done
+	while iptables -w -D FORWARD -j minivtun_forward 2>/dev/null; do :; done
+	iptables -w -F minivtun_forward 2>/dev/null
+	iptables -w -X minivtun_forward 2>/dev/null
 
 	local pidfile
 	for pidfile in /var/run/minivtun-go*.pid; do
