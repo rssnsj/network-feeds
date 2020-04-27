@@ -1,10 +1,8 @@
 
 config dnspod 'main'
-	option login_token ''
-	option account 'abc@163.com'
-	option password 'WaWaWaWa'
+	option login_token '11111,22222222222222222222222222222222'
 	option domain 'abc.com'
-	option subdomain 'www'
+	option subdomain 'hello'
 	option ipfrom 'auto'
 	option enabled '0'
 

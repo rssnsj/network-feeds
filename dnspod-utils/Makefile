@@ -1,12 +1,12 @@
 #
-# Copyright (c) 2015 Justin Liu
+# Copyright (c) 2020 Justin Liu
 # Author: Justin Liu <rssnsj@gmail.com>
 #
 
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=dnspod-utils
-PKG_VERSION:=20150526
+PKG_VERSION:=20200427
 PKG_RELEASE:=
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
@@ -17,7 +17,7 @@ define Package/dnspod-utils
   CATEGORY:=Network
   TITLE:=DNSPod dynamic DNS support
   MAINTAINER:=Justin Liu <rssnsj@gmail.com>
-  DEPENDS:=+luci-lib-json
+  DEPENDS:=+uci +curl +jq
 endef
 
 define Package/dnspod-utils/conffiles
