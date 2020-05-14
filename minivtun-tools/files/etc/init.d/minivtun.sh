@@ -39,7 +39,7 @@ start()
 {
 	local enabled=`uci -q get minivtun.@global[0].enabled`
 	if [ "$enabled" = 0 ]; then
-		echo "WARNING: 'minivtun' service is disabled."
+		echo "WARNING: 'minivtun' service is disabled." >&2
 		return 1
 	fi
 	local proxy_mode=`uci -q get minivtun.@global[0].proxy_mode`
@@ -82,13 +82,13 @@ start()
 
 		local enabled=`uci -q get minivtun.@minivtun[$i].enabled`
 		if [ "$enabled" = 0 ]; then
-			echo "WARNING: This tunnel is disabled."
+			echo "WARNING: This tunnel is disabled." >&2
 			continue
 		fi
 		local server_addr=`uci -q get minivtun.@minivtun[$i].server`
 		local server_port=`uci -q get minivtun.@minivtun[$i].server_port`
 		if [ -z "$server_addr" -o -z "$server_port" ]; then
-			echo "WARNING: No server address, ignoring this tunnel."
+			echo "WARNING: No server address, ignoring this tunnel." >&2
 			continue
 		fi
 		local password=`uci -q get minivtun.@minivtun[$i].password`
@@ -134,14 +134,11 @@ start()
 	# -----------------------------------------------------------
 	iptables -w -t mangle -N minivtun_go
 	iptables -w -t mangle -F minivtun_go
-	iptables -w -t mangle -A minivtun_go -m set --match-set local dst -j RETURN || {
-			iptables -w -t mangle -A minivtun_go -d 10.0.0.0/8 -j RETURN
-			iptables -w -t mangle -A minivtun_go -d 127.0.0.0/8 -j RETURN
-			iptables -w -t mangle -A minivtun_go -d 172.16.0.0/12 -j RETURN
-			iptables -w -t mangle -A minivtun_go -d 192.168.0.0/16 -j RETURN
-			iptables -w -t mangle -A minivtun_go -d 127.0.0.0/8 -j RETURN
-			iptables -w -t mangle -A minivtun_go -d 224.0.0.0/3 -j RETURN
-		}
+	iptables -w -t mangle -A minivtun_go -m conntrack --ctdir REPLY -j RETURN  # ignore DNAT replies
+	if ! iptables -w -t mangle -A minivtun_go -m set --match-set local dst -j RETURN; then
+		echo "*** IP set 'local' is not loaded." >&2
+		return 1
+	fi
 	case "$proxy_mode" in
 		G)
 			;;
