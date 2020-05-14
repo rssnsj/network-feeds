@@ -6,7 +6,8 @@ Generic Linux-based version
 Install the 'uci' utility
 
     apt-get install cmake libjson-c-dev
-    ln -s json-c /usr/include/json
+    
+    [ -d /usr/include/json ] || ln -s json-c /usr/include/json
     
     git clone http://git.nbd.name/luci2/libubox.git
     cd libubox
