@@ -17,7 +17,7 @@ define Package/file-storage
   CATEGORY:=Network
   TITLE:=Storage device automount and autoconfig scripts
   MAINTAINER:=Justin Liu <rssnsj@gmail.com>
-  DEPENDS:=+samba36-server +kmod-usb-storage +kmod-fs-ext4 +kmod-fs-vfat +kmod-nls-cp437 +kmod-nls-iso8859-1 +kmod-nls-utf8 +ntfs-3g
+  DEPENDS:=+samba36-server +blkid +kmod-usb-storage +kmod-fs-ext4 +kmod-fs-vfat +kmod-nls-cp437 +kmod-nls-iso8859-1 +kmod-nls-utf8 +ntfs-3g
 endef
 
 define Build/Prepare
