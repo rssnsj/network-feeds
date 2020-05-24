@@ -6,8 +6,8 @@
 
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=minivtun
-PKG_VERSION:=20200514
+PKG_NAME:=minivtun-tools
+PKG_VERSION:=20200524
 PKG_RELEASE=$(PKG_SOURCE_VERSION)
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
@@ -16,11 +16,11 @@ PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/rssnsj/minivtun.git
 PKG_SOURCE_VERSION:=40852f2e01c66e228096687272ff60f649524cf3
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-$(PKG_SOURCE_VERSION).tar.bz2
+PKG_SOURCE:=minivtun-$(PKG_SOURCE_VERSION).tar.bz2
 
 include $(INCLUDE_DIR)/package.mk
 
-define Package/minivtun
+define Package/minivtun-tools
   CATEGORY:=Network
   TITLE:=Non-standard VPN that helps you to get through firewalls
   URL:=https://github.com/rssnsj/network-feeds
@@ -28,7 +28,7 @@ define Package/minivtun
   DEPENDS:=+ip +ipset-lists +kmod-tun +libopenssl +luci
 endef
 
-define Package/minivtun/conffiles
+define Package/minivtun-tools/conffiles
 /etc/config/minivtun
 endef
 
@@ -37,18 +37,17 @@ define Build/Compile
 		CFLAGS="$(TARGET_CPPFLAGS) $(TARGET_CFLAGS)"
 endef
 
-define Package/minivtun/install
+define Package/minivtun-tools/install
 	mkdir -p $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/minivtun $(1)/usr/sbin
 	$(CP) -a files/* $(1)/
 endef
 
-define Package/minivtun/postinst
+define Package/minivtun-tools/postinst
 #!/bin/sh
 if [ -e /etc/openwrt_release ]; then
 	/etc/init.d/minivtun.sh enable || :
 fi
 endef
 
-$(eval $(call BuildPackage,minivtun))
-
+$(eval $(call BuildPackage,minivtun-tools))
