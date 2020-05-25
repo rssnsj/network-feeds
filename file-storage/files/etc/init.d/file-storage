@@ -5,42 +5,6 @@
 
 START=95
 
-PRIMARY_DISK_LINK=/tmp/data
-DELAYED_TRIALS_MAX=2
-DELAYED_INTERVAL=5
-
-#
-# $1 - file name of service's init.d script
-#
-delay_startup_or_exit()
-{
-	local service="$1"
-
-	if [ -z "$DELAY_TRIALS_LEFT" ]; then
-		export DELAY_TRIALS_LEFT=$DELAYED_TRIALS_MAX
-	elif [ $DELAY_TRIALS_LEFT -gt 0 ]; then
-		export DELAY_TRIALS_LEFT=`expr $DELAY_TRIALS_LEFT - 1`
-	else
-		echo "Startup trials of \"$service\" exceeded, given up."
-		exit 1
-	fi
-
-	echo "Delaying startup for \"$service\"."
-
-	# Hook a unique executable file to start-stop-daemon,
-	# to prevent duplicate process detection.
-	local call_script="/tmp/X-${service}.$$"
-	cat > $call_script <<EOF
-#!/bin/sh
-sleep $DELAYED_INTERVAL
-/etc/init.d/$service start
-rm -f $call_script
-EOF
-	chmod +x $call_script
-	start-stop-daemon -S -b -x $call_script --
-	exit 0
-}
-
 # Get mount point of specified storage device or
 # partition (e.g., /dev/sda1), empty for unmounted.
 __mount_point_of()

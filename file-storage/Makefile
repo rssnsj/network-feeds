@@ -1,12 +1,12 @@
 #
-# Copyright (c) 2015 Justin Liu
+# Copyright (c) 2020 Justin Liu
 # Author: Justin Liu <rssnsj@gmail.com>
 #
 
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=file-storage
-PKG_VERSION:=20150617
+PKG_VERSION:=20200525
 PKG_RELEASE:=
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
