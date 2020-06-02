@@ -10,21 +10,22 @@ china_banned()
 
 	cat gfwlist.txt base-gfwlist.txt | sort -u |
 		sed '/^!/d; /^@@/d; /^$/d; /^#/d' |
-		sed 's#!.\+##; s#|##g; s#@##g; s#https\?:\/\/##;' |
-		sed '/\*/d; /apple\.com/d; /sina\.cn/d; /sina\.com\.cn/d; /baidu\.com/d; /qq\.com/d; /\<jd\.com/d; /\<hiwifi\.com/d;' |
+		sed 's/!.\+//; s/|//g; s/@//g; s/https\?:\/\///;' |
+		sed '/\*/d; /apple\.com/d; /\<hiwifi\>/d;' |
 		sed '/^[0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+$/d' |
 		grep '^[0-9a-z\.-]\+$' | grep '\.' | sed 's#^\.\+##' | rev | sort -u |
 		awk '
-BEGIN { prev = "________"; }  {
-	cur = $0;
-	if (index(cur, prev) == 1 && substr(cur, 1 + length(prev), 1) == ".") {
-	} else {
-		print cur;
-		prev = cur;
-	}
-}' | rev | sort -u
+			BEGIN { prev = "___"; }
+			{
+				cur = $0;
+				if (index(cur, prev) == 1 && substr(cur, 1 + length(prev), 1) == ".") {
+				} else {
+					print cur;
+					prev = cur;
+				}
+			}' |
+		rev | sort -u
 
 }
 
 china_banned
-
