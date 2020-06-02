@@ -9,7 +9,7 @@ china_banned()
 	fi
 
 	cat gfwlist.txt base-gfwlist.txt | sort -u |
-		sed '/^!/d; /^@@/d' |
+		sed '/^!/d; /^@@/d; /^$/d; /^#/d' |
 		sed 's#!.\+##; s#|##g; s#@##g; s#https\?:\/\/##;' |
 		sed '/\*/d; /apple\.com/d; /sina\.cn/d; /sina\.com\.cn/d; /baidu\.com/d; /qq\.com/d; /\<jd\.com/d; /\<hiwifi\.com/d;' |
 		sed '/^[0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+$/d' |
