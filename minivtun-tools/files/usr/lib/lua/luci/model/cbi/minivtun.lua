@@ -5,8 +5,6 @@
  https://github.com/rssnsj/network-feeds
 ]]--
 
-local fs = require("nixio.fs")
-
 function ipv4_mask_prefix(mask)
 	local a, b, c, d = mask:match("^(%d+)%.(%d+)%.(%d+)%.(%d+)")
 	local k, v
@@ -86,7 +84,6 @@ o = s:option(ListValue, "proxy_mode", translate("Proxy Mode"),
 o:value("M", translate("GFW-List based auto-proxy"))
 o:value("S", translate("All non-China IPs"))
 o:value("G", translate("All Public IPs"))
-o:value("V", translate("Watching Youku overseas"))
 o:depends("more", "1")
 
 o = s:option(Value, "safe_dns", translate("Safe DNS"),
