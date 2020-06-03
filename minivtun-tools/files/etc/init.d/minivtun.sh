@@ -58,12 +58,8 @@ start()
 		. /lib/functions/network.sh
 		network_get_subnet covered_subnets lan
 	fi
-	if [ "$proxy_mode" = V ]; then
-		local gfwlist="unblock-youku"
-	else
-		local gfwlist="china-banned"
-		[ -n "$safe_dns" ] || safe_dns="8.8.8.8";
-	fi
+	local gfwlist="china-banned"
+	[ -n "$safe_dns" ] || safe_dns="8.8.8.8";
 
 	# -----------------------------------------------------------
 	if ! ipset list local >/dev/null 2>&1; then
@@ -151,11 +147,6 @@ start()
 			iptables -w -t mangle -A minivtun_go -m set ! --match-set $gfwlist dst -j RETURN
 			iptables -w -t mangle -A minivtun_go -m set --match-set china dst -j RETURN
 			;;
-		V)
-			ipset create $gfwlist hash:ip maxelem 65536 2>/dev/null
-			[ -n "$safe_dns" ] && ipset add $gfwlist $safe_dns 2>/dev/null
-			iptables -w -t mangle -A minivtun_go -m set ! --match-set $gfwlist dst -j RETURN
-			;;
 	esac
 	# Clients that do not use VPN
 	local subnet
@@ -187,12 +178,12 @@ start()
 			awk -vs="$safe_dns#$safe_dns_port" '!/^$/&&!/^#/{printf("server=/%s/%s\n",$0,s)}' \
 			> /var/etc/dnsmasq-go.d/01-pollution.conf
 	else
-		logger_warn "WARNING: Not using safe DNS, might have DNS pollution issue in China."
+		logger_warn "WARNING: Not using safe DNS, might have DNS pollution issue."
 	fi
 
 	###### dnsmasq-to-ipset configuration ######
 	case "$proxy_mode" in
-		M|V)
+		M)
 			( cat /etc/gfwlist/$gfwlist; cat /etc/gfwlist/$gfwlist.* 2>/dev/null; ) | \
 				awk '!/^$/&&!/^#/{printf("ipset=/%s/'"$gfwlist"'\n",$0)}' \
 				> /var/etc/dnsmasq-go.d/02-ipset.conf
@@ -254,7 +245,6 @@ stop()
 	# -----------------------------------------------------------
 	if [ "$KEEP_GFWLIST" != Y ]; then
 		ipset destroy china-banned 2>/dev/null
-		ipset destroy unblock-youku 2>/dev/null
 	fi
 
 	# -----------------------------------------------------------

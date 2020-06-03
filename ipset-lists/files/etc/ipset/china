@@ -2288,6 +2288,7 @@ add china 103.151.142.0/23
 add china 103.151.148.0/22
 add china 103.151.158.0/23
 add china 103.151.178.0/23
+add china 103.151.206.0/23
 add china 103.192.0.0/19
 add china 103.192.48.0/21
 add china 103.192.56.0/22
