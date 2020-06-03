@@ -18,8 +18,7 @@ china_banned()
 			BEGIN { prev = "___"; }
 			{
 				cur = $0;
-				if (index(cur, prev) == 1 && substr(cur, 1 + length(prev), 1) == ".") {
-				} else {
+				if (!(index(cur, prev) == 1 && substr(cur, 1 + length(prev), 1) == ".")) {
 					print cur;
 					prev = cur;
 				}
