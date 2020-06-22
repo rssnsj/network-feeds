@@ -2289,6 +2289,14 @@ add china 103.151.148.0/22
 add china 103.151.158.0/23
 add china 103.151.178.0/23
 add china 103.151.206.0/23
+add china 103.151.216.0/23
+add china 103.151.228.0/23
+add china 103.152.14.0/23
+add china 103.152.24.0/23
+add china 103.152.28.0/22
+add china 103.152.56.0/23
+add china 103.152.76.0/23
+add china 103.152.80.0/23
 add china 103.192.0.0/19
 add china 103.192.48.0/21
 add china 103.192.56.0/22
@@ -3580,6 +3588,8 @@ add china 140.246.0.0/16
 add china 140.249.0.0/16
 add china 140.250.0.0/16
 add china 140.255.0.0/16
+add china 142.70.0.0/16
+add china 142.86.0.0/16
 add china 144.0.0.0/16
 add china 144.7.0.0/16
 add china 144.12.0.0/16
@@ -3709,6 +3719,7 @@ add china 160.202.212.0/22
 add china 160.202.216.0/21
 add china 160.202.224.0/19
 add china 160.238.64.0/22
+add china 161.120.0.0/16
 add china 161.163.0.0/21
 add china 161.163.28.0/23
 add china 161.163.176.0/24
