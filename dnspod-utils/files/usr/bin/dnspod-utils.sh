@@ -186,6 +186,7 @@ Options:
   -d sencods                delayed seconds before any operation
   -D                        use 'Record.Ddns' for update (10s TTL)
   -k                        pass '-k' to curl
+  -y                        assume yes for delete
 EOF
 }
 
