@@ -9,6 +9,7 @@ DNSAPI_USERAGENT="OpenWrt-DDNS/0.1.0 (rssnsj@gmail.com)"
 DNSAPI_TOKEN=
 CURL_EXTRA_OPTS=
 DDNS_MODE=N
+ASSUME_YES=N
 
 # $1: URL
 # $2: post data
@@ -40,18 +41,18 @@ __call_dnsapi()
 }
 
 # $1: domain
-# $2: host
+# $2: sub_domain
 # $3: record type
 # $*: values (allow empty when DDNS_MODE=Y)
 dnspod_set()
 {
-	local r_domain="$1" r_host="$2" r_type="$3"
-	shift 3
-
-	if ! [ -n "$r_domain" -a -n "$r_host" -a -n "$r_type" ]; then
+	if [ $# -lt 3 ]; then
 		echo "*** Missing arguments" >&2
 		return 1
 	fi
+
+	local r_domain="$1" r_host="$2" r_type="$3"
+	shift 3
 
 	# Get record id(s)
 	local r_ids=`__call_dnsapi "https://dnsapi.cn/Record.List" \
@@ -79,6 +80,65 @@ dnspod_set()
 		[ -n "$api_resp" ] || return 1
 		local new_value=`echo "$api_resp" | jq -r '.record.value'`
 		echo "OK: $r_host.$r_domain - $new_value"
+	done
+}
+
+# $1: domain
+# $2: sub_domain
+# $3: record type
+# $4: value
+dnspod_add()
+{
+	if [ $# -lt 4 ]; then
+		echo "*** Missing arguments" >&2
+		return 1
+	fi
+
+	local r_domain="$1" r_host="$2" r_type="$3" r_value="$4"
+
+	local api_resp=`__call_dnsapi "https://dnsapi.cn/Record.Create" \
+		"login_token=$DNSAPI_TOKEN&format=json&domain=$r_domain&record_id=$r_id&sub_domain=$r_host&value=$r_value&record_type=$r_type&record_line=默认"`
+	[ -n "$api_resp" ] || return 1
+	local new_host=`echo "$api_resp" | jq -r '.record.name'`
+	echo "OK: $new_host.$r_domain"
+}
+
+# $1: domain
+# $2: sub_domain
+# $3: record type
+dnspod_del()
+{
+	if [ $# -lt 3 ]; then
+		echo "*** Missing arguments" >&2
+		return 1
+	fi
+
+	local r_domain="$1" r_host="$2" r_type="$3"
+
+	# Get record id(s)
+	local r_rows=`__call_dnsapi "https://dnsapi.cn/Record.List" \
+		"login_token=$DNSAPI_TOKEN&format=json&domain=$r_domain&sub_domain=$r_host&record_type=$r_type" |
+		jq -r '.records[] | select(.name=="'"$r_host"'" and .type=="'"$r_type"'") | (.id + "|" + .line + "|" + .value)'`
+	[ -n "$r_rows" ] || return 1
+
+	# Delete each record
+	IFS=$'\n'
+	local r_row c
+	for r_row in $r_rows; do
+		local r_id=`echo "$r_row" | awk -F\| '{print $1}'`
+		local r_line=`echo "$r_row" | awk -F\| '{print $2}'`
+		local r_value=`echo "$r_row" | awk -F\| '{print $3}'`
+		if [ "$ASSUME_YES" = Y ]; then
+			echo "Deleting $r_host.$r_domain - $r_value ($r_line)"
+		else
+			read -p "Delete $r_host.$r_domain - $r_value ($r_line)? [N/y] " c
+			case "$c" in
+				y|Y) ;;
+				*) continue;;
+			esac
+		fi
+		local api_resp=`__call_dnsapi "https://dnsapi.cn/Record.Remove" \
+			"login_token=$DNSAPI_TOKEN&format=json&domain=$r_domain&record_id=$r_id"`
 	done
 }
 
@@ -117,7 +177,9 @@ show_help()
 {
 	cat <<EOF
 Usage:
-  dnspod-utils.sh [options] set  domain subdomain type value1 [value2 ...]
+  dnspod-utils.sh [options] set  domain sub_domain type value1 [value2 ...]
+  dnspod-utils.sh [options] add  domain sub_domain type value
+  dnspod-utils.sh [options] del  domain sub_domain type
   dnspod-utils.sh [options] once          # OpenWrt only
 Options:
   -t api_token              DNSPod API token in 'id,key' format
@@ -133,6 +195,7 @@ while [ $# -gt 0 ]; do
 		-d) shift 1; sleep "$1";;
 		-D) DDNS_MODE=Y;;
 		-k) CURL_EXTRA_OPTS=-k;;
+		-y) ASSUME_YES=Y;;
 		-*) echo "*** Invalid option: '$1'" >&2; exit 1;;
 		*) break;;
 	esac
@@ -154,5 +217,7 @@ fi
 
 case "$command" in
 	set) dnspod_set "$@";;
+	add) dnspod_add "$@";;
+	del) dnspod_del "$@";;
 	*) echo "*** Invalid command: '$command'" >&2; exit 1;;
 esac
