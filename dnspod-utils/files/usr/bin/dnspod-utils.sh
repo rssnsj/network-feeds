@@ -15,29 +15,29 @@ ASSUME_YES=N
 # $2: post data
 __call_dnsapi()
 {
-	local api_url="$1" post_data="$2" api_resp= rc i
-	for i in 2 2 5 5 10 10 20 20 0; do
-		api_resp=`curl "$api_url" -d "$post_data" -A "$DNSAPI_USERAGENT" -f -s --connect-timeout 10 -m20 $CURL_EXTRA_OPTS`
-		rc=$?
-		if [ "$rc" = 60 -o "$rc" = 51 ]; then
+	local api_url="$1" post_data="$2" i
+	for i in 2 2 5 5 10 20 30 0; do
+		local api_resp=`curl "$api_url" -d "$post_data" -A "$DNSAPI_USERAGENT" -f -s --connect-timeout 10 -m20 $CURL_EXTRA_OPTS`
+		local r=$?
+		if [ "$r" = 60 -o "$r" = 51 ]; then
 			echo "*** Invalid certificate of '$api_url'" >&2
 			return 1
-		elif [ -z "$api_resp" ]; then
+		fi
+		if [ -z "$api_resp" ]; then
 			echo "*** Network failure, retrying in ${i}s ..." >&2
 			sleep $i
 			continue
-		else
-			local err=`echo "$api_resp" | jq -r .status.code`
-			if [ "$err" != 1 ]; then
-				local errmsg=`echo "$api_resp" | jq -r .status.message`
-				echo "*** $errmsg ($err)" >&2
-				return 1
-			fi
 		fi
-		#
-		break
+		# Got any result
+		r=`echo "$api_resp" | jq -r .status.code`
+		if [ "$r" != 1 ]; then
+			local msg=`echo "$api_resp" | jq -r .status.message`
+			echo "*** $msg ($r)" >&2
+			return 1
+		fi
+		echo "$api_resp"
+		return 0
 	done
-	[ -n "$api_resp" ] && echo "$api_resp"
 }
 
 # $1: domain
