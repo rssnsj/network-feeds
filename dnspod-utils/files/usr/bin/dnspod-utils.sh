@@ -86,7 +86,7 @@ dnspod_set()
 # $1: domain
 # $2: sub_domain
 # $3: record type
-# $4: value
+# $*: values
 dnspod_add()
 {
 	if [ $# -lt 4 ]; then
@@ -94,13 +94,18 @@ dnspod_add()
 		return 1
 	fi
 
-	local r_domain="$1" r_host="$2" r_type="$3" r_value="$4"
+	local r_domain="$1" r_host="$2" r_type="$3"
+	shift 3
 
-	local api_resp=`__call_dnsapi "https://dnsapi.cn/Record.Create" \
-		"login_token=$DNSAPI_TOKEN&format=json&domain=$r_domain&record_id=$r_id&sub_domain=$r_host&value=$r_value&record_type=$r_type&record_line=默认"`
-	[ -n "$api_resp" ] || return 1
-	local new_host=`echo "$api_resp" | jq -r '.record.name'`
-	echo "OK: $new_host.$r_domain"
+	# Create each record
+	local r_value
+	for r_value in "$@"; do
+		local api_resp=`__call_dnsapi "https://dnsapi.cn/Record.Create" \
+			"login_token=$DNSAPI_TOKEN&format=json&domain=$r_domain&record_id=$r_id&sub_domain=$r_host&value=$r_value&record_type=$r_type&record_line=默认"`
+		[ -n "$api_resp" ] || return 1
+		local new_host=`echo "$api_resp" | jq -r '.record.name'`
+		echo "OK: $new_host.$r_domain - $r_value"
+	done
 }
 
 # $1: domain
