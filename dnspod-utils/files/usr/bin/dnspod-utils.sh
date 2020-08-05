@@ -6,6 +6,7 @@
 #
 
 DNSAPI_USERAGENT="OpenWrt-DDNS/0.1.0 (rssnsj@gmail.com)"
+DNSAPI_TOKEN=
 CURL_EXTRA_OPTS=
 DDNS_MODE=N
 
@@ -38,24 +39,23 @@ __call_dnsapi()
 	[ -n "$api_resp" ] && echo "$api_resp"
 }
 
-# $1: token (id,key)
-# $2: domain
-# $3: host
-# $4: record type
-# $*: values (allow empty with '-d')
+# $1: domain
+# $2: host
+# $3: record type
+# $*: values (allow empty when DDNS_MODE=Y)
 dnspod_set()
 {
-	local api_token="$1" r_domain="$2" r_host="$3" r_type="$4"
-	shift 4
+	local r_domain="$1" r_host="$2" r_type="$3"
+	shift 3
 
-	if ! [ -n "$api_token" -a -n "$r_domain" -a -n "$r_host" -a -n "$r_type" ]; then
+	if ! [ -n "$r_domain" -a -n "$r_host" -a -n "$r_type" ]; then
 		echo "*** Missing arguments" >&2
 		return 1
 	fi
 
 	# Get record id(s)
 	local r_ids=`__call_dnsapi "https://dnsapi.cn/Record.List" \
-		"login_token=$api_token&format=json&domain=$r_domain&sub_domain=$r_host&record_type=$r_type" |
+		"login_token=$DNSAPI_TOKEN&format=json&domain=$r_domain&sub_domain=$r_host&record_type=$r_type" |
 		jq -r '.records[] | select(.name=="'"$r_host"'" and .type=="'"$r_type"'" and .enabled=="1") | .id'`
 	[ -n "$r_ids" ] || return 1
 
@@ -75,7 +75,7 @@ dnspod_set()
 			local value_arg="&value=$r_value"
 		fi
 		local api_resp=`__call_dnsapi "https://dnsapi.cn/$api_method" \
-			"login_token=$api_token&format=json&domain=$r_domain&record_id=$r_id&sub_domain=$r_host$value_arg&record_type=$r_type&record_line=默认"`
+			"login_token=$DNSAPI_TOKEN&format=json&domain=$r_domain&record_id=$r_id&sub_domain=$r_host$value_arg&record_type=$r_type&record_line=默认"`
 		[ -n "$api_resp" ] || return 1
 		local new_value=`echo "$api_resp" | jq -r '.record.value'`
 		echo "OK: $r_host.$r_domain - $new_value"
@@ -98,15 +98,16 @@ openwrt_once()
 		local enabled=`uci -q get dnspod.@dnspod[$i].enabled`
 		[ "$enabled" = 0 ] && continue || :
 		local login_token=`uci -q get dnspod.@dnspod[$i].login_token`
+		DNSAPI_TOKEN=$login_token
 		local domain=`uci -q get dnspod.@dnspod[$i].domain`
 		local subdomain=`uci -q get dnspod.@dnspod[$i].subdomain`
 		local ipfrom=`uci -q get dnspod.@dnspod[$i].ipfrom`
 		if [ "$ipfrom" = auto ]; then
-			dnspod_set "$login_token" "$domain" "$subdomain" A
+			dnspod_set "$domain" "$subdomain" A
 		elif [ -n "$ipfrom" ]; then
 			. /lib/functions/network.sh
 			network_get_ipaddr ip $ipfrom
-			dnspod_set "$login_token" "$domain" "$subdomain" A "$ip"
+			dnspod_set "$domain" "$subdomain" A "$ip"
 		fi
 	done
 }
@@ -116,9 +117,10 @@ show_help()
 {
 	cat <<EOF
 Usage:
-  $0 [options] set  api_token domain name type value1 [value2 ...]
-  $0 [options] once    # OpenWrt only
+  dnspod-utils.sh [options] set  domain subdomain type value1 [value2 ...]
+  dnspod-utils.sh [options] once          # OpenWrt only
 Options:
+  -t api_token              DNSPod API token in 'id,key' format
   -d sencods                delayed seconds before any operation
   -D                        use 'Record.Ddns' for update (10s TTL)
   -k                        pass '-k' to curl
@@ -127,17 +129,30 @@ EOF
 
 while [ $# -gt 0 ]; do
 	case "$1" in
+		-t) shift 1; DNSAPI_TOKEN="$1";;
 		-d) shift 1; sleep "$1";;
 		-D) DDNS_MODE=Y;;
 		-k) CURL_EXTRA_OPTS=-k;;
-		-*) show_help; exit 1;;
+		-*) echo "*** Invalid option: '$1'" >&2; exit 1;;
 		*) break;;
 	esac
 	shift 1
 done
 
-case "$1" in
-	set) shift 1; dnspod_set "$@";;
-	once) shift 1; openwrt_once;;
-	*) show_help; exit 1;;
+command="$1"; shift 1
+
+if [ -z "$command" ]; then
+	show_help
+	exit 1
+elif [ "$command" = once ]; then
+	openwrt_once
+	exit 0
+elif [ -z "$DNSAPI_TOKEN" ]; then
+	echo "*** Missing API token" >&2
+	exit 1
+fi
+
+case "$command" in
+	set) dnspod_set "$@";;
+	*) echo "*** Invalid command: '$command'" >&2; exit 1;;
 esac
