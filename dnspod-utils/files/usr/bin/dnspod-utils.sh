@@ -110,20 +110,24 @@ dnspod_add()
 
 # $1: domain
 # $2: sub_domain
-# $3: record type
+# $3: record type (optional)
 dnspod_del()
 {
-	if [ $# -lt 3 ]; then
+	if [ $# -lt 2 ]; then
 		echo "*** Missing arguments" >&2
 		return 1
 	fi
 
-	local r_domain="$1" r_host="$2" r_type="$3"
+	local r_domain="$1" r_host="$2" r_type="$3" record_type_arg=
+
+	if [ -n "$r_type" ]; then
+		record_type_arg="&record_type=$r_type"
+	fi
 
 	# Get record id(s)
 	local r_rows=`__call_dnsapi "https://dnsapi.cn/Record.List" \
-		"login_token=$DNSAPI_TOKEN&format=json&domain=$r_domain&sub_domain=$r_host&record_type=$r_type" |
-		jq -r '.records[] | select(.name=="'"$r_host"'" and .type=="'"$r_type"'") | (.id + "|" + .line + "|" + .value)'`
+		"login_token=$DNSAPI_TOKEN&format=json&domain=$r_domain&sub_domain=$r_host$record_type_arg" |
+		jq -r '.records[] | select(.name=="'"$r_host"'") | (.id + "|" + .type + "|" + .line + "|" + .value)'`
 	[ -n "$r_rows" ] || return 1
 
 	# Delete each record
@@ -131,12 +135,13 @@ dnspod_del()
 	local r_row c
 	for r_row in $r_rows; do
 		local r_id=`echo "$r_row" | awk -F\| '{print $1}'`
-		local r_line=`echo "$r_row" | awk -F\| '{print $2}'`
-		local r_value=`echo "$r_row" | awk -F\| '{print $3}'`
+		local r_type=`echo "$r_row" | awk -F\| '{print $2}'`
+		local r_line=`echo "$r_row" | awk -F\| '{print $3}'`
+		local r_value=`echo "$r_row" | awk -F\| '{print $4}'`
 		if [ "$ASSUME_YES" = Y ]; then
-			echo "Deleting $r_host.$r_domain - $r_value ($r_line)"
+			echo "Deleting $r_host.$r_domain - $r_type, $r_value, $r_line"
 		else
-			read -p "Delete $r_host.$r_domain - $r_value ($r_line)? [N/y] " c
+			read -p "Delete $r_host.$r_domain - $r_type, $r_value, $r_line ? [N/y] " c
 			case "$c" in
 				y|Y) ;;
 				*) continue;;
