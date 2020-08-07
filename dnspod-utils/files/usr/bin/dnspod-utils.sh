@@ -208,19 +208,20 @@ while [ $# -gt 0 ]; do
 	shift 1
 done
 
-command="$1"; shift 1
-
-if [ -z "$command" ]; then
+if [ -z "$1" ]; then
 	show_help
 	exit 1
-elif [ "$command" = once ]; then
+fi
+if [ "$1" = once ]; then
 	openwrt_once
 	exit 0
-elif [ -z "$DNSAPI_TOKEN" ]; then
+fi
+if [ -z "$DNSAPI_TOKEN" ]; then
 	echo "*** Missing API token" >&2
 	exit 1
 fi
 
+command="$1"; shift 1
 case "$command" in
 	set) dnspod_set "$@";;
 	add) dnspod_add "$@";;
