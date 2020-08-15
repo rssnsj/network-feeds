@@ -58,7 +58,6 @@ start()
 		. /lib/functions/network.sh
 		network_get_subnet covered_subnets lan
 	fi
-	local gfwlist="china-banned"
 	[ -n "$safe_dns" ] || safe_dns="8.8.8.8";
 
 	# -----------------------------------------------------------
@@ -142,9 +141,9 @@ start()
 			iptables -w -t mangle -A minivtun_go -m set --match-set china dst -j RETURN
 			;;
 		M)
-			ipset create $gfwlist hash:ip maxelem 65536 2>/dev/null
-			[ -n "$safe_dns" ] && ipset add $gfwlist $safe_dns 2>/dev/null
-			iptables -w -t mangle -A minivtun_go -m set ! --match-set $gfwlist dst -j RETURN
+			ipset create china-banned hash:ip maxelem 65536 2>/dev/null
+			[ -n "$safe_dns" ] && ipset add china-banned $safe_dns 2>/dev/null
+			iptables -w -t mangle -A minivtun_go -m set ! --match-set china-banned dst -j RETURN
 			iptables -w -t mangle -A minivtun_go -m set --match-set china dst -j RETURN
 			;;
 	esac
@@ -174,7 +173,7 @@ start()
 	mkdir -p /var/etc/dnsmasq-go.d
 	###### Anti-pollution configuration ######
 	if [ -n "$safe_dns" ]; then
-		( cat /etc/gfwlist/$gfwlist; cat /etc/gfwlist/$gfwlist.* 2>/dev/null; ) | \
+		( cat /etc/gfwlist/china-banned; cat /etc/gfwlist/china-banned.* 2>/dev/null; ) | \
 			awk -vs="$safe_dns#$safe_dns_port" '!/^$/&&!/^#/{printf("server=/%s/%s\n",$0,s)}' \
 			> /var/etc/dnsmasq-go.d/01-pollution.conf
 	else
@@ -184,8 +183,8 @@ start()
 	###### dnsmasq-to-ipset configuration ######
 	case "$proxy_mode" in
 		M)
-			( cat /etc/gfwlist/$gfwlist; cat /etc/gfwlist/$gfwlist.* 2>/dev/null; ) | \
-				awk '!/^$/&&!/^#/{printf("ipset=/%s/'"$gfwlist"'\n",$0)}' \
+			( cat /etc/gfwlist/china-banned; cat /etc/gfwlist/china-banned.* 2>/dev/null; ) | \
+				awk '!/^$/&&!/^#/{printf("ipset=/%s/china-banned\n",$0)}' \
 				> /var/etc/dnsmasq-go.d/02-ipset.conf
 			;;
 	esac
