@@ -141,9 +141,9 @@ start()
 			iptables -w -t mangle -A minivtun_go -m set --match-set china dst -j RETURN
 			;;
 		M)
-			ipset create china-banned hash:ip maxelem 65536 2>/dev/null
-			[ -n "$safe_dns" ] && ipset add china-banned $safe_dns 2>/dev/null
-			iptables -w -t mangle -A minivtun_go -m set ! --match-set china-banned dst -j RETURN
+			ipset create dns-resolved hash:ip maxelem 262144 2>/dev/null
+			[ -n "$safe_dns" ] && ipset add dns-resolved $safe_dns 2>/dev/null
+			iptables -w -t mangle -A minivtun_go -m set ! --match-set dns-resolved dst -j RETURN
 			iptables -w -t mangle -A minivtun_go -m set --match-set china dst -j RETURN
 			;;
 	esac
@@ -184,7 +184,7 @@ start()
 	case "$proxy_mode" in
 		M)
 			( cat /etc/gfwlist/china-banned; cat /etc/gfwlist/china-banned.* 2>/dev/null; ) | \
-				awk '!/^$/&&!/^#/{printf("ipset=/%s/china-banned\n",$0)}' \
+				awk '!/^$/&&!/^#/{printf("ipset=/%s/dns-resolved\n",$0)}' \
 				> /var/etc/dnsmasq-go.d/02-ipset.conf
 			;;
 	esac
@@ -243,7 +243,7 @@ stop()
 
 	# -----------------------------------------------------------
 	if [ "$KEEP_GFWLIST" != Y ]; then
-		ipset destroy china-banned 2>/dev/null
+		ipset destroy dns-resolved 2>/dev/null
 	fi
 
 	# -----------------------------------------------------------
