@@ -90,6 +90,7 @@ start()
 		local algorithm=`uci -q get minivtun.@minivtun[$i].algorithm`
 		local local_ipaddr=`uci -q get minivtun.@minivtun[$i].local_ipaddr`
 		local local_netmask=`uci -q get minivtun.@minivtun[$i].local_netmask`
+		local local_ip6addr=`uci -q get minivtun.@minivtun[$i].local_ip6addr`
 		local mtu=`uci -q get minivtun.@minivtun[$i].mtu`
 
 		local cmd_opts=""
@@ -105,6 +106,10 @@ start()
 		local ifname=minivtun-go$i
 		local metric_base=`expr 200 + $i`
 
+		if [ -n "$local_ip6addr" ]; then
+			cmd_opts="$cmd_opts -A $local_ip6addr -v ::/0"
+		fi
+
 		# NOTICE: Empty '$password' is for no encryption
 		/usr/sbin/minivtun -r [$server_addr]:$server_port -n $ifname \
 			-a $local_ipaddr/`netmask_to_pfxlen $local_netmask` \
@@ -118,6 +123,7 @@ start()
 
 	# -----------------------------------------------------------
 	ip rule add fwmark $VPN_ROUTE_FWMARK table $VPN_ROUTE_TABLE
+	ip -6 rule add fwmark $VPN_ROUTE_FWMARK table $VPN_ROUTE_TABLE
 
 	# Add basic firewall rules
 	iptables -w -N minivtun_forward || iptables -w -F minivtun_forward
@@ -125,6 +131,12 @@ start()
 	iptables -w -A minivtun_forward -o minivtun-+ -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 	iptables -w -A minivtun_forward -o minivtun-+ -j ACCEPT
 	iptables -w -t nat -I POSTROUTING -o minivtun-+ -j MASQUERADE
+
+	ip6tables -w -N minivtun_forward || ip6tables -w -F minivtun_forward
+	ip6tables -w -I FORWARD -j minivtun_forward
+	ip6tables -w -A minivtun_forward -o minivtun-+ -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+	ip6tables -w -A minivtun_forward -o minivtun-+ -j ACCEPT
+	ip6tables -w -t nat -I POSTROUTING -o minivtun-+ -j MASQUERADE
 
 	# -----------------------------------------------------------
 	iptables -w -t mangle -N minivtun_go
@@ -134,19 +146,33 @@ start()
 		echo "*** IP set 'local' is not loaded." >&2
 		return 1
 	fi
+
+	ip6tables -w -t mangle -N minivtun_go
+	ip6tables -w -t mangle -F minivtun_go
+	ip6tables -w -t mangle -A minivtun_go -m conntrack --ctdir REPLY -j RETURN  # ignore DNAT replies
+	ip6tables -w -t mangle -A minivtun_go ! -d 2000::/3 -j RETURN
+
 	case "$proxy_mode" in
 		G)
 			;;
 		S)
 			iptables -w -t mangle -A minivtun_go -m set --match-set china dst -j RETURN
+			ip6tables -w -t mangle -A minivtun_go -m set --match-set china6 dst -j RETURN
 			;;
 		M)
 			ipset create dns-resolved hash:ip maxelem 262144 2>/dev/null
-			[ -n "$safe_dns" ] && ipset add dns-resolved $safe_dns 2>/dev/null
+			ipset create dns-resolved6 hash:ip family inet6 maxelem 65536 2>/dev/null
+			if [ -n "$safe_dns" ]; then
+				ipset add dns-resolved $safe_dns 2>/dev/null
+				ipset add dns-resolved6 $safe_dns 2>/dev/null
+			fi
 			iptables -w -t mangle -A minivtun_go -m set ! --match-set dns-resolved dst -j RETURN
 			iptables -w -t mangle -A minivtun_go -m set --match-set china dst -j RETURN
+			ip6tables -w -t mangle -A minivtun_go -m set ! --match-set dns-resolved6 dst -j RETURN
+			ip6tables -w -t mangle -A minivtun_go -m set --match-set china6 dst -j RETURN
 			;;
 	esac
+
 	# Clients that do not use VPN
 	local subnet
 	for subnet in $excepted_subnets; do
@@ -160,14 +186,22 @@ start()
 	for subnet in $covered_subnets; do
 		iptables -w -t mangle -A minivtun_go -s $subnet -j MARK --set-mark $VPN_ROUTE_FWMARK
 	done
+	for subnet in $covered_subnets6; do
+		ip6tables -w -t mangle -A minivtun_go -s $subnet -j MARK --set-mark $VPN_ROUTE_FWMARK
+	done
 	if [ -n "$safe_dns" ]; then
 		iptables -w -t mangle -A minivtun_go -d $safe_dns -p udp --dport $safe_dns_port \
-			-j MARK --set-mark $VPN_ROUTE_FWMARK
+			-j MARK --set-mark $VPN_ROUTE_FWMARK 2>/dev/null
+		ip6tables -w -t mangle -A minivtun_go -d $safe_dns -p udp --dport $safe_dns_port \
+			-j MARK --set-mark $VPN_ROUTE_FWMARK 2>/dev/null
 	fi
 	iptables -w -t mangle -A minivtun_go -m mark --mark $VPN_ROUTE_FWMARK -j ACCEPT  # stop further matches
+	ip6tables -w -t mangle -A minivtun_go -m mark --mark $VPN_ROUTE_FWMARK -j ACCEPT
 
 	iptables -w -t mangle -I PREROUTING -j minivtun_go
 	iptables -w -t mangle -I OUTPUT -p udp --dport 53 -j minivtun_go  # DNS queries over tunnel
+	ip6tables -w -t mangle -I PREROUTING -j minivtun_go
+	ip6tables -w -t mangle -I OUTPUT -p udp --dport 53 -j minivtun_go
 
 	# -----------------------------------------------------------
 	mkdir -p /var/etc/dnsmasq-go.d
@@ -184,7 +218,7 @@ start()
 	case "$proxy_mode" in
 		M)
 			( cat /etc/gfwlist/china-banned; cat /etc/gfwlist/china-banned.* 2>/dev/null; ) | \
-				awk '!/^$/&&!/^#/{printf("ipset=/%s/dns-resolved\n",$0)}' \
+				awk '!/^$/&&!/^#/{printf("ipset=/%s/dns-resolved,dns-resolved6\n",$0)}' \
 				> /var/etc/dnsmasq-go.d/02-ipset.conf
 			;;
 	esac
@@ -241,21 +275,34 @@ stop()
 		iptables -w -t mangle -X minivtun_go 2>/dev/null
 	fi
 
+	if ip6tables -w -t mangle -F minivtun_go 2>/dev/null; then
+		while ip6tables -w -t mangle -D OUTPUT -p udp --dport 53 -j minivtun_go 2>/dev/null; do :; done
+		while ip6tables -w -t mangle -D PREROUTING -j minivtun_go 2>/dev/null; do :; done
+		ip6tables -w -t mangle -X minivtun_go 2>/dev/null
+	fi
+
 	# -----------------------------------------------------------
 	if [ "$KEEP_GFWLIST" != Y ]; then
 		ipset destroy dns-resolved 2>/dev/null
+		ipset destroy dns-resolved6 2>/dev/null
 	fi
 
 	# -----------------------------------------------------------
 	# We don't have to delete the default route, since it will be
 	# brought down along with the interface down.
 	while ip rule del fwmark $VPN_ROUTE_FWMARK table $VPN_ROUTE_TABLE 2>/dev/null; do :; done
+	while ip -6 rule del fwmark $VPN_ROUTE_FWMARK table $VPN_ROUTE_TABLE 2>/dev/null; do :; done
 
 	# Delete basic firewall rules
 	while iptables -w -t nat -D POSTROUTING -o minivtun-+ -j MASQUERADE 2>/dev/null; do :; done
 	while iptables -w -D FORWARD -j minivtun_forward 2>/dev/null; do :; done
 	iptables -w -F minivtun_forward 2>/dev/null
 	iptables -w -X minivtun_forward 2>/dev/null
+
+	while ip6tables -w -t nat -D POSTROUTING -o minivtun-+ -j MASQUERADE 2>/dev/null; do :; done
+	while ip6tables -w -D FORWARD -j minivtun_forward 2>/dev/null; do :; done
+	ip6tables -w -F minivtun_forward 2>/dev/null
+	ip6tables -w -X minivtun_forward 2>/dev/null
 
 	local pidfile
 	for pidfile in /var/run/minivtun-go*.pid; do
