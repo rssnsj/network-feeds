@@ -25,7 +25,7 @@ define Package/minivtun-tools
   TITLE:=Non-standard VPN that helps you to get through firewalls
   URL:=https://github.com/rssnsj/network-feeds
   MAINTAINER:=Justin Liu <rssnsj@gmail.com>
-  DEPENDS:=+ip +ipset-lists +kmod-tun +libopenssl +luci
+  DEPENDS:=+ip +ipset-lists +kmod-tun ip6tables-mod-nat +libopenssl +luci
 endef
 
 define Package/minivtun-tools/conffiles
