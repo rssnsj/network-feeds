@@ -1,8 +1,10 @@
 update:
 	./china-routes.sh > china
+	./china-routes6.sh > china6
 	./gfwlist.sh > china-banned
-	md5sum china china-banned > MD5SUMS
+	md5sum china china6 china-banned > MD5SUMS
 	mv -f china ../files/etc/ipset/china
+	mv -f china6 ../files/etc/ipset/china6
 	mv -f china-banned ../files/etc/gfwlist/china-banned
 
 commit: update
