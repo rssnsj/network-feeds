@@ -1,3 +1,16 @@
+ca
+de
+edu
+google
+gov
+hk
+kr
+my
+sg
+tw
+uk
+us
+
 0to255.com
 141hongkong.com
 2000fun.com

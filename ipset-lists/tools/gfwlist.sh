@@ -8,15 +8,16 @@ china_banned()
 		rm -f gfwlist.b64
 	fi
 
-	cat gfwlist.txt base-gfwlist.txt | sort -u |
-		sed '/^!/d; /^@@/d; /^$/d; /^#/d' |
-		sed 's/!.\+//; s/|//g; s/@//g; s/https\?:\/\///;' |
-		sed '/\*/d; /apple\.com/d; /\<hiwifi\>/d;' |
-		sed '/^[0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+$/d' |
-		grep '^[0-9a-z\.-]\+$' | grep '\.' | sed 's#^\.\+##' | rev | sort -u |
-		awk '
-			BEGIN { prev = "___"; }
-			{
+	(
+		cat gfwlist.txt |
+			sed '/^!/d; /^@@/d; /^$/d; /^#/d' |
+			sed 's/!.\+//; s/|//g; s/@//g; s/https\?:\/\///;' |
+			sed '/\*/d; /apple\.com/d; /\<hiwifi\>/d;' |
+			sed '/^[0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+$/d' |
+			grep '^[0-9a-z\.-]\+$' | grep '\.' | sed 's/^\.\+//'
+		cat base-gfwlist.txt
+	) | rev | sort -u | awk '
+			BEGIN { prev = "___"; }  {
 				cur = $0;
 				if (!(index(cur, prev) == 1 && substr(cur, 1 + length(prev), 1) == ".")) {
 					print cur;
