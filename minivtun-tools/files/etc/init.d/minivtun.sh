@@ -199,27 +199,27 @@ EOF
 		/etc/init.d/dnsmasq restart
 
 		# Check if DNS service was really started
-		local dnsmasq_ok=N
-		local i
-		for i in 0 1 2 3 4 5 6 7; do
-			sleep 1
+		local dnsmasq_ok=N dnsmasq_pidfile= i
+		for i in 1 1 1 1 1 1 1 1; do
+			sleep $i
 			if [ -f /var/run/dnsmasq.pid ]; then
-				local dnsmasq_pid=`cat /var/run/dnsmasq.pid`
+				dnsmasq_pidfile=/var/run/dnsmasq.pid
 			elif [ -f /var/run/dnsmasq/dnsmasq.pid ]; then
-				local dnsmasq_pid=`cat /var/run/dnsmasq/dnsmasq.pid`
+				dnsmasq_pidfile=/var/run/dnsmasq/dnsmasq.pid
 			else
-				local dnsmasq_pid=`cat /var/run/dnsmasq/dnsmasq.*.pid 2>/dev/null`
+				dnsmasq_pidfile=`ls -d /var/run/dnsmasq/dnsmasq.*.pid 2>/dev/null | head -n1`
 			fi
-			if [ -n "$dnsmasq_pid" ]; then
-				if kill -0 $dnsmasq_pid 2>/dev/null; then
+			if [ -n "$dnsmasq_pidfile" ]; then
+				if kill -0 `cat $dnsmasq_pidfile` 2>/dev/null; then
 					dnsmasq_ok=Y
 					break
 				fi
 			fi
 		done
 		if [ "$dnsmasq_ok" != Y ]; then
-			logger_warn "WARNING: Attached dnsmasq rules will cause the service startup failure. Removed those configurations."
-			rm -f /tmp/dnsmasq.d/dnsmasq-go.conf
+			logger_warn "WARNING: Attached dnsmasq rules will cause the service startup failure. Removing the configuration."
+			( set -x; rm -f /tmp/dnsmasq.d/dnsmasq-go.conf )
+			rm -f $dnsmasq_pidfile
 			/etc/init.d/dnsmasq restart
 		fi
 	fi
