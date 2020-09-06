@@ -5,16 +5,30 @@
 #
 
 china_routes_apnic() {
-	[ -f apnic.txt ] || wget -4 http://ftp.apnic.net/stats/apnic/delegated-apnic-latest -O apnic.txt >&2 || exit 1
+	if [ ! -f apnic.txt ]; then
+		wget -4 http://ftp.apnic.net/stats/apnic/delegated-apnic-latest -O apnic.txt >&2 || exit 1
+	fi
 	cat apnic.txt | awk -F'|' '
 function tobits(c) { for(n=0; c>=2; c/=2) n++; return 32-n; }
 $2=="CN"&&$3=="ipv4" { printf("%s/%d\n", $4, tobits($5)) }' |
-	xargs ./netmask/netmask | awk '{print $1}'
+		xargs ./netmask/netmask | awk '{print $1}'
 }
 
 china_routes_ipip() {
-	[ -f ipip.txt ] || wget -4 https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt -O ipip.txt >&2 || exit 1
+	if [ ! -f ipip.txt ]; then
+		wget -4 https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt -O ipip.txt >&2 || exit 1
+	fi
 	cat ipip.txt | xargs ./netmask/netmask | awk '{print $1}'
+}
+
+china_routes_maxmind() {
+	local maxmind_db=GeoLite2-Country-Blocks-IPv4.csv
+	if [ ! -f $maxmind_db ]; then
+		echo "*** Missing '$maxmind_db'." >&2
+		exit 1
+	fi
+	cat $maxmind_db | awk -F, '$2==1814991 && $3==1814991 {print $1}' |
+		xargs ./netmask/netmask | awk '{print $1}'
 }
 
 china_routes_merged() {
@@ -22,7 +36,7 @@ china_routes_merged() {
 	china_routes_ipip > china.ipip
 	# Merge them together
 	cat china.apnic china.ipip | ./ipv4-merger/ipv4-merger | sed 's/\-/:/g' |
-	xargs ./netmask/netmask | awk '{print $1}' | awk -F/ '$2<=24' > china.merged
+		xargs ./netmask/netmask | awk '{print $1}' | awk -F/ '$2<=24' > china.merged
 	cat china.merged
 }
 
@@ -63,11 +77,13 @@ case "$1" in
 	-r)
 		inverted_china_routes
 		;;
+	china_routes_*)
+		"$@"
+		;;
 	*)
 		echo "Usage:"
 		echo " $0              generate China routes in ipset format"
 		echo " $0 -c           generate China routes in IP/prefix format"
 		echo " $0 -r           generate invert China routes"
 		;;
-	*)
 esac
