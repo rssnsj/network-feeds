@@ -1,9 +1,9 @@
-/apnic.txt
 /china.apnic
 /china.ipip
 /china.merged
-/gfwlist.txt
 /ipip.txt
+/*.txt
+/*.csv
 *.o
 /ipv4-merger/ipv4-merger
 /netmask/netmask
