@@ -1,11 +1,18 @@
 #!/bin/sh -e
 
+DOWNLOAD_URL_PREFIX="https://raw.githubusercontent.com/rssnsj/network-feeds/master/ipset-lists"
+
 mkdir -p /tmp/update-ipsets
 cd /tmp/update-ipsets
 
-curl -ks https://raw.githubusercontent.com/rssnsj/network-feeds/master/ipset-lists/files/etc/ipset/china -o china
-curl -ks https://raw.githubusercontent.com/rssnsj/network-feeds/master/ipset-lists/files/etc/gfwlist/china-banned -o china-banned
-curl -ks https://raw.githubusercontent.com/rssnsj/network-feeds/master/ipset-lists/tools/MD5SUMS -o MD5SUMS
+for relpath in files/etc/ipset/china files/etc/gfwlist/china-banned tools/MD5SUMS; do
+	file=`basename $relpath`
+	echo "Downloading $relpath ..." >&2
+	if ! curl -k $DOWNLOAD_URL_PREFIX/$relpath -o $file --interface minivtun-go0; then
+		curl -k $DOWNLOAD_URL_PREFIX/$relpath -o $file || exit 1
+	fi
+	echo "Done." >&2
+done
 
 if md5sum -c MD5SUMS; then
 	# Check if data really changes before restarting the services
