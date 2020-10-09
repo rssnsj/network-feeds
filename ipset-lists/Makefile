@@ -6,7 +6,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=ipset-lists
-PKG_VERSION:=10
+PKG_VERSION:=11
 PKG_RELEASE:=
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
@@ -21,6 +21,8 @@ define Package/ipset-lists
 endef
 
 define Package/ipset-lists/conffiles
+/etc/ipset/local
+/etc/ipset/china
 /etc/gfwlist/china-banned
 endef
 
