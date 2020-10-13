@@ -11,4 +11,5 @@ function index()
 	local page
 	page = entry({"admin", "services", "gfwlist"}, cbi("gfwlist"), _("Domain Lists"))
 	page.dependent = true
+	page.order = 70
 end

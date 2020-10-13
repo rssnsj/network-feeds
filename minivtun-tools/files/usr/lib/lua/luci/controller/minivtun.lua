@@ -15,4 +15,5 @@ function index()
 	local page
 	page = entry({"admin", "services", "minivtun"}, cbi("minivtun"), _("Mini Virtual Tunneller"))
 	page.dependent = true
+	page.order = 20
 end
