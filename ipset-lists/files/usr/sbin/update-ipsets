@@ -2,23 +2,29 @@
 
 DOWNLOAD_URL_PREFIX="https://raw.githubusercontent.com/rssnsj/network-feeds/master/ipset-lists"
 
-mkdir -p /tmp/update-ipsets
-cd /tmp/update-ipsets
-
-for relpath in files/etc/ipset/china files/etc/gfwlist/china-banned tools/MD5SUMS; do
-	file=`basename $relpath`
+download_file_of_path() {
+	local relpath="$1"
+	local file=`basename $relpath`
 	echo "Downloading $relpath ..." >&2
 	if ! curl -k $DOWNLOAD_URL_PREFIX/$relpath -o $file --interface minivtun-go0; then
-		curl -k $DOWNLOAD_URL_PREFIX/$relpath -o $file || exit 1
+		curl -k $DOWNLOAD_URL_PREFIX/$relpath -o $file || return 1
 	fi
 	echo "Done." >&2
-done
+}
 
-if md5sum -c MD5SUMS; then
-	# Check if data really changes before restarting the services
-	mkdir -p s
-	cp /etc/ipset/china /etc/gfwlist/china-banned s/
-	if ! ( cd s && md5sum -c ../MD5SUMS >/dev/null 2>&1 ); then
+
+mkdir -p /tmp/ipsets-tmp
+cd /tmp/ipsets-tmp
+
+# Get checksum and check if we need an update
+download_file_of_path tools/MD5SUMS || exit 1
+mkdir -p s
+cp /etc/ipset/china /etc/gfwlist/china-banned s/
+if ! ( cd s && md5sum -c ../MD5SUMS >/dev/null 2>&1 ); then
+	download_file_of_path files/etc/ipset/china || exit 1
+	download_file_of_path files/etc/gfwlist/china-banned || exit 1
+	# File correctness check
+	if md5sum -c MD5SUMS; then
 		echo "Updating the data files ..."
 		cp -f china /etc/ipset/china
 		cp -f china-banned /etc/gfwlist/china-banned
@@ -30,9 +36,10 @@ if md5sum -c MD5SUMS; then
 		/etc/init.d/ss-redir.sh enabled 2>/dev/null && /etc/init.d/ss-redir.sh start || :
 		echo "Done."
 	else
-		echo "No change on the data."
+		echo "*** MD5 mismatch for downloaded files." >&2
 	fi
-	rm -rf /tmp/update-ipsets
 else
-	echo "*** MD5 mismatch for downloaded files."
+	echo "No change on the data."
 fi
+
+rm -rf /tmp/ipsets-tmp
