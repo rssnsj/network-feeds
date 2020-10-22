@@ -440,7 +440,6 @@ sandnoble.com
 sankaizok.com
 scanscout.com
 scorecardresearch.com
-secure.wikimedia.org
 sendoid.com
 serverfault.com
 shahamat-english.com
@@ -553,7 +552,6 @@ uniteddaily.com.my
 update.playstation.net
 uploaded.to
 uploadstation.com
-upload.wikimedia.org
 uushare.com
 v70.us
 vaayoo.com
@@ -586,6 +584,7 @@ whydidyoubuymethat.com
 w.idaiwan.com
 wiki.keso.cn
 wikilivres.info
+wikimedia.org
 wikimedia.org.mo
 wikinet.org
 wikkii.com
