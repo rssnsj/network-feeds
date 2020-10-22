@@ -6,7 +6,7 @@
 
 china_routes_apnic() {
 	if [ ! -f apnic.txt ]; then
-		wget -4 http://ftp.apnic.net/stats/apnic/delegated-apnic-latest -O apnic.txt >&2 || exit 1
+		wget -4 http://ftp.apnic.net/stats/apnic/delegated-apnic-latest -O apnic.txt >&2 || { rm -f apnic.txt; exit 1; }
 	fi
 	cat apnic.txt | awk -F'|' '
 			function tobits(c) { for(n=0; c>=2; c/=2) n++; return 32-n; }
@@ -16,7 +16,7 @@ china_routes_apnic() {
 
 china_routes_ipip() {
 	if [ ! -f ipip.txt ]; then
-		wget -4 https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt -O ipip.txt >&2 || exit 1
+		wget -4 https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt -O ipip.txt >&2 || { rm -f ipip.txt; exit 1; }
 	fi
 	cat ipip.txt | xargs ./netmask/netmask | awk '{print $1}' | awk -F/ '$2<=24'
 }
