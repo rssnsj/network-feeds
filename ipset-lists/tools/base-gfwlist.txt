@@ -16,7 +16,10 @@ tiktokv.com
 byteoversea.com
 ibytedtos.com
 
-letsencrypt.org
+ocsp.int-x1.letsencrypt.org
+ocsp.int-x2.letsencrypt.org
+ocsp.int-x3.letsencrypt.org
+ocsp.int-x4.letsencrypt.org
 
 0to255.com
 141hongkong.com
