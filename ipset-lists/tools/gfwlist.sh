@@ -24,7 +24,7 @@ china_banned()
 					prev = cur;
 				}
 			}' |
-		rev | sort -u
+		rev | sort -u | sed '/^$/d'
 
 }
 

@@ -11,10 +11,12 @@ tw
 uk
 us
 
-tiktokcdn.com
+tiktok.com
 tiktokv.com
 byteoversea.com
 ibytedtos.com
+ipstatp.com
+hotapi.sgsnssdk.com
 
 ocsp.int-x1.letsencrypt.org
 ocsp.int-x2.letsencrypt.org
