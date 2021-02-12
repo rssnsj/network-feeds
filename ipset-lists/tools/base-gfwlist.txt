@@ -20,6 +20,8 @@ ibytedtos.com
 ipstatp.com
 hotapi.sgsnssdk.com
 
+openwrt.org
+
 ocsp.int-x1.letsencrypt.org
 ocsp.int-x2.letsencrypt.org
 ocsp.int-x3.letsencrypt.org
