@@ -142,8 +142,9 @@ start()
 			;;
 		M)
 			ipset create dns-resolved hash:ip maxelem 262144 2>/dev/null
+			ipset create special-hosts hash:ip maxelem 256 2>/dev/null
 			[ -n "$safe_dns" ] && ipset add dns-resolved $safe_dns 2>/dev/null
-			iptables -w -t mangle -A minivtun_go -m set ! --match-set dns-resolved dst -j RETURN
+			iptables -w -t mangle -A minivtun_go -m set ! --match-set special-hosts src -m set ! --match-set dns-resolved dst -j RETURN
 			iptables -w -t mangle -A minivtun_go -m set --match-set china dst -j RETURN
 			;;
 	esac
@@ -244,6 +245,7 @@ stop()
 	# -----------------------------------------------------------
 	if [ "$KEEP_GFWLIST" != Y ]; then
 		ipset destroy dns-resolved 2>/dev/null
+		ipset destroy special-hosts 2>/dev/null
 	fi
 
 	# -----------------------------------------------------------
