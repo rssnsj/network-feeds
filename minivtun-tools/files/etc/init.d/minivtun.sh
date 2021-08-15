@@ -70,9 +70,16 @@ start()
 	echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter
 
 	# -----------------------------------------------------------
+	# Get the number of tunnels as metric stepping factor */
+	local index_list= i=0
+	while uci -q get minivtun.@minivtun[$i] >/dev/null; do
+		index_list="$index_list $i"
+		i=`expr $i + 1`
+	done
+	local nr_tunnels=$i
+
 	# For each tunnel
-	local i
-	for i in 0 1 2 3 4 5 6 7 8 9; do
+	for i in $index_list; do
 		uci -q get minivtun.@minivtun[$i] >/dev/null || break
 
 		local enabled=`uci -q get minivtun.@minivtun[$i].enabled`
@@ -109,7 +116,7 @@ start()
 		/usr/sbin/minivtun -r [$server_addr]:$server_port -n $ifname \
 			-a $local_ipaddr/`netmask_to_pfxlen $local_netmask` \
 			-e "$password" -t "$algorithm" -w \
-			-D -v 0.0.0.0/0 -T $VPN_ROUTE_TABLE -M $metric_base \
+			-D -v 0.0.0.0/0 -T $VPN_ROUTE_TABLE -M $metric_base++$nr_tunnels \
 			-p /var/run/$ifname.pid -H /var/run/$ifname.health \
 			$cmd_opts -d || continue
 
