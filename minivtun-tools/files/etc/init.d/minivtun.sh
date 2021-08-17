@@ -150,8 +150,8 @@ start()
 		M)
 			ipset create dns-resolved hash:ip maxelem 262144 2>/dev/null
 			[ -n "$safe_dns" ] && ipset add dns-resolved $safe_dns 2>/dev/null
-			iptables -w -t mangle -A minivtun_go -m set ! --match-set dns-resolved dst -j RETURN
 			iptables -w -t mangle -A minivtun_go -m set --match-set china dst -j RETURN
+			iptables -w -t mangle -A minivtun_go -m set ! --match-set dns-resolved dst -j RETURN
 			;;
 	esac
 	# Clients that do not use VPN
