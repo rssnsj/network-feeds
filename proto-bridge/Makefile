@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2015 Justin Liu
+# Copyright (c) 2021 Justin Liu
 # Author: Justin Liu <rssnsj@gmail.com>
 # https://github.com/rssnsj/network-feeds
 #
@@ -7,7 +7,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=proto-bridge
-PKG_VERSION:=20180530
+PKG_VERSION:=20210917
 PKG_RELEASE=$(PKG_SOURCE_VERSION)
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
@@ -15,7 +15,7 @@ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE_URL:=https://github.com/rssnsj/proto-bridge.git
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=1130e71e017f5facfc355fb5db5b3459ef2a1822
+PKG_SOURCE_VERSION:=cd10edd849c19a8eaac0c3d5df707e4c581d975c
 
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/kernel.mk
@@ -41,8 +41,8 @@ define KernelPackage/yavlan/description
 endef
 
 define Build/Compile
-	$(MAKE) -C "$(LINUX_DIR)" CROSS_COMPILE="$(TARGET_CROSS)" \
-		ARCH="$(LINUX_KARCH)" SUBDIRS="$(PKG_BUILD_DIR)/src" \
+	$(MAKE) -C "$(LINUX_DIR)" CROSS_COMPILE="$(TARGET_CROSS)" ARCH="$(LINUX_KARCH)" \
+		SUBDIRS="$(PKG_BUILD_DIR)/src" M="$(PKG_BUILD_DIR)/src" \
 		modules
 endef
 
