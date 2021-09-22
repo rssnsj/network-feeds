@@ -101,7 +101,8 @@ start()
 {
 	/etc/init.d/samba disable
 	detect_usb_storages
-	/etc/init.d/samba restart
+	/etc/init.d/samba stop 2>/dev/null
+	/etc/init.d/samba start
 }
 
 stop()
