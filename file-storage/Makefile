@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2020 Justin Liu
+# Copyright (c) 2021 Justin Liu
 # Author: Justin Liu <rssnsj@gmail.com>
 #
 
@@ -36,12 +36,15 @@ endef
 define Package/file-storage/postinst
 #!/bin/sh
 if [ -e /etc/openwrt_release ]; then
-	[ -f /etc/init.d/samba4 ] && ln -sf samba4 /etc/init.d/samba || :
-	[ -f /etc/config/samba4 ] && ln -sf samba4 /etc/config/samba || :
+	if [ -f /etc/init.d/samba4 ]; then
+		/etc/init.d/samba4 disable
+		ln -sf samba4 /etc/init.d/samba
+	fi
+	if [ -f /etc/config/samba4 ]; then
+		ln -sf samba4 /etc/config/samba
+	fi
 	/etc/init.d/samba stop
 	/etc/init.d/samba disable
-	/etc/init.d/file-storage restart
-	/etc/init.d/file-storage enable || :
 	/etc/init.d/boot-mount enable || :
 fi
 endef
