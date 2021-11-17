@@ -1,6 +1,6 @@
 #!/bin/sh /etc/rc.common
 
-# Copyright (C) 2015 Justin Liu
+# Copyright (C) 2021 Justin Liu
 # https://github.com/rssnsj/network-feeds
 
 START=95
@@ -99,9 +99,31 @@ detect_usb_storages()
 
 start()
 {
-	/etc/init.d/samba disable
-	detect_usb_storages
+	if [ -x /etc/init.d/samba4 ]; then
+		/etc/init.d/samba4 disable
+	elif [ -x /etc/init.d/samba ]; then
+		/etc/init.d/samba disable
+	fi
+	if [ -x /etc/init.d/samba4 -a ! -x /etc/init.d/samba ]; then
+		ln -s samba4 /etc/init.d/samba
+	fi
+	if [ -f /etc/config/samba4 -a ! -f /etc/config/samba ]; then
+		ln -sf samba4 /etc/config/samba
+	fi
+
+	if [ ! -x /etc/init.d/samba ]; then
+		echo "======================================================="
+		echo "Samba server not found, try install with:"
+		echo " opkg install samba36-server   # for OpenWrt < 21.02"
+		echo " opkg install samba4-server    # for OpenWrt >= 21.02"
+		echo "Then restart the service with:"
+		echo " /etc/init.d/file-storage restart"
+		echo "======================================================="
+		return 1
+	fi
+
 	/etc/init.d/samba stop 2>/dev/null
+	detect_usb_storages
 	/etc/init.d/samba start
 }
 

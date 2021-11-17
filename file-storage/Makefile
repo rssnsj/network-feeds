@@ -6,7 +6,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=file-storage
-PKG_VERSION:=20210922
+PKG_VERSION:=20211117
 PKG_RELEASE:=
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
@@ -17,7 +17,7 @@ define Package/file-storage
   CATEGORY:=Network
   TITLE:=Storage device automount and autoconfig scripts
   MAINTAINER:=Justin Liu <rssnsj@gmail.com>
-  DEPENDS:=+blkid +kmod-fs-vfat
+  DEPENDS:=+blkid +kmod-fs-ext4 +kmod-fs-vfat +kmod-usb-storage
 endef
 
 define Build/Prepare
@@ -35,18 +35,12 @@ endef
 
 define Package/file-storage/postinst
 #!/bin/sh
-if [ -e /etc/openwrt_release ]; then
-	if [ -f /etc/init.d/samba4 ]; then
-		/etc/init.d/samba4 disable
-		ln -sf samba4 /etc/init.d/samba
-	fi
-	if [ -f /etc/config/samba4 ]; then
-		ln -sf samba4 /etc/config/samba
-	fi
-	/etc/init.d/samba stop
-	/etc/init.d/samba disable
-	/etc/init.d/boot-mount enable || :
-fi
+endef
+
+define Package/file-storage/prerm
+#!/bin/sh
+[ -L /etc/init.d/samba ] && rm -f /etc/init.d/samba || :
+[ -L /etc/config/samba ] && rm -f /etc/config/samba || :
 endef
 
 $(eval $(call BuildPackage,file-storage))
