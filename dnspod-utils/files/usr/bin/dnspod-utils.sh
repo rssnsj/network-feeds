@@ -63,23 +63,27 @@ dnspod_set()
 	# Update each record
 	local r_id
 	for r_id in $r_ids; do
+		local value_arg=
 		local r_value="$1"
-		if [ "$DDNS_MODE" = Y ]; then
+		if [ -n "$r_value" ]; then
+			shift 1
+			value_arg="&value=$r_value"
+		fi
+		if [ "$DDNS_MODE" = Y -a "$r_type" = A ]; then
 			local api_method="Record.Ddns"
 		else
 			local api_method="Record.Modify"
-			[ -n "$r_value" ] || break
-			shift 1
-		fi
-		local value_arg=
-		if [ -n "$r_value" ]; then
-			local value_arg="&value=$r_value"
+			[ -n "$value_arg" ] || break
 		fi
 		local api_resp=`__call_dnsapi "https://dnsapi.cn/$api_method" \
 			"login_token=$DNSAPI_TOKEN&format=json&domain=$r_domain&record_id=$r_id&sub_domain=$r_host$value_arg&record_type=$r_type&record_line=默认"`
 		[ -n "$api_resp" ] || return 1
 		local new_value=`echo "$api_resp" | jq -r '.record.value'`
-		echo "OK: $r_host.$r_domain - $new_value"
+		if [ "$DDNS_MODE" = Y -a "$r_type" = A ]; then
+			echo "OK: $r_host.$r_domain, $r_type, $new_value (DDNS mode)"
+		else
+			echo "OK: $r_host.$r_domain, $r_type, $new_value"
+		fi
 	done
 }
 
@@ -101,10 +105,19 @@ dnspod_add()
 	local r_value
 	for r_value in "$@"; do
 		local api_resp=`__call_dnsapi "https://dnsapi.cn/Record.Create" \
-			"login_token=$DNSAPI_TOKEN&format=json&domain=$r_domain&record_id=$r_id&sub_domain=$r_host&value=$r_value&record_type=$r_type&record_line=默认"`
+			"login_token=$DNSAPI_TOKEN&format=json&domain=$r_domain&sub_domain=$r_host&value=$r_value&record_type=$r_type&record_line=默认"`
 		[ -n "$api_resp" ] || return 1
-		local new_host=`echo "$api_resp" | jq -r '.record.name'`
-		echo "OK: $new_host.$r_domain - $r_value"
+		# Update in DDNS mode
+		if [ "$DDNS_MODE" = Y -a "$r_type" = A ]; then
+			local r_id=`echo "$api_resp" | jq -r '.record.id'`
+			local api_resp=`__call_dnsapi "https://dnsapi.cn/Record.Ddns" \
+				"login_token=$DNSAPI_TOKEN&format=json&domain=$r_domain&record_id=$r_id&sub_domain=$r_host&value=$r_value&record_type=$r_type&record_line=默认"`
+			[ -n "$api_resp" ] || return 1
+			local new_value=`echo "$api_resp" | jq -r '.record.value'`
+			echo "OK: $r_host.$r_domain, $r_type, $new_value (DDNS mode)"
+		else
+			echo "OK: $r_host.$r_domain, $r_type, $r_value"
+		fi
 	done
 }
 
@@ -139,9 +152,9 @@ dnspod_del()
 		local r_line=`echo "$r_row" | awk -F\| '{print $3}'`
 		local r_value=`echo "$r_row" | awk -F\| '{print $4}'`
 		if [ "$ASSUME_YES" = Y ]; then
-			echo "Deleting $r_host.$r_domain - $r_type, $r_value, $r_line"
+			echo "Deleting $r_host.$r_domain, $r_type, $r_value, $r_line"
 		else
-			read -p "Delete $r_host.$r_domain - $r_type, $r_value, $r_line ? [N/y] " c
+			read -p "Delete $r_host.$r_domain, $r_type, $r_value, $r_line ? [N/y] " c
 			case "$c" in
 				y|Y) ;;
 				*) continue;;
@@ -187,9 +200,9 @@ show_help()
 {
 	cat <<EOF
 Usage:
-  dnspod-utils.sh [options] set  domain sub_domain type value1 [value2 ...]
-  dnspod-utils.sh [options] add  domain sub_domain type value
-  dnspod-utils.sh [options] del  domain sub_domain type
+  dnspod-utils.sh [options] set[d]  domain sub_domain type value1 [value2 ...]
+  dnspod-utils.sh [options] add[d]  domain sub_domain type value
+  dnspod-utils.sh [options] del[y]  domain sub_domain type
   dnspod-utils.sh [options] once          # OpenWrt only
 Options:
   -t api_token              DNSPod API token in 'id,key' format
@@ -231,5 +244,8 @@ case "$command" in
 	set) dnspod_set "$@";;
 	add) dnspod_add "$@";;
 	del) dnspod_del "$@";;
+	setd) DDNS_MODE=Y; dnspod_set "$@";;
+	addd) DDNS_MODE=Y; dnspod_add "$@";;
+	dely) ASSUME_YES=Y; dnspod_del "$@";;
 	*) echo "*** Invalid command: '$command'" >&2; exit 1;;
 esac
