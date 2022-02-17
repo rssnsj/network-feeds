@@ -166,33 +166,60 @@ dnspod_del()
 }
 
 # No argument
-openwrt_once()
+do_local_once()
 {
-	if ! [ -f /etc/config/dnspod ]; then
-		echo "*** No /etc/config/dnspod found." >&2
-		return 1
-	fi
-
 	DDNS_MODE=Y
 
-	local i
-	for i in 0 1 2 3 4 5 6 7 8 9; do
-		uci -q get dnspod.@dnspod[$i] >/dev/null || break
-		local enabled=`uci -q get dnspod.@dnspod[$i].enabled`
-		[ "$enabled" = 0 ] && continue || :
-		local login_token=`uci -q get dnspod.@dnspod[$i].login_token`
+	if [ -f /etc/config/dnspod ]; then
+		local i
+		for i in 0 1 2 3 4 5 6 7 8 9; do
+			uci -q get dnspod.@dnspod[$i] >/dev/null || break
+			local enabled=`uci -q get dnspod.@dnspod[$i].enabled`
+			[ "$enabled" = 0 ] && continue || :
+			local login_token=`uci -q get dnspod.@dnspod[$i].login_token`
+			DNSAPI_TOKEN=$login_token
+			local domain=`uci -q get dnspod.@dnspod[$i].domain`
+			local subdomain=`uci -q get dnspod.@dnspod[$i].subdomain`
+			local ipfrom=`uci -q get dnspod.@dnspod[$i].ipfrom`
+			if [ "$ipfrom" = auto ]; then
+				dnspod_set "$domain" "$subdomain" A
+			elif [ -n "$ipfrom" ]; then
+				. /lib/functions/network.sh
+				network_get_ipaddr ip $ipfrom
+				dnspod_set "$domain" "$subdomain" A "$ip"
+			fi
+		done
+	elif [ -f /etc/default/dnspod ]; then
+		. /etc/default/dnspod
+		# Configuration variables: enabled, login_token, domain, subdomain, ipfrom
+		if [ "$enabled" = 0 ]; then
+			echo "DNSPod service disabled." >&2
+			return 0
+		fi
+		if [ -z "$login_token" -o -z "$domain" -o -z "subdomain" ]; then
+			echo "*** Missing required parameters:" >&2
+			echo "***  login_token = $login_token" >&2
+			echo "***  domain = $domain" >&2
+			echo "***  subdomain = $domain" >&2
+			return 2
+		fi
 		DNSAPI_TOKEN=$login_token
-		local domain=`uci -q get dnspod.@dnspod[$i].domain`
-		local subdomain=`uci -q get dnspod.@dnspod[$i].subdomain`
-		local ipfrom=`uci -q get dnspod.@dnspod[$i].ipfrom`
 		if [ "$ipfrom" = auto ]; then
+			# Local public IP
 			dnspod_set "$domain" "$subdomain" A
-		elif [ -n "$ipfrom" ]; then
-			. /lib/functions/network.sh
-			network_get_ipaddr ip $ipfrom
+		elif [ -z "$ipfrom" ]; then
+			# IP of default route
+			local ip=`ip route get 223.5.5.5 | grep '\<src .*' -o | awk '{print $2}'`
+			dnspod_set "$domain" "$subdomain" A "$ip"
+		else
+			# IP of specified interface
+			local ip=`ip route get 223.5.5.5 oif $ipfrom | grep '\<src .*' -o | awk '{print $2}'`
 			dnspod_set "$domain" "$subdomain" A "$ip"
 		fi
-	done
+	else
+		echo "*** None of the files found: /etc/config/dnspod, /etc/default/dnspod." >&2
+		return 1
+	fi
 }
 
 ##
@@ -231,7 +258,7 @@ if [ -z "$1" ]; then
 	exit 1
 fi
 if [ "$1" = once ]; then
-	openwrt_once
+	do_local_once
 	exit 0
 fi
 if [ -z "$DNSAPI_TOKEN" ]; then
