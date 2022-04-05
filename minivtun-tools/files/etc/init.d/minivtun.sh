@@ -230,6 +230,12 @@ EOF
 			/etc/init.d/dnsmasq restart
 		fi
 	fi
+
+	# Some action after each start
+	local postup_script=`uci -q get minivtun.@global[0].postup_script`
+	if [ -n "$postup_script" ]; then
+		eval "$postup_script"
+	fi
 }
 
 stop()
