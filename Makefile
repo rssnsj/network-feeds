@@ -8,3 +8,6 @@ minivtun-tools/files/usr/lib/lua/luci/i18n/minivtun.zh-cn.lmo: minivtun-tools/po
 	mkdir -p minivtun-tools/files/usr/lib/lua/luci/i18n
 	po2lmo $< $@
 
+update commit clean:
+	make -C ipset-lists/tools $@
+
