@@ -30,10 +30,31 @@ Network accelerating extensions for OpenWrt (valuable Pull Requests are welcomed
     
     # Then the packages 'ipset-lists' and 'minivtun-tools' are ready under 'bin/packages/mipsel_24kc/base/'
 
-
 ### Install `minivtun-tools` for OpenWrt
 
     opkg update
     opkg install dnsmasq-full --force-overwrite
     opkg install ipset-lists_xxxx.ipk minivtun-tools_xxxx.ipk
+
+### Setup for the server
+
+Supposing you've setup a client like this:
+
+    config minivtun
+        option server 'xxx.xxx.xxx.xxx'
+        option server_port '1414'
+        option password 'Hello'
+        option algorithm 'rc4'
+        option local_netmask '255.255.0.0'
+        option local_ipaddr '10.7.34.34'
+
+Then run the following commands after each system startup:
+
+    /usr/sbin/minivtun -l 0.0.0.0:1414 -a 10.7.0.1/24 -e Hello -t rc4 -d
+    
+    # Setup as a NAT router
+    sysctl -w net.ipv4.ip_forward=1
+    iptables -t nat -I POSTROUTING ! -o lo -j MASQUERADE
+    iptables -I FORWARD -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+
 
