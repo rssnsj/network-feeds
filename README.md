@@ -38,7 +38,7 @@ Network accelerating extensions for OpenWrt (valuable Pull Requests are welcomed
 
 ### Setup for the server
 
-Supposing you've setup a client like this:
+Supposing you've setup a client like this to connect your server:
 
     config minivtun
         option server 'xxx.xxx.xxx.xxx'
@@ -48,7 +48,7 @@ Supposing you've setup a client like this:
         option local_netmask '255.255.0.0'
         option local_ipaddr '10.7.34.34'
 
-Then run the following commands after each system startup:
+Then run the following commands after each system startup of the server:
 
     /usr/sbin/minivtun -l 0.0.0.0:1414 -a 10.7.0.1/24 -e Hello -t rc4 -d
     
