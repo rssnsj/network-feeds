@@ -9,6 +9,7 @@ DNSAPI_USERAGENT="OpenWrt-DDNS/0.1.0 (rssnsj@gmail.com)"
 DNSAPI_TOKEN=
 CURL_EXTRA_OPTS=
 DDNS_MODE=N
+DDNS_MODE_TTL=60
 ASSUME_YES=N
 
 # $1: URL
@@ -63,20 +64,23 @@ dnspod_set()
 	# Update each record
 	local r_id
 	for r_id in $r_ids; do
-		local value_arg=
+		local extra_args=
 		local r_value="$1"
 		if [ -n "$r_value" ]; then
 			shift 1
-			value_arg="&value=$r_value"
+			extra_args="$extra_args&value=$r_value"
 		fi
 		if [ "$DDNS_MODE" = Y -a "$r_type" = A ]; then
 			local api_method="Record.Ddns"
+			if [ -n "$DDNS_MODE_TTL" ]; then
+				extra_args="$extra_args&ttl=$DDNS_MODE_TTL"
+			fi
 		else
 			local api_method="Record.Modify"
-			[ -n "$value_arg" ] || break
+			[ -n "$extra_args" ] || break
 		fi
 		local api_resp=`__call_dnsapi "https://dnsapi.cn/$api_method" \
-			"login_token=$DNSAPI_TOKEN&format=json&domain=$r_domain&record_id=$r_id&sub_domain=$r_host$value_arg&record_type=$r_type&record_line=默认"`
+			"login_token=$DNSAPI_TOKEN&format=json&domain=$r_domain&record_id=$r_id&sub_domain=$r_host$extra_args&record_type=$r_type&record_line=默认"`
 		[ -n "$api_resp" ] || return 1
 		local new_value=`echo "$api_resp" | jq -r '.record.value'`
 		if [ "$DDNS_MODE" = Y -a "$r_type" = A ]; then
@@ -104,19 +108,18 @@ dnspod_add()
 	# Create each record
 	local r_value
 	for r_value in "$@"; do
+		local extra_args=
+		if [ "$DDNS_MODE" = Y ]; then
+			extra_args="$extra_args&ttl=$DDNS_MODE_TTL"
+		fi
 		local api_resp=`__call_dnsapi "https://dnsapi.cn/Record.Create" \
-			"login_token=$DNSAPI_TOKEN&format=json&domain=$r_domain&sub_domain=$r_host&value=$r_value&record_type=$r_type&record_line=默认"`
+			"login_token=$DNSAPI_TOKEN&format=json&domain=$r_domain&sub_domain=$r_host&value=$r_value$extra_args&record_type=$r_type&record_line=默认"`
 		[ -n "$api_resp" ] || return 1
-		# Update in DDNS mode
-		if [ "$DDNS_MODE" = Y -a "$r_type" = A ]; then
-			local r_id=`echo "$api_resp" | jq -r '.record.id'`
-			local api_resp=`__call_dnsapi "https://dnsapi.cn/Record.Ddns" \
-				"login_token=$DNSAPI_TOKEN&format=json&domain=$r_domain&record_id=$r_id&sub_domain=$r_host&value=$r_value&record_type=$r_type&record_line=默认"`
-			[ -n "$api_resp" ] || return 1
-			local new_value=`echo "$api_resp" | jq -r '.record.value'`
+		local new_value=`echo "$api_resp" | jq -r '.record.value'`
+		if [ "$DDNS_MODE" = Y ]; then
 			echo "OK: $r_host.$r_domain, $r_type, $new_value (DDNS mode)"
 		else
-			echo "OK: $r_host.$r_domain, $r_type, $r_value"
+			echo "OK: $r_host.$r_domain, $r_type, $new_value"
 		fi
 	done
 }
