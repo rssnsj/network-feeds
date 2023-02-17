@@ -5,7 +5,7 @@ Generic Linux-based version
 
 Install the 'uci' utility
 
-    apt-get install cmake libjson-c-dev ipset dnsmasq
+    apt-get install build-essential libssl-dev cmake libjson-c-dev ipset dnsmasq
     
     [ -d /usr/include/json ] || ln -s json-c /usr/include/json
     
