@@ -47,7 +47,7 @@ define Package/minivtun-tools/postinst
 #!/bin/sh
 if [ -e /etc/openwrt_release ]; then
 	/etc/init.d/minivtun.sh enable || :
-	cat /etc/crontabs/root | grep -v '\<kill .*minivtun-go' > /tmp/tmpcron
+	cat /etc/crontabs/root 2>/dev/null | grep -v '\<kill .*minivtun-go' > /tmp/tmpcron
 	a=`date +%s`
 	s=`expr \( $$a + $$$$ \) % 58 + 1`
 	echo "$$s"' 1 * * *  kill -USR1 `cat /var/run/minivtun-go*.pid`' >> /tmp/tmpcron
