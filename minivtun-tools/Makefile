@@ -7,7 +7,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=minivtun-tools
-PKG_VERSION:=20230708
+PKG_VERSION:=20230725
 PKG_RELEASE=$(PKG_SOURCE_VERSION)
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
@@ -47,7 +47,19 @@ define Package/minivtun-tools/postinst
 #!/bin/sh
 if [ -e /etc/openwrt_release ]; then
 	/etc/init.d/minivtun.sh enable || :
+	cat /etc/crontabs/root | grep -v '\<kill .*minivtun-go' > /tmp/tmpcron
+	a=`date +%s`
+	s=`expr \( $$a + $$$$ \) % 58 + 1`
+	echo "$$s"' 1 * * *  kill -USR1 `cat /var/run/minivtun-go*.pid`' >> /tmp/tmpcron
+	crontab /tmp/tmpcron
+	rm -f /tmp/tmpcron
 fi
+endef
+
+define Package/minivtun-tools/prerm
+	cat /etc/crontabs/root | grep -v '\<kill .*minivtun-go' > /tmp/tmpcron
+	crontab /tmp/tmpcron
+	rm -f /tmp/tmpcron
 endef
 
 $(eval $(call BuildPackage,minivtun-tools))
