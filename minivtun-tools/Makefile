@@ -7,7 +7,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=minivtun-tools
-PKG_VERSION:=20230725
+PKG_VERSION:=20230726
 PKG_RELEASE=$(PKG_SOURCE_VERSION)
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
@@ -49,17 +49,23 @@ if [ -e /etc/openwrt_release ]; then
 	/etc/init.d/minivtun.sh enable || :
 	cat /etc/crontabs/root 2>/dev/null | grep -v '\<kill .*minivtun-go' > /tmp/tmpcron
 	a=`date +%s`
-	s=`expr \( $$a + $$$$ \) % 58 + 1`
-	echo "$$s"' 1 * * *  kill -USR1 `cat /var/run/minivtun-go*.pid`' >> /tmp/tmpcron
+	r=`expr \( $$a + $$$$ \) % 58 + 1`
+	echo "$$r"' 5 * * *  kill -USR1 `cat /var/run/minivtun-go*.pid`' > /tmp/tmpcron.add
+	echo "Added crontab task for resetting dynamic route each day:"
+	cat /tmp/tmpcron.add
+	cat /tmp/tmpcron.add >> /tmp/tmpcron
 	crontab /tmp/tmpcron
-	rm -f /tmp/tmpcron
+	rm -f /tmp/tmpcron*
 fi
 endef
 
 define Package/minivtun-tools/prerm
+#!/bin/sh
+if [ -e /etc/openwrt_release ]; then
 	cat /etc/crontabs/root | grep -v '\<kill .*minivtun-go' > /tmp/tmpcron
 	crontab /tmp/tmpcron
 	rm -f /tmp/tmpcron
+fi
 endef
 
 $(eval $(call BuildPackage,minivtun-tools))
