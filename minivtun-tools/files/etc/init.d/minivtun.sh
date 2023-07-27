@@ -112,6 +112,9 @@ start()
 		local ifname=minivtun-go$i
 		local metric_base=`expr 200 + $i`
 
+		# Exclude server IP from foreign
+		ipset add local $server_addr 2>/dev/null
+
 		# NOTICE: Empty '$password' is for no encryption
 		/usr/sbin/minivtun -r [$server_addr]:$server_port -n $ifname \
 			-a $local_ipaddr/`netmask_to_pfxlen $local_netmask` \
