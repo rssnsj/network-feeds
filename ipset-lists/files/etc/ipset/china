@@ -1162,7 +1162,7 @@ add china 103.11.16.0/22
 add china 103.11.168.0/22
 add china 103.11.180.0/22
 add china 103.12.32.0/22
-add china 103.12.68.0/22
+add china 103.12.68.0/23
 add china 103.12.92.0/22
 add china 103.12.98.0/23
 add china 103.12.136.0/22
@@ -2980,6 +2980,7 @@ add china 103.242.240.0/22
 add china 103.243.136.0/22
 add china 103.243.252.0/22
 add china 103.244.16.0/22
+add china 103.244.26.0/23
 add china 103.244.58.0/23
 add china 103.244.60.0/22
 add china 103.244.64.0/20
@@ -2989,6 +2990,7 @@ add china 103.244.164.0/22
 add china 103.244.232.0/22
 add china 103.244.252.0/22
 add china 103.245.23.0/24
+add china 103.245.24.0/23
 add china 103.245.52.0/22
 add china 103.245.60.0/22
 add china 103.245.80.0/22
