@@ -98,11 +98,11 @@ start()
 		local local_ipaddr=`uci -q get minivtun.@minivtun[$i].local_ipaddr`
 		local local_netmask=`uci -q get minivtun.@minivtun[$i].local_netmask`
 		local mtu=`uci -q get minivtun.@minivtun[$i].mtu`
+		if [ -z "$mtu" ]; then
+			mtu=1400
+		fi
 
 		local cmd_opts=""
-		if [ -n "$mtu" ]; then
-			cmd_opts="$cmd_opts -m$mtu"
-		fi
 		[ -n "$algorithm" ] || algorithm="aes-128"
 		if [ -n "$max_droprate" -o -n "$max_rtt" ]; then
 			cmd_opts="$cmd_opts -K3 -S22 -B4"
@@ -118,7 +118,7 @@ start()
 		# NOTICE: Empty '$password' is for no encryption
 		/usr/sbin/minivtun -r [$server_addr]:$server_port -n $ifname \
 			-a $local_ipaddr/`netmask_to_pfxlen $local_netmask` \
-			-e "$password" -t "$algorithm" -w \
+			-e "$password" -t "$algorithm" -w -m $mtu \
 			-D -v 0.0.0.0/0 -T $VPN_ROUTE_TABLE -M $metric_base++$nr_tunnels \
 			-p /var/run/$ifname.pid -H /var/run/$ifname.health \
 			$cmd_opts -d || continue
