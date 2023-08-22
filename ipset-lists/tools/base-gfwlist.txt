@@ -1,7 +1,6 @@
 ca
 de
 edu
-google
 gov
 hk
 kr
@@ -10,6 +9,8 @@ sg
 tw
 uk
 us
+google
+world
 
 tiktok.com
 tiktokv.com

@@ -12,7 +12,7 @@ china_banned()
 		cat gfwlist.txt |
 			sed '/^!/d; /^@@/d; /^$/d; /^#/d' |
 			sed 's/!.\+//; s/|//g; s/@//g; s/https\?:\/\///;' |
-			sed '/\*/d; /apple\.com/d; /\<hiwifi\>/d;' |
+			sed '/\*/d; /apple\.com/d' |
 			sed '/^[0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+$/d' |
 			grep '^[0-9a-z\.-]\+$' | grep '\.' | sed 's/^\.\+//'
 		cat base-gfwlist.txt
