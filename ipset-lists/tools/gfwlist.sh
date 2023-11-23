@@ -15,7 +15,7 @@ china_banned()
 			sed '/\*/d; /apple\.com/d' |
 			sed '/^[0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+$/d' |
 			grep '^[0-9a-z\.-]\+$' | grep '\.' | sed 's/^\.\+//'
-		cat base-gfwlist.txt
+		cat base-banned.txt
 	) | rev | sort -u | awk '
 			BEGIN { prev = "___"; }  {
 				cur = $0;
