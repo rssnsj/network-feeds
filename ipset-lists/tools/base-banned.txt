@@ -11,6 +11,8 @@ uk
 us
 google
 world
+science
+mil
 
 tiktok.com
 tiktokv.com
