@@ -1,15 +1,12 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 #include <errno.h>
 
-typedef u_int32_t u32;
-typedef int bool;
-#define true  1
-#define false 0
 typedef unsigned gfp_t;
 
-static inline char *ipv4_hltos(u32 u, char *s)
+static inline char *ipv4_hltos(uint32_t u, char *s)
 {
 	static char ss[20];
 	if (!s)
@@ -20,31 +17,31 @@ static inline char *ipv4_hltos(u32 u, char *s)
 	return s;
 }
 
-static inline u32 ipv4_stohl(const char *s)
+static inline uint32_t ipv4_stohl(const char *s)
 {
 	int u[4];
 	if (sscanf(s, "%d.%d.%d.%d", &u[0], &u[1], &u[2], &u[3]) == 4) {
-		return  (((u32)u[0] & 0xff) << 24) |
-				(((u32)u[1] & 0xff) << 16) |
-				(((u32)u[2] & 0xff) << 8) |
-				(((u32)u[3] & 0xff));
+		return  (((uint32_t)u[0] & 0xff) << 24) |
+				(((uint32_t)u[1] & 0xff) << 16) |
+				(((uint32_t)u[2] & 0xff) << 8) |
+				(((uint32_t)u[3] & 0xff));
 	} else
 		return 0xffffffff;
 }
 
-static inline bool is_ipv4_addr(const char *s)
+static inline int is_ipv4_addr(const char *s)
 {
 	int u[4];
 	if (sscanf(s, "%d.%d.%d.%d", &u[0], &u[1], &u[2], &u[3]) == 4)
-		return true;
+		return 1;
 	else
-		return false;
+		return 0;
 }
 
 
 struct ipv4_range {
-	u32 start;
-	u32 end;
+	uint32_t start;
+	uint32_t end;
 };
 
 struct sa_open_data {
@@ -75,8 +72,8 @@ static int __touch_tmp_base(struct sa_open_data *od, gfp_t gfp)
 	return 0;
 }
 
-static int ipv4_list_add_range(struct sa_open_data *od, u32 start,
-		u32 end, gfp_t gfp)
+static int ipv4_list_add_range(struct sa_open_data *od, uint32_t start,
+		uint32_t end, gfp_t gfp)
 {
 	struct ipv4_range *cur;
 	int ret;
@@ -111,23 +108,23 @@ static int ipv4_list_add_range(struct sa_open_data *od, u32 start,
 }
 
 static inline int ipv4_list_add_netmask(struct sa_open_data *od,
-		u32 net, u32 net_mask, gfp_t gfp)
+		uint32_t net, uint32_t net_mask, gfp_t gfp)
 {
-	u32 start = net & net_mask;
-	u32 end = net | ~net_mask;
+	uint32_t start = net & net_mask;
+	uint32_t end = net | ~net_mask;
 	
 	return ipv4_list_add_range(od, start, end, gfp);
 }
 
-static int ipv4_list_add_net(struct sa_open_data *od, u32 net,
+static int ipv4_list_add_net(struct sa_open_data *od, uint32_t net,
 		int net_bits, gfp_t gfp)
 {
-	u32 net_mask;
+	uint32_t net_mask;
 
 	if(net_bits == 0)
 		net_mask = 0x00000000;
 	else
-		net_mask = ~(((u32)1 << (32 - net_bits)) - 1);
+		net_mask = ~(((uint32_t)1 << (32 - net_bits)) - 1);
 	//printf("%d: %08x, %08x\n", net_bits, net_mask, net_size);
 
 	return ipv4_list_add_netmask(od, net, net_mask, gfp);
@@ -187,7 +184,7 @@ static int salist_cmd_parse(struct sa_open_data *od, char *cmd, gfp_t gfp)
 	default:
 		if (is_ipv4_addr(a1)) {
 			/* Single IP address. */
-			u32 ip = ipv4_stohl(a1);
+			uint32_t ip = ipv4_stohl(a1);
 			/* ------------------------------------ */
 			ipv4_list_add_range(od, ip, ip, gfp);
 			/* ------------------------------------ */
@@ -257,7 +254,7 @@ static int salist_close(struct sa_open_data *od)
 			
 			for (wi = 0, ri = 1; ri < od->tmp_length; ri++) {
 				/* NOTICE: 0xffffffff + 1 ? */
-				if (od->tmp_base[wi].end == (u32)(-1)) {
+				if (od->tmp_base[wi].end == (uint32_t)(-1)) {
 					/* Nothing */
 				} else if (od->tmp_base[ri].start <= od->tmp_base[wi].end + 1) {
 					/* The two ranges overlap, so merge the 2nd to the 1st one */
