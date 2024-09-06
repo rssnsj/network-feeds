@@ -1164,7 +1164,6 @@ add china 103.11.16.0/22
 add china 103.11.168.0/22
 add china 103.11.180.0/22
 add china 103.12.32.0/22
-add china 103.12.68.0/23
 add china 103.12.92.0/22
 add china 103.12.98.0/23
 add china 103.12.136.0/22
@@ -1633,7 +1632,6 @@ add china 103.68.192.0/22
 add china 103.69.16.0/22
 add china 103.69.62.0/23
 add china 103.69.116.0/22
-add china 103.69.132.0/22
 add china 103.70.8.0/22
 add china 103.70.14.0/23
 add china 103.70.148.0/22
@@ -2075,7 +2073,6 @@ add china 103.116.72.0/21
 add china 103.116.92.0/22
 add china 103.116.120.0/22
 add china 103.116.128.0/22
-add china 103.116.132.0/23
 add china 103.116.138.0/23
 add china 103.116.148.0/22
 add china 103.116.184.0/22
@@ -2337,7 +2334,6 @@ add china 103.152.76.0/23
 add china 103.152.98.0/23
 add china 103.152.112.0/23
 add china 103.152.120.0/22
-add china 103.152.132.0/23
 add china 103.152.152.0/23
 add china 103.152.168.0/22
 add china 103.152.186.0/23
@@ -2487,7 +2483,7 @@ add china 103.183.26.0/23
 add china 103.183.66.0/23
 add china 103.183.122.0/23
 add china 103.183.124.0/23
-add china 103.184.44.0/22
+add china 103.184.46.0/23
 add china 103.184.60.0/23
 add china 103.185.78.0/23
 add china 103.185.80.0/23
@@ -3279,7 +3275,6 @@ add china 116.58.128.0/20
 add china 116.58.208.0/20
 add china 116.60.0.0/14
 add china 116.66.0.0/17
-add china 116.66.176.0/22
 add china 116.68.136.0/21
 add china 116.68.176.0/21
 add china 116.69.0.0/16
@@ -3939,6 +3934,12 @@ add china 160.22.244.0/22
 add china 160.25.10.0/23
 add china 160.25.12.0/23
 add china 160.25.20.0/23
+add china 160.25.194.0/23
+add china 160.30.40.0/23
+add china 160.30.148.0/22
+add china 160.30.194.0/23
+add china 160.30.196.0/22
+add china 160.30.230.0/23
 add china 160.83.109.0/24
 add china 160.83.110.0/23
 add china 160.202.60.0/22
@@ -4119,7 +4120,6 @@ add china 183.172.0.0/14
 add china 183.182.0.0/19
 add china 183.184.0.0/13
 add china 183.192.0.0/10
-add china 185.203.36.0/22
 add china 185.241.211.0/24
 add china 188.131.128.0/17
 add china 192.23.191.0/24
