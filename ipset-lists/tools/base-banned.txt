@@ -42,6 +42,7 @@ ipstatp.com
 hotapi.sgsnssdk.com
 tiktokcdn-us.com
 
+onlyfans.com
 openwrt.org
 
 ocsp.int-x1.letsencrypt.org
