@@ -35,12 +35,16 @@ mil
 tiktok.com
 tiktokv.com
 tiktokcdn.com
+tiktokcdn-eu.com
+tiktokcdn-us.com
+ttlivecdn.com
 ibyteimg.com
-byteoversea.com
 ibytedtos.com
+byteoversea.com
+byteoversea.net
+bytefcdn-oversea.com
 ipstatp.com
 hotapi.sgsnssdk.com
-tiktokcdn-us.com
 
 onlyfans.com
 openwrt.org
