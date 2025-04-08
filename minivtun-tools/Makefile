@@ -63,7 +63,7 @@ endef
 define Package/minivtun-tools/prerm
 #!/bin/sh
 if [ -e /etc/openwrt_release ]; then
-	cat /etc/crontabs/root | grep -v '\<kill .*minivtun-go' > /tmp/tmpcron
+	cat /etc/crontabs/root | grep -v ' 5 \* \* \*  kill -USR1 .*minivtun-go' > /tmp/tmpcron
 	crontab -u root /tmp/tmpcron
 	rm -f /tmp/tmpcron
 fi
