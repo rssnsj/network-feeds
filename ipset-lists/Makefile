@@ -1,12 +1,12 @@
 #
-# Copyright (c) 2015 Justin Liu
+# Copyright (c) 2025 Justin Liu
 # Author: Justin Liu <rssnsj@gmail.com>
 #
 
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=ipset-lists
-PKG_VERSION:=14
+PKG_VERSION:=15
 PKG_RELEASE:=
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
@@ -21,9 +21,6 @@ define Package/ipset-lists
 endef
 
 define Package/ipset-lists/conffiles
-/etc/ipset/local
-/etc/ipset/china
-/etc/gfwlist/china-banned
 endef
 
 define Build/Prepare
