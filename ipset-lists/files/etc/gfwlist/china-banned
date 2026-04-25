@@ -76,6 +76,7 @@
 9gag.com
 a248.e.akamai.net
 aamacau.com
+aave.com
 abc.xyz
 abebooks.com
 abematv.akamaized.net
@@ -127,6 +128,7 @@ akamaihd.net
 akamai.tvb.com
 akiba-online.com
 akiba-web.com
+akile.io
 akinator.com
 akow.org
 alabout.com
@@ -175,10 +177,9 @@ andygod.com
 angola.org
 angularjs.org
 aniscartujo.com
-annas-archive.li
-annas-archive.org
-annas-archive.pm
-annas-archive.se
+annas-archive.gd
+annas-archive.gl
+annas-archive.pk
 anobii.com
 anonfiles.com
 anonymouse.org
@@ -220,6 +221,7 @@ appadvice.com
 app.box.com
 appbrain.com
 app.cloudcone.com
+app.element.io
 app.hkatvnews.com
 appledaily.com
 apps.evozi.com
@@ -232,6 +234,7 @@ appsto.re
 aptoide.com
 archive.fo
 archive.is
+archive-it.org
 archive.li
 archive.md
 archiveofourown.com
@@ -241,12 +244,14 @@ archive.today
 archive.vn
 arctosia.com
 areca-backup.org
+arena.ai
 arena.taipei
 arethusa.su
 arte.tv
 art-or-porn.com
 artstation.com
 arvanstorage.ir
+arweave.org
 asacp.org
 asiafriendfinder.com
 asiaharvest.org
@@ -254,11 +259,13 @@ asianage.com
 asianfanfics.com
 asiansexdiary.com
 asiaone.com
+asiasociety.org
 ask.com
 askstudent.com
 askubuntu.com
 askynz.net
 assembla.com
+assets.nxtrace.org
 assimp.org
 astonmartinnews.com
 astrill.com
@@ -277,6 +284,7 @@ avdb.tv
 avg.com
 avgle.com
 avidemux.org
+avistaz.to
 avmoo.pw
 avmo.pw
 av.movie
@@ -335,6 +343,7 @@ behance.net
 beijing1989.com
 beijing2022.art
 beijingspring.com
+bellingcat.com
 bell.wiki
 berlintwitterwall.com
 bestvpnanalysis.com
@@ -695,7 +704,6 @@ chromecast.com
 chrome.com
 chromeexperiments.com
 chromestatus.com
-chromium.org
 ciciai.com
 cici.com
 cirosantilli.com
@@ -708,6 +716,7 @@ cjb.net
 ck101.com
 classicalguitarblog.net
 claude.ai
+claude.com
 clearsurance.com
 clementine-player.org
 clientsfromhell.net
@@ -785,6 +794,7 @@ coze.com
 cpj.org
 cpu-monkey.com
 crackle.com
+crashlytics.com
 crazypool.org
 crazyshit.com
 crbug.com
@@ -908,7 +918,9 @@ dmcdn.net
 dmc.nico
 dmhy.org
 dns2go.com
+dns.cloudflare.com
 dnscrypt.org
+dns.sb
 dnssec.net
 dnvod.tv
 docker.com
@@ -918,6 +930,7 @@ doc.new
 docs.new
 docstoc.com
 documentingreality.com
+doh.sb
 dongde.com
 dongtaiwang.com
 dongtaiwang.net
@@ -926,6 +939,7 @@ doosho.com
 doourbest.org
 dotheyfolloweachother.com
 dotplane.com
+dot.sb
 dotsub.com
 dotvpn.com
 doubibackup.com
@@ -937,7 +951,7 @@ doublethinklab.org
 douchi.space
 dougscripts.com
 doujincafe.com
-download.aircrack-ng.org
+download.dappcdn.com
 doxygen.org
 dpool.top
 dpr.info
@@ -980,6 +994,7 @@ earthvpn.com
 eastasiaforum.org
 easy-share.com
 ebtcbank.com
+economist.com
 edgecastcdn.net
 edu
 edubridge.com
@@ -1357,6 +1372,7 @@ glorystar.me
 glype.com
 gmail.com
 gmgard.com
+gmgn.ai
 gmodules.com
 gmp4.com
 gnews.org
@@ -1488,6 +1504,7 @@ google.co.za
 google.co.zm
 google.co.zw
 google.cv
+google.dev
 google.dk
 google.dm
 googledomains.com
@@ -1630,6 +1647,7 @@ gumroad.com
 gunsamerica.com
 gutteruncensored.com
 gvlib.com
+gvt1.com
 gvt3.com
 gwins.org
 gwtproject.org
@@ -1699,8 +1717,6 @@ hiveon.net
 hk
 hk01.com
 hka8964.wordpress.com
-hkacg.com
-hkacg.net
 hkanews.wordpress.com
 hkbookcity.com
 hkchronicles.com
@@ -1893,6 +1909,7 @@ internetpopculture.com
 interseclab.org
 inthenameofconfuciusmovie.com
 investigating.wordpress.com
+investing.com
 inxian.com
 ipdefenseforum.com
 ipfire.org
@@ -1922,6 +1939,7 @@ islamhouse.com
 ismaelan.com
 ismprofessional.net
 israbox.com
+issues.chromium.org
 issuu.com
 isupportuyghurs.org
 it
@@ -2060,6 +2078,7 @@ lagranepoca.com
 lala.im
 lamayeshe.com
 landofhope.tv
+lantern.io
 laogai.org
 laogairesearch.org
 laqingdan.net
@@ -2185,6 +2204,7 @@ mangafox.com
 mangafox.me
 mangmang.run
 manta.com
+manus.im
 manyvoices.news
 marc.info
 marco.org
@@ -2223,7 +2243,6 @@ mediafreakcity.com
 media.nu.nl
 mediawiki.org
 medium.com
-meetup.com
 mega.io
 megaporn.com
 megaproxy.com
@@ -2292,6 +2311,7 @@ mirrormedia.mg
 mirror.xyz
 missav.com
 missav.ws
+mistral.ai
 mitbbs.com
 mixedmedialabs.com
 mixero.com
@@ -2329,6 +2349,7 @@ moonbingo.com
 moon.fm
 moresci.sale
 morningsun.org
+mosavi.io
 motherless.com
 m.oulove.org
 movabletype.com
@@ -2354,7 +2375,6 @@ muzi.com
 muzi.net
 muzu.tv
 mx
-mx981.com
 my
 myactimes.com
 my-addr.com
@@ -2524,7 +2544,9 @@ ogaoga.org
 ogate.org
 ohmyrss.com
 okayfreedom.com
+okcoin.com
 okex.com
+oklink.com
 okpool.me
 okx.com
 olehdtv.com
@@ -2558,6 +2580,8 @@ ooni.io
 ooni.org
 ooyala.com
 openai.com
+openart.ai
+opencritic.com
 opendemocracy.net
 open.firstory.me
 openid.net
@@ -2574,6 +2598,7 @@ opus-gaming.com
 ordns.he.net
 orient-doll.com
 osfoora.com
+osmand.net
 otcbtc.com
 ourdearamy.com
 overcast.fm
@@ -2792,7 +2817,6 @@ pursuestar.com
 putlocker.com
 putty.org
 pximg.net
-pytorch.org
 qbittorrent.org
 qiandao.today
 qianglie.com
@@ -2833,6 +2857,7 @@ rationalwiki.org
 rawgit.com
 raw.githack.com
 rawgithub.com
+rawstory.com
 rayfme.com
 rd.com
 reabble.com
@@ -2842,6 +2867,7 @@ readydown.com
 realcourage.org
 realitykings.com
 reason.com
+recordedfuture.com
 redbubble.com
 redchinacn.net
 reddit.com
@@ -2874,6 +2900,7 @@ rixcloud.com
 rlwlw.com
 rmbl.ws
 rnw.nl
+roblox.com
 robtex.com
 robustnessiskey.com
 rocket.chat
@@ -2925,6 +2952,7 @@ savetibetstore.org
 savetube.io
 saveuighur.org
 sbme.me
+sbti.unun.dev
 scache1.vzw.com
 scache2.vzw.com
 scache.vzw.com
@@ -2991,6 +3019,7 @@ shenzhoufilm.com
 shenzhouzhengdao.org
 shifeike.blog125.fc2blog.net
 shiksha.com
+shitjournal.org
 shixiao.org
 shizhao.org
 shkspr.mobi
@@ -3083,10 +3112,10 @@ southmongolia.org
 southpark.cc.com
 south-plus.net
 south-plus.org
-soylentnews.org
 spaceflightnow.com
 space-scape.com
 spaces.hightail.com
+spacex.com
 spankbang.com
 sparkpool.com
 spatial.io
@@ -3249,9 +3278,9 @@ t.co
 teachparentstech.org
 teamseesmic.com
 teashark.com
+techbang.com
 techlifeweb.com
 techparaiso.com
-techspot.com
 techviz.net
 teco-hk.org
 teco-mo.org
@@ -3427,6 +3456,7 @@ topstyle4.com
 topsy.com
 toptoon.net
 top.tv
+tor.eff.org
 torguard.net
 torlock.com
 torproject.org
@@ -3593,6 +3623,7 @@ underwoodammo.com
 unholyknight.com
 unicode.org
 unirule.cloud
+uniswap.org
 unknownspace.org
 unmineable.com
 unseen.is
@@ -3746,12 +3777,12 @@ vrporn.com
 vrsmash.com
 v-state.org
 vtunnel.com
-vuku.cc
 vultryhw.com
 waffle1999.com
 waikeung.org
 wainao.me
 walletconnect.com
+walletconnect.org
 wallmama.com
 wallpapercasa.com
 wallsttv.com
@@ -3866,6 +3897,7 @@ wiredpen.com
 wireguard.com
 wireshark.org
 wisevid.com
+wispbyte.com
 withgoogle.com
 withyoutube.com
 witopia.net
@@ -3918,6 +3950,7 @@ www.ajsands.com
 www.antd.org
 www.aolnews.com
 www.bing.com
+www.clashverge.dev
 www.cmoinc.org
 www.dfanning.com
 www.eulam.com
@@ -3964,6 +3997,7 @@ xcancel.com
 x.co
 x.com
 x.company
+xdaforums.com
 xerotica.com
 xfinity.com
 xfxssr.me
@@ -3978,17 +4012,18 @@ xiaxiaoqiang.net
 xijie.wordpress.com
 xing.com
 xinjiangpolicefiles.org
-xjp.cc
 xjtravelguide.com
 xm.com
 xml-training-guide.com
 xmusic.fm
 xn--11xs86f.icu
+xn--1jqvh729avzfcy2d8ummib.com
 xn--4gq171p.com
 xn--9iqy04a7fi01l.com
 xn--9pr62r24a.com
 xn--czq75pvv1aj5c.org
 xn--i2ru8q2qg.com
+xn--kcrv3utim32hx9f6qe.com
 xn--ngstr-lra8j.com
 xn--noss43i.com
 xn--oiq.cc
